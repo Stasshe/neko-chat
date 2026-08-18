@@ -2,24 +2,25 @@
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background text-foreground">
-      <div className="max-w-2xl text-center px-6 py-24">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-4">Template</h1>
-        <p className="text-lg text-muted-foreground mb-8">A minimal Next.js + Tailwind template</p>
-
-        <div className="flex gap-4 justify-center">
-          <a
-            href="#"
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-md shadow-sm hover:shadow-md"
-          >
-            Get Started
-          </a>
-          <a href="#" className="px-6 py-3 border rounded-md text-foreground">
-            Learn More
-          </a>
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-6 py-12 text-center">
+        <div className="space-y-4">
+          <p className="text-sm tracking-[0.2em] text-muted-foreground">NEKO CHAT</p>
+          <h1 className="text-4xl font-bold">猫チャット</h1>
+          <p className="text-sm leading-6 text-muted-foreground">
+            ゆるく近況を共有する、猫モチーフのグループチャットアプリ
+          </p>
         </div>
 
-        <p className="text-sm text-muted-foreground mt-12">Powered by Next.js & Tailwind CSS</p>
+        <div className="mt-10 w-full space-y-3">
+          <button
+            type="button"
+            className="w-full rounded-xl bg-primary px-5 py-3 text-primary-foreground"
+          >
+            Googleでログイン
+          </button>
+          <p className="text-xs text-muted-foreground">認証導線はこのあと FE-A で接続する</p>
+        </div>
       </div>
     </main>
   );
