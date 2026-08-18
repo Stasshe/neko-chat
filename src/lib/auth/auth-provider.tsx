@@ -1,7 +1,7 @@
 "use client";
 
 import type { Session } from "@supabase/supabase-js";
-import { createContext, useEffect, useMemo, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 
@@ -10,6 +10,7 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   userId: string | null;
   session: Session | null;
+  signOut: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -55,15 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const value = useMemo(
-    () => ({
-      isLoading,
-      isAuthenticated: !!session,
-      userId: session?.user.id ?? null,
-      session,
-    }),
-    [isLoading, session],
-  );
+  async function signOut() {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Failed to sign out", error);
+    }
+  }
+
+  const value = {
+    isLoading,
+    isAuthenticated: !!session,
+    userId: session?.user.id ?? null,
+    session,
+    signOut,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
