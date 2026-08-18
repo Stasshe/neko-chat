@@ -128,3 +128,56 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
+
+-- 通常グループ作成関数（招待コードも同時発行）
+create or replace function public.create_group_with_invite(
+  p_name text
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_group_id uuid;
+  v_code text;
+  v_result json;
+begin
+  -- ログイン中のユーザーIDを取得
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- 1. 通常グループ作成 (is_solo = false)
+  insert into public.groups (name, is_solo)
+  values (p_name, false)
+  returning id into v_group_id;
+
+  -- 2. 作成者をメンバーに追加
+  insert into public.group_members (group_id, user_id)
+  values (v_group_id, v_user_id);
+
+  -- 3. 6桁のランダムな招待コードを生成して追加
+  v_code := upper(substring(md5(random()::text) from 1 for 6));
+  insert into public.invite_codes (group_id, code)
+  values (v_group_id, v_code);
+
+  -- 4. フロント用に GroupSummary と inviteCode をまとめた JSON を返却
+  select json_build_object(
+    'group', json_build_object(
+      'id', g.id,
+      'name', g.name,
+      'is_solo', g.is_solo,
+      'created_at', g.created_at,
+      'updated_at', g.updated_at
+    ),
+    'invite_code', v_code
+  )
+  into v_result
+  from public.groups g
+  where g.id = v_group_id;
+
+  return v_result;
+end;
+$$;
