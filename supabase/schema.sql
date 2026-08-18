@@ -128,3 +128,47 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
+
+-- 一人モード開始関数
+create or replace function public.start_solo_mode(
+  p_group_name text default '一人モード'
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_group_id uuid;
+  v_result json;
+begin
+  -- ログイン中のユーザーIDを取得
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- 1. 一人用グループ作成 (is_solo = true)
+  insert into public.groups (name, is_solo)
+  values (p_group_name, true)
+  returning id into v_group_id;
+
+  -- 2. グループメンバーに自分を追加
+  insert into public.group_members (group_id, user_id)
+  values (v_group_id, v_user_id);
+
+  -- 3. フロントエンド向けにGroupSummary形式のJSONを返却
+  select json_build_object(
+    'id', g.id,
+    'name', g.name,
+    'is_solo', g.is_solo,
+    'created_at', g.created_at,
+    'updated_at', g.updated_at
+  )
+  into v_result
+  from public.groups g
+  where g.id = v_group_id;
+
+  return v_result;
+end;
+$$;
