@@ -128,3 +128,72 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
+
+-- 招待コード参加関数（上限5人チェック付き）
+create or replace function public.join_group_by_invite_code(
+  p_code text
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_group_id uuid;
+  v_member_count integer;
+  v_already_joined boolean;
+  v_result json;
+begin
+  -- ログイン中のユーザーIDを取得
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- 1. 招待コードから group_id を検索（大文字小文字を区別しないようにUpper処理）
+  select group_id into v_group_id
+  from public.invite_codes
+  where upper(code) = upper(p_code);
+
+  if v_group_id is null then
+    raise exception 'Invalid invite code';
+  end if;
+
+  -- 2. 既に参加しているかチェック
+  select exists(
+    select 1 from public.group_members
+    where group_id = v_group_id and user_id = v_user_id
+  ) into v_already_joined;
+
+  if v_already_joined then
+    raise exception 'Already joined this group';
+  end if;
+
+  -- 3. グループの現在の人数をチェック（上限5人）
+  select count(*) into v_member_count
+  from public.group_members
+  where group_id = v_group_id;
+
+  if v_member_count >= 5 then
+    raise exception 'Group is full (maximum 5 members)';
+  end if;
+
+  -- 4. メンバーに追加
+  insert into public.group_members (group_id, user_id)
+  values (v_group_id, v_user_id);
+
+  -- 5. フロント用に GroupSummary 形式で返却
+  select json_build_object(
+    'id', g.id,
+    'name', g.name,
+    'is_solo', g.is_solo,
+    'created_at', g.created_at,
+    'updated_at', g.updated_at
+  )
+  into v_result
+  from public.groups g
+  where g.id = v_group_id;
+
+  return v_result;
+end;
+$$;
