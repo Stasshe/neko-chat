@@ -128,3 +128,67 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
+
+-- 投稿作成関数（文字数・emotion・所属チェック付き）
+create or replace function public.create_post(
+  p_group_id uuid,
+  p_body text,
+  p_emotion text
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_is_member boolean;
+  v_post_id uuid;
+  v_result json;
+begin
+  -- ログイン中のユーザーIDを取得
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- 1. 文字数制限チェック（最大30文字）
+  if length(p_body) > 30 or length(p_body) = 0 then
+    raise exception 'Post body must be between 1 and 30 characters';
+  end if;
+
+  -- 2. emotion の値チェック
+  if p_emotion not in ('positive', 'neutral', 'negative', 'random') then
+    raise exception 'Invalid emotion value';
+  end if;
+
+  -- 3. グループメンバーかチェック
+  select exists(
+    select 1 from public.group_members
+    where group_id = p_group_id and user_id = v_user_id
+  ) into v_is_member;
+
+  if not v_is_member then
+    raise exception 'You are not a member of this group';
+  end if;
+
+  -- 4. 投稿を作成
+  insert into public.posts (group_id, user_id, body, emotion)
+  values (p_group_id, v_user_id, p_body, p_emotion)
+  returning id into v_post_id;
+
+  -- 5. 作成した Post オブジェクトを JSON で返却
+  select json_build_object(
+    'id', p.id,
+    'group_id', p.group_id,
+    'user_id', p.user_id,
+    'body', p.body,
+    'emotion', p.emotion,
+    'created_at', p.created_at
+  )
+  into v_result
+  from public.posts p
+  where p.id = v_post_id;
+
+  return v_result;
+end;
+$$;
