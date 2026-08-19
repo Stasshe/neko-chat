@@ -23,8 +23,10 @@ where is_solo;
 create table public.group_members (
   group_id uuid not null references public.groups(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
+  slot smallint not null check (slot between 1 and 5),
   joined_at timestamptz not null default now(),
-  primary key (group_id, user_id)
+  primary key (group_id, user_id),
+  unique (group_id, slot)
 );
 
 create index group_members_by_user
@@ -54,3 +56,16 @@ alter table public.groups enable row level security;
 alter table public.group_members enable row level security;
 alter table public.invite_codes enable row level security;
 alter table public.posts enable row level security;
+
+revoke all on public.profiles from anon, authenticated;
+revoke all on public.groups from anon, authenticated;
+revoke all on public.group_members from anon, authenticated;
+revoke all on public.invite_codes from anon, authenticated;
+revoke all on public.posts from anon, authenticated;
+
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.profiles to service_role;
+grant select, insert, update, delete on public.groups to service_role;
+grant select, insert, update, delete on public.group_members to service_role;
+grant select, insert, update, delete on public.invite_codes to service_role;
+grant select, insert, update, delete on public.posts to service_role;

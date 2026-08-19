@@ -1,7 +1,6 @@
 import type { User } from "@supabase/supabase-js";
-import type { Sql, TransactionSql } from "postgres";
 
-import { getDatabase } from "@/server/db";
+import { getAdminClient } from "@/server/admin";
 import {
   AppError,
   type CatType,
@@ -11,19 +10,29 @@ import {
   type Profile,
 } from "@/types/app";
 
+type DataError = {
+  code?: string;
+  message: string;
+};
+
 type ProfileRow = {
   id: string;
   username: string;
   cat_type: CatType;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 };
 
 type GroupRow = {
   id: string;
   name: string;
   is_solo: boolean;
-  member_count: number;
+};
+
+type MembershipRow = {
+  group_id: string;
+  joined_at: string;
+  slot: number;
 };
 
 type PostRow = {
@@ -32,44 +41,40 @@ type PostRow = {
   user_id: string;
   body: string;
   emotion: Emotion;
-  created_at: Date;
-  username: string;
-  cat_type: CatType;
+  created_at: string;
 };
-
-type Database = Sql | TransactionSql;
 
 function mapProfile(row: ProfileRow): Profile {
   return {
     id: row.id,
     username: row.username,
     catType: row.cat_type,
-    createdAt: row.created_at.toISOString(),
-    updatedAt: row.updated_at.toISOString(),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
-function mapGroup(row: GroupRow): GroupSummary {
+function mapGroup(row: GroupRow, memberCount: number): GroupSummary {
   return {
     id: row.id,
     name: row.name,
     isSolo: row.is_solo,
-    memberCount: Number(row.member_count),
+    memberCount,
   };
 }
 
-function mapPost(row: PostRow): Post {
+function mapPost(row: PostRow, profile: ProfileRow): Post {
   return {
     id: row.id,
     groupId: row.group_id,
     userId: row.user_id,
     body: row.body,
     emotion: row.emotion,
-    createdAt: row.created_at.toISOString(),
+    createdAt: row.created_at,
     user: {
-      id: row.user_id,
-      username: row.username,
-      catType: row.cat_type,
+      id: profile.id,
+      username: profile.username,
+      catType: profile.cat_type,
     },
   };
 }
@@ -85,46 +90,71 @@ function getInitialUsername(user: User): string {
   return "ななしの猫";
 }
 
-async function ensureProfile(sql: Database, user: User): Promise<ProfileRow> {
-  const rows = await sql<ProfileRow[]>`
-    insert into profiles (id, username, cat_type)
-    values (${user.id}, ${getInitialUsername(user)}, 'white')
-    on conflict (id) do update set id = excluded.id
-    returning id, username, cat_type, created_at, updated_at
-  `;
-  const profile = rows[0];
-  if (!profile) {
-    throw new AppError("UNKNOWN", "プロフィールを取得できませんでした。");
-  }
-  return profile;
+function fail(error: DataError, message: string): never {
+  console.error(error);
+  throw new AppError("UNKNOWN", message);
 }
 
-async function findGroup(sql: Database, groupId: string): Promise<GroupRow> {
-  const rows = await sql<GroupRow[]>`
-    select
-      g.id,
-      g.name,
-      g.is_solo,
-      count(gm.user_id)::integer as member_count
-    from groups g
-    left join group_members gm on gm.group_id = g.id
-    where g.id = ${groupId}
-    group by g.id
-  `;
-  const group = rows[0];
-  if (!group) {
+async function ensureProfile(user: User): Promise<ProfileRow> {
+  const admin = getAdminClient();
+  const existing = await admin
+    .from("profiles")
+    .select("id, username, cat_type, created_at, updated_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (existing.error) {
+    fail(existing.error, "プロフィールを取得できませんでした。");
+  }
+  if (existing.data) {
+    return existing.data as ProfileRow;
+  }
+
+  const inserted = await admin
+    .from("profiles")
+    .insert({ id: user.id, username: getInitialUsername(user), cat_type: "white" })
+    .select("id, username, cat_type, created_at, updated_at")
+    .single();
+  if (inserted.error) {
+    if (inserted.error.code === "23505") {
+      return ensureProfile(user);
+    }
+    fail(inserted.error, "プロフィールを作成できませんでした。");
+  }
+  return inserted.data as ProfileRow;
+}
+
+async function getGroup(groupId: string): Promise<GroupSummary> {
+  const admin = getAdminClient();
+  const [groupResult, countResult] = await Promise.all([
+    admin.from("groups").select("id, name, is_solo").eq("id", groupId).maybeSingle(),
+    admin
+      .from("group_members")
+      .select("group_id", { count: "exact", head: true })
+      .eq("group_id", groupId),
+  ]);
+  if (groupResult.error) {
+    fail(groupResult.error, "グループを取得できませんでした。");
+  }
+  if (!groupResult.data) {
     throw new AppError("NOT_FOUND", "グループが見つかりません。");
   }
-  return group;
+  if (countResult.error) {
+    fail(countResult.error, "グループの人数を取得できませんでした。");
+  }
+  return mapGroup(groupResult.data as GroupRow, countResult.count ?? 0);
 }
 
-async function requireMembership(sql: Database, groupId: string, userId: string): Promise<void> {
-  const rows = await sql<{ exists: boolean }[]>`
-    select exists(
-      select 1 from group_members where group_id = ${groupId} and user_id = ${userId}
-    ) as exists
-  `;
-  if (!rows[0]?.exists) {
+async function requireMembership(groupId: string, userId: string): Promise<void> {
+  const result = await getAdminClient()
+    .from("group_members")
+    .select("group_id")
+    .eq("group_id", groupId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (result.error) {
+    fail(result.error, "グループの参加状態を確認できませんでした。");
+  }
+  if (!result.data) {
     throw new AppError("FORBIDDEN", "このグループにはアクセスできません。");
   }
 }
@@ -135,9 +165,30 @@ function createInviteCode(): string {
   return Array.from(values, (value) => alphabet[value % alphabet.length]).join("");
 }
 
+async function deleteGroup(groupId: string): Promise<void> {
+  const result = await getAdminClient().from("groups").delete().eq("id", groupId);
+  if (result.error) {
+    console.error("Failed to roll back group creation", result.error);
+  }
+}
+
+async function addInviteCode(groupId: string): Promise<string> {
+  const admin = getAdminClient();
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const code = createInviteCode();
+    const result = await admin.from("invite_codes").insert({ group_id: groupId, code });
+    if (!result.error) {
+      return code;
+    }
+    if (result.error.code !== "23505") {
+      fail(result.error, "招待コードを作成できませんでした。");
+    }
+  }
+  throw new AppError("UNKNOWN", "招待コードを作成できませんでした。");
+}
+
 export async function getProfile(user: User): Promise<Profile> {
-  const profile = await ensureProfile(getDatabase(), user);
-  return mapProfile(profile);
+  return mapProfile(await ensureProfile(user));
 }
 
 export async function updateProfile(
@@ -145,165 +196,214 @@ export async function updateProfile(
   username: string,
   catType: CatType,
 ): Promise<Profile> {
-  const sql = getDatabase();
-  await ensureProfile(sql, user);
-  const rows = await sql<ProfileRow[]>`
-    update profiles
-    set username = ${username}, cat_type = ${catType}, updated_at = now()
-    where id = ${user.id}
-    returning id, username, cat_type, created_at, updated_at
-  `;
-  const profile = rows[0];
-  if (!profile) {
-    throw new AppError("NOT_FOUND", "プロフィールが見つかりません。");
+  await ensureProfile(user);
+  const result = await getAdminClient()
+    .from("profiles")
+    .update({ username, cat_type: catType, updated_at: new Date().toISOString() })
+    .eq("id", user.id)
+    .select("id, username, cat_type, created_at, updated_at")
+    .single();
+  if (result.error) {
+    fail(result.error, "プロフィールを更新できませんでした。");
   }
-  return mapProfile(profile);
+  return mapProfile(result.data as ProfileRow);
 }
 
 export async function getGroups(user: User): Promise<GroupSummary[]> {
-  const sql = getDatabase();
-  await ensureProfile(sql, user);
-  const rows = await sql<GroupRow[]>`
-    select
-      g.id,
-      g.name,
-      g.is_solo,
-      count(all_members.user_id)::integer as member_count
-    from group_members mine
-    join groups g on g.id = mine.group_id
-    left join group_members all_members on all_members.group_id = g.id
-    where mine.user_id = ${user.id}
-    group by g.id, mine.joined_at
-    order by mine.joined_at desc
-  `;
-  return rows.map(mapGroup);
+  await ensureProfile(user);
+  const membershipResult = await getAdminClient()
+    .from("group_members")
+    .select("group_id, joined_at, slot")
+    .eq("user_id", user.id)
+    .order("joined_at", { ascending: false });
+  if (membershipResult.error) {
+    fail(membershipResult.error, "グループ一覧を取得できませんでした。");
+  }
+  const memberships = membershipResult.data as MembershipRow[];
+  if (memberships.length === 0) {
+    return [];
+  }
+  const groupIds = memberships.map((membership) => membership.group_id);
+  const [groupsResult, membersResult] = await Promise.all([
+    getAdminClient().from("groups").select("id, name, is_solo").in("id", groupIds),
+    getAdminClient().from("group_members").select("group_id").in("group_id", groupIds),
+  ]);
+  if (groupsResult.error) {
+    fail(groupsResult.error, "グループ一覧を取得できませんでした。");
+  }
+  if (membersResult.error) {
+    fail(membersResult.error, "グループの人数を取得できませんでした。");
+  }
+  const groups = new Map(
+    (groupsResult.data as GroupRow[]).map((group) => [group.id, group] as const),
+  );
+  const counts = new Map<string, number>();
+  for (const member of membersResult.data as { group_id: string }[]) {
+    counts.set(member.group_id, (counts.get(member.group_id) ?? 0) + 1);
+  }
+  return memberships.flatMap((membership) => {
+    const group = groups.get(membership.group_id);
+    if (!group) {
+      return [];
+    }
+    return [mapGroup(group, counts.get(group.id) ?? 0)];
+  });
 }
 
 export async function startSoloGroup(user: User): Promise<GroupSummary> {
-  const sql = getDatabase();
-  return sql.begin(async (transaction) => {
-    await ensureProfile(transaction, user);
-    const inserted = await transaction<{ id: string }[]>`
-      insert into groups (name, owner_id, is_solo)
-      values ('ひとりの部屋', ${user.id}, true)
-      on conflict (owner_id) where is_solo do nothing
-      returning id
-    `;
-    let groupId = inserted[0]?.id;
-    if (groupId) {
-      await transaction`
-        insert into group_members (group_id, user_id)
-        values (${groupId}, ${user.id})
-      `;
-    } else {
-      const existing = await transaction<{ id: string }[]>`
-        select id from groups where owner_id = ${user.id} and is_solo = true
-      `;
-      groupId = existing[0]?.id;
+  await ensureProfile(user);
+  const admin = getAdminClient();
+  const existing = await admin
+    .from("groups")
+    .select("id")
+    .eq("owner_id", user.id)
+    .eq("is_solo", true)
+    .maybeSingle();
+  if (existing.error) {
+    fail(existing.error, "一人モードを確認できませんでした。");
+  }
+  let groupId = (existing.data as { id: string } | null)?.id;
+  if (!groupId) {
+    const inserted = await admin
+      .from("groups")
+      .insert({ name: "ひとりの部屋", owner_id: user.id, is_solo: true })
+      .select("id")
+      .single();
+    if (inserted.error) {
+      if (inserted.error.code === "23505") {
+        return startSoloGroup(user);
+      }
+      fail(inserted.error, "一人モードを開始できませんでした。");
     }
-    if (!groupId) {
-      throw new AppError("UNKNOWN", "一人モードを開始できませんでした。");
-    }
-    return mapGroup(await findGroup(transaction, groupId));
-  });
+    groupId = (inserted.data as { id: string }).id;
+  }
+  const membership = await admin
+    .from("group_members")
+    .upsert({ group_id: groupId, user_id: user.id, slot: 1 }, { onConflict: "group_id,user_id" });
+  if (membership.error) {
+    fail(membership.error, "一人モードを開始できませんでした。");
+  }
+  return getGroup(groupId);
 }
 
 export async function createGroup(
   user: User,
   name: string,
 ): Promise<{ group: GroupSummary; inviteCode: string }> {
-  const sql = getDatabase();
-  return sql.begin(async (transaction) => {
-    await ensureProfile(transaction, user);
-    const groups = await transaction<{ id: string }[]>`
-      insert into groups (name, owner_id, is_solo)
-      values (${name}, ${user.id}, false)
-      returning id
-    `;
-    const groupId = groups[0]?.id;
-    if (!groupId) {
-      throw new AppError("UNKNOWN", "グループを作成できませんでした。");
-    }
-    await transaction`
-      insert into group_members (group_id, user_id)
-      values (${groupId}, ${user.id})
-    `;
-    const inviteCode = createInviteCode();
-    await transaction`
-      insert into invite_codes (group_id, code)
-      values (${groupId}, ${inviteCode})
-    `;
-    return {
-      group: mapGroup(await findGroup(transaction, groupId)),
-      inviteCode,
-    };
-  });
+  await ensureProfile(user);
+  const admin = getAdminClient();
+  const inserted = await admin
+    .from("groups")
+    .insert({ name, owner_id: user.id, is_solo: false })
+    .select("id")
+    .single();
+  if (inserted.error) {
+    fail(inserted.error, "グループを作成できませんでした。");
+  }
+  const groupId = (inserted.data as { id: string }).id;
+  const membership = await admin
+    .from("group_members")
+    .insert({ group_id: groupId, user_id: user.id, slot: 1 });
+  if (membership.error) {
+    await deleteGroup(groupId);
+    fail(membership.error, "グループを作成できませんでした。");
+  }
+  try {
+    const inviteCode = await addInviteCode(groupId);
+    return { group: await getGroup(groupId), inviteCode };
+  } catch (error) {
+    await deleteGroup(groupId);
+    throw error;
+  }
 }
 
 export async function joinGroup(user: User, code: string): Promise<GroupSummary> {
-  const sql = getDatabase();
-  return sql.begin(async (transaction) => {
-    await ensureProfile(transaction, user);
-    const groups = await transaction<{ id: string }[]>`
-      select g.id
-      from groups g
-      join invite_codes invitation on invitation.group_id = g.id
-      where invitation.code = ${code}
-      for update of g
-    `;
-    const groupId = groups[0]?.id;
-    if (!groupId) {
-      throw new AppError("INVALID_INVITE_CODE", "招待コードが見つかりません。");
+  await ensureProfile(user);
+  const admin = getAdminClient();
+  const invitation = await admin
+    .from("invite_codes")
+    .select("group_id")
+    .eq("code", code)
+    .maybeSingle();
+  if (invitation.error) {
+    fail(invitation.error, "招待コードを確認できませんでした。");
+  }
+  const groupId = (invitation.data as { group_id: string } | null)?.group_id;
+  if (!groupId) {
+    throw new AppError("INVALID_INVITE_CODE", "招待コードが見つかりません。");
+  }
+  const existing = await admin
+    .from("group_members")
+    .select("group_id")
+    .eq("group_id", groupId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (existing.error) {
+    fail(existing.error, "グループの参加状態を確認できませんでした。");
+  }
+  if (existing.data) {
+    throw new AppError("ALREADY_JOINED", "このグループには参加済みです。");
+  }
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const slotsResult = await admin.from("group_members").select("slot").eq("group_id", groupId);
+    if (slotsResult.error) {
+      fail(slotsResult.error, "グループの人数を確認できませんでした。");
     }
-    const memberships = await transaction<{ exists: boolean; count: number }[]>`
-      select
-        exists(
-          select 1 from group_members where group_id = ${groupId} and user_id = ${user.id}
-        ) as exists,
-        count(*)::integer as count
-      from group_members
-      where group_id = ${groupId}
-    `;
-    const membership = memberships[0];
-    if (membership?.exists) {
-      throw new AppError("ALREADY_JOINED", "このグループには参加済みです。");
-    }
-    if (Number(membership?.count) >= 5) {
+    const occupied = new Set((slotsResult.data as { slot: number }[]).map((row) => row.slot));
+    const slot = [1, 2, 3, 4, 5].find((candidate) => !occupied.has(candidate));
+    if (!slot) {
       throw new AppError("GROUP_FULL", "このグループは5人に達しています。");
     }
-    await transaction`
-      insert into group_members (group_id, user_id)
-      values (${groupId}, ${user.id})
-    `;
-    return mapGroup(await findGroup(transaction, groupId));
-  });
+    const joined = await admin
+      .from("group_members")
+      .insert({ group_id: groupId, user_id: user.id, slot });
+    if (!joined.error) {
+      return getGroup(groupId);
+    }
+    if (joined.error.code !== "23505") {
+      fail(joined.error, "グループへ参加できませんでした。");
+    }
+  }
+  throw new AppError("GROUP_FULL", "このグループは5人に達しています。");
 }
 
 export async function getPosts(
   user: User,
   groupId: string,
 ): Promise<{ group: GroupSummary; posts: Post[] }> {
-  const sql = getDatabase();
-  await requireMembership(sql, groupId, user.id);
-  const [group, rows] = await Promise.all([
-    findGroup(sql, groupId),
-    sql<PostRow[]>`
-      select
-        post.id,
-        post.group_id,
-        post.user_id,
-        post.body,
-        post.emotion,
-        post.created_at,
-        profile.username,
-        profile.cat_type
-      from posts post
-      join profiles profile on profile.id = post.user_id
-      where post.group_id = ${groupId}
-      order by post.created_at desc
-    `,
-  ]);
-  return { group: mapGroup(group), posts: rows.map(mapPost) };
+  await requireMembership(groupId, user.id);
+  const postsResult = await getAdminClient()
+    .from("posts")
+    .select("id, group_id, user_id, body, emotion, created_at")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false });
+  if (postsResult.error) {
+    fail(postsResult.error, "投稿を取得できませんでした。");
+  }
+  const rows = postsResult.data as PostRow[];
+  const userIds = [...new Set(rows.map((row) => row.user_id))];
+  let profiles = new Map<string, ProfileRow>();
+  if (userIds.length > 0) {
+    const profileResult = await getAdminClient()
+      .from("profiles")
+      .select("id, username, cat_type, created_at, updated_at")
+      .in("id", userIds);
+    if (profileResult.error) {
+      fail(profileResult.error, "投稿者情報を取得できませんでした。");
+    }
+    profiles = new Map(
+      (profileResult.data as ProfileRow[]).map((profile) => [profile.id, profile] as const),
+    );
+  }
+  const posts = rows.map((row) => {
+    const profile = profiles.get(row.user_id);
+    if (!profile) {
+      throw new AppError("UNKNOWN", "投稿者情報を取得できませんでした。");
+    }
+    return mapPost(row, profile);
+  });
+  return { group: await getGroup(groupId), posts };
 }
 
 export async function addPost(
@@ -312,23 +412,14 @@ export async function addPost(
   body: string,
   emotion: Emotion,
 ): Promise<Post> {
-  const sql = getDatabase();
-  return sql.begin(async (transaction) => {
-    await requireMembership(transaction, groupId, user.id);
-    const rows = await transaction<PostRow[]>`
-      with inserted as (
-        insert into posts (group_id, user_id, body, emotion)
-        values (${groupId}, ${user.id}, ${body}, ${emotion})
-        returning id, group_id, user_id, body, emotion, created_at
-      )
-      select inserted.*, profile.username, profile.cat_type
-      from inserted
-      join profiles profile on profile.id = inserted.user_id
-    `;
-    const post = rows[0];
-    if (!post) {
-      throw new AppError("UNKNOWN", "投稿を作成できませんでした。");
-    }
-    return mapPost(post);
-  });
+  await requireMembership(groupId, user.id);
+  const result = await getAdminClient()
+    .from("posts")
+    .insert({ group_id: groupId, user_id: user.id, body, emotion })
+    .select("id, group_id, user_id, body, emotion, created_at")
+    .single();
+  if (result.error) {
+    fail(result.error, "投稿を作成できませんでした。");
+  }
+  return mapPost(result.data as PostRow, await ensureProfile(user));
 }

@@ -4,14 +4,14 @@ let client: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!url || !anonKey) {
+  if (!url || !publishableKey) {
     return null;
   }
 
   if (!client) {
-    client = createClient(url, anonKey);
+    client = createClient(url, publishableKey);
   }
 
   return client;

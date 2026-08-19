@@ -159,7 +159,7 @@ HTTP境界:
 | `GET` | `/api/groups/:groupId/posts` | `getGroupPosts` |
 | `POST` | `/api/groups/:groupId/posts` | `createPost` |
 
-ブラウザはSupabase AuthのBearer tokenを送る。Vercel Route Handlerが認証・認可・DBトランザクションを担当する。Supabase RPCは使わない。
+ブラウザはSupabase AuthのBearer tokenを送る。Vercel Route Handlerが認証・認可・Supabase Data API呼び出しを担当する。Supabase RPCは使わない。
 
 ### `createProfileIfNeeded`
 

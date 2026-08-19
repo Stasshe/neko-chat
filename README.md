@@ -13,15 +13,17 @@ pnpm dev
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_DATABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
 ```
 
-公開変数はSupabase Auth専用。`SUPABASE_DATABASE_URL`はVercelのRoute Handlerだけが使い、ブラウザへ配布しない。
+公開変数はSupabase Auth専用。`SUPABASE_SECRET_KEY`はVercelのRoute Handlerだけが使い、ブラウザへ配布しない。
+
+既存プロジェクトはSupabase SQL Editorで `supabase/migrations/202608190001_vercel_access.sql` を一度適用する。Vercel用権限と5人上限を保証するmember slot制約が入る。
 
 ## データ境界
 
-ブラウザはアクセストークン付きで `/api` を呼ぶ。Route Handlerがトークン検証、入力検証、認可、SQLを担当する。グループ作成・参加はPostgreSQLトランザクションで処理する。Supabase RPC、DBトリガー、ブラウザからの直接DB操作は使わない。
+ブラウザはアクセストークン付きで `/api` を呼ぶ。Route Handlerがトークン検証、入力検証、認可、Supabase Data API呼び出しを担当する。5人上限はメンバーslotの一意制約で保証する。Supabase RPC、DBトリガー、ブラウザからの直接DB操作は使わない。
 
 ## 画面
 
