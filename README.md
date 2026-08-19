@@ -9,14 +9,19 @@ pnpm install
 pnpm dev
 ```
 
-Supabase 接続には次の公開環境変数が必要。
+`.env.example` を `.env.local` へコピーして設定する。
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_DATABASE_URL=
 ```
 
-未設定・API失敗時は主要画面内にエラーを表示する。Service Role Key はブラウザへ渡さない。
+公開変数はSupabase Auth専用。`SUPABASE_DATABASE_URL`はVercelのRoute Handlerだけが使い、ブラウザへ配布しない。
+
+## データ境界
+
+ブラウザはアクセストークン付きで `/api` を呼ぶ。Route Handlerがトークン検証、入力検証、認可、SQLを担当する。グループ作成・参加はPostgreSQLトランザクションで処理する。Supabase RPC、DBトリガー、ブラウザからの直接DB操作は使わない。
 
 ## 画面
 

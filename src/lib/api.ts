@@ -1,222 +1,115 @@
-import type { PostgrestError } from "@supabase/supabase-js";
-
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   AppError,
   type CatType,
-  catTypes,
   type Emotion,
-  emotions,
   type GroupSummary,
   type Post,
   type Profile,
 } from "@/types/app";
 
-type RawProfile = {
-  id: string;
-  username: string;
-  catType?: string;
-  cat_type?: string;
-  avatar_type?: string;
-  createdAt?: string;
-  created_at?: string;
-  updatedAt?: string;
-  updated_at?: string;
+type ApiFailure = {
+  ok: false;
+  error: {
+    code: AppError["code"];
+    message: string;
+  };
 };
 
-type RawGroup = {
-  id: string;
-  name: string;
-  isSolo?: boolean;
-  is_solo?: boolean;
-  memberCount?: number;
-  member_count?: number;
+type ApiSuccess<T> = {
+  ok: true;
+  data: T;
 };
 
-type RawPostUser = {
-  id: string;
-  username: string;
-  catType?: string;
-  cat_type?: string;
-  avatar_type?: string;
-};
-
-type RawPost = {
-  id: string;
-  groupId?: string;
-  group_id?: string;
-  userId?: string;
-  user_id?: string;
-  body?: string;
-  content?: string;
-  emotion?: string;
-  cat_expression?: string;
-  createdAt?: string;
-  created_at?: string;
-  user?: RawPostUser;
-};
-
-function requireClient() {
+async function getAccessToken(): Promise<string> {
   const client = getSupabaseClient();
   if (!client) {
-    throw new AppError(
-      "CONFIGURATION_ERROR",
-      "Supabase の接続情報が設定されていません。環境変数を確認してください。",
-    );
+    throw new AppError("CONFIGURATION_ERROR", "Supabase Authの接続情報が設定されていません。");
   }
-  return client;
+  const { data, error } = await client.auth.getSession();
+  if (error || !data.session) {
+    throw new AppError("UNAUTHORIZED", "ログイン状態を確認してください。");
+  }
+  return data.session.access_token;
 }
 
-function isCatType(value: string): value is CatType {
-  return catTypes.includes(value as CatType);
-}
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const accessToken = await getAccessToken();
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${accessToken}`);
+  if (init?.body) {
+    headers.set("Content-Type", "application/json");
+  }
 
-function normalizeCatType(value?: string): CatType {
-  if (value && isCatType(value)) {
-    return value;
+  let response: Response;
+  try {
+    response = await fetch(path, { ...init, headers });
+  } catch (error) {
+    console.error(error);
+    throw new AppError("UNKNOWN", "サーバーへ接続できませんでした。");
   }
-  return "white";
-}
 
-function normalizeEmotion(value?: string): Emotion {
-  if (value && emotions.includes(value as Emotion)) {
-    return value as Emotion;
+  const result = (await response.json()) as ApiSuccess<T> | ApiFailure;
+  if (!result.ok) {
+    throw new AppError(result.error.code, result.error.message);
   }
-  return "neutral";
-}
-
-function mapError(error: PostgrestError): AppError {
-  const message = error.message.toLowerCase();
-  if (message.includes("unauthorized") || error.code === "42501") {
-    return new AppError("UNAUTHORIZED", "ログイン状態を確認してください。");
-  }
-  if (message.includes("group is full")) {
-    return new AppError("GROUP_FULL", "このグループは5人に達しています。");
-  }
-  if (message.includes("invite code")) {
-    return new AppError("INVALID_INVITE_CODE", "招待コードが見つかりません。");
-  }
-  if (message.includes("between") || message.includes("invalid")) {
-    return new AppError("VALIDATION_ERROR", "入力内容を確認してください。");
-  }
-  return new AppError("UNKNOWN", error.message);
-}
-
-function mapProfile(raw: RawProfile): Profile {
-  return {
-    id: raw.id,
-    username: raw.username,
-    catType: normalizeCatType(raw.catType ?? raw.cat_type ?? raw.avatar_type),
-    createdAt: raw.createdAt ?? raw.created_at ?? "",
-    updatedAt: raw.updatedAt ?? raw.updated_at ?? "",
-  };
-}
-
-function mapGroup(raw: RawGroup): GroupSummary {
-  return {
-    id: raw.id,
-    name: raw.name,
-    isSolo: raw.isSolo ?? raw.is_solo ?? false,
-    memberCount: raw.memberCount ?? raw.member_count ?? 1,
-  };
-}
-
-function mapPost(raw: RawPost): Post {
-  const rawUser = raw.user;
-  if (!rawUser) {
-    throw new AppError("UNKNOWN", "投稿者情報を取得できませんでした。");
-  }
-  return {
-    id: raw.id,
-    groupId: raw.groupId ?? raw.group_id ?? "",
-    userId: raw.userId ?? raw.user_id ?? rawUser.id,
-    body: raw.body ?? raw.content ?? "",
-    emotion: normalizeEmotion(raw.emotion ?? raw.cat_expression),
-    createdAt: raw.createdAt ?? raw.created_at ?? "",
-    user: {
-      id: rawUser.id,
-      username: rawUser.username,
-      catType: normalizeCatType(rawUser.catType ?? rawUser.cat_type ?? rawUser.avatar_type),
-    },
-  };
-}
-
-function unwrapProfile(response: { profile?: RawProfile } | RawProfile): RawProfile {
-  if ("id" in response) {
-    return response;
-  }
-  if (response.profile) {
-    return response.profile;
-  }
-  throw new AppError("UNKNOWN", "プロフィールを取得できませんでした。");
-}
-
-function unwrapPost(response: { post?: RawPost } | RawPost): RawPost {
-  if ("id" in response) {
-    return response;
-  }
-  if (response.post) {
-    return response.post;
-  }
-  throw new AppError("UNKNOWN", "投稿結果を取得できませんでした。");
+  return result.data;
 }
 
 export async function getMyProfile(): Promise<Profile> {
-  const { data, error } = await requireClient().rpc("get_my_profile");
-  if (error) {
-    throw mapError(error);
-  }
-  const response = data as { profile?: RawProfile } | RawProfile;
-  return mapProfile(unwrapProfile(response));
+  const data = await request<{ profile: Profile }>("/api/profile");
+  return data.profile;
 }
 
 export async function updateMyProfile(username: string, catType: CatType): Promise<Profile> {
-  const { data, error } = await requireClient().rpc("update_my_profile", {
-    p_username: username,
-    p_cat_type: catType,
+  const data = await request<{ profile: Profile }>("/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify({ username, catType }),
   });
-  if (error) {
-    throw mapError(error);
-  }
-  const response = data as { profile?: RawProfile } | RawProfile;
-  return mapProfile(unwrapProfile(response));
+  return data.profile;
 }
 
 export async function getMyGroups(): Promise<GroupSummary[]> {
-  const { data, error } = await requireClient().rpc("get_my_groups");
-  if (error) {
-    throw mapError(error);
-  }
-  const response = data as { groups?: RawGroup[] } | RawGroup[];
-  let groups: RawGroup[] = [];
-  if (Array.isArray(response)) {
-    groups = response;
-  } else if (response.groups) {
-    groups = response.groups;
-  }
-  return groups.map(mapGroup);
+  const data = await request<{ groups: GroupSummary[] }>("/api/groups");
+  return data.groups;
+}
+
+export async function startSoloMode(): Promise<GroupSummary> {
+  const data = await request<{ group: GroupSummary }>("/api/groups", {
+    method: "POST",
+    body: JSON.stringify({ mode: "solo" }),
+  });
+  return data.group;
+}
+
+export async function createGroupWithInvite(
+  name: string,
+): Promise<{ group: GroupSummary; inviteCode: string }> {
+  return request("/api/groups", {
+    method: "POST",
+    body: JSON.stringify({ mode: "create", name }),
+  });
+}
+
+export async function joinGroupByInviteCode(code: string): Promise<GroupSummary> {
+  const data = await request<{ group: GroupSummary }>("/api/groups/join", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
+  return data.group;
 }
 
 export async function getGroupPosts(groupId: string): Promise<Post[]> {
-  const { data, error } = await requireClient().rpc("get_group_posts", {
-    p_group_id: groupId,
-  });
-  if (error) {
-    throw mapError(error);
-  }
-  const response = data as { posts?: RawPost[] };
-  return (response.posts ?? []).map(mapPost);
+  const data = await request<{ group: GroupSummary; posts: Post[] }>(
+    `/api/groups/${groupId}/posts`,
+  );
+  return data.posts;
 }
 
 export async function createPost(groupId: string, body: string, emotion: Emotion): Promise<Post> {
-  const { data, error } = await requireClient().rpc("create_post", {
-    p_group_id: groupId,
-    p_body: body,
-    p_emotion: emotion,
+  const data = await request<{ post: Post }>(`/api/groups/${groupId}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body, emotion }),
   });
-  if (error) {
-    throw mapError(error);
-  }
-  const response = data as { post?: RawPost } | RawPost;
-  return mapPost(unwrapPost(response));
+  return data.post;
 }

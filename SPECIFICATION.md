@@ -801,9 +801,9 @@ Security
 * XSS対策
 * CSRFを考慮した認証設計
 * UUIDによるResource ID
-* Service Role KeyをClientへ公開しない
+* DB接続文字列をClientへ公開しない
 
-SUPABASE_SERVICE_ROLE_KEYはブラウザへ絶対に配布しない。
+SUPABASE_DATABASE_URLはVercel環境変数だけに置く。
 
 ⸻
 
@@ -821,7 +821,7 @@ group name
 
 post
 
-1 <= length <= 100
+1 <= length <= 30
 
 ⸻
 
@@ -1002,7 +1002,7 @@ Reaction
 
 35.2 状態
 
-API境界は`API_TYPES.md`。画面はSupabase生レスポンスを扱わない。API境界でsnake_caseをアプリ型へ変換する。
+API境界は`API_TYPES.md`。画面はDB行やSupabase生レスポンスを扱わない。Vercel Route HandlerがDB行をアプリ型へ変換する。
 
 現在グループIDだけをlocalStorageへ保存する。プロフィール、グループ、投稿の正はSupabase。グループ切り替え時は対象投稿の取得成功後に現在グループを更新する。
 
@@ -1020,4 +1020,12 @@ API境界は`API_TYPES.md`。画面はSupabase生レスポンスを扱わない�
 
 35.4 接続失敗
 
-`NEXT_PUBLIC_SUPABASE_URL`と`NEXT_PUBLIC_SUPABASE_ANON_KEY`が必要。未設定、認証切れ、権限不足、入力不正、グループ満員、招待コード不正を画面内エラーとして顕在化する。Service Role Keyはブラウザへ配布しない。
+`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`、`SUPABASE_DATABASE_URL`が必要。未設定、認証切れ、権限不足、入力不正、グループ満員、招待コード不正を画面内エラーとして顕在化する。DB接続文字列はブラウザへ配布しない。
+
+35.5 Vercel API
+
+ブラウザはSupabase Authのaccess tokenをBearer tokenとして`/api`へ送る。Route Handlerは毎回Supabase Authでユーザーを検証する。
+
+プロフィール、所属グループ、投稿の読み書きはVercelからPostgreSQLへ接続する。Supabase RPC、DBトリガー、公開RLSポリシーは使わない。RLSは有効化し、ブラウザからの直接DB操作を拒否する。
+
+グループ作成、solo group作成、招待参加、投稿作成はトランザクションで処理する。招待参加は対象group行をロックして参加済み判定と5人上限を直列化する。
