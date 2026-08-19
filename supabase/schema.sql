@@ -128,3 +128,42 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
+
+-- 所属グループ一覧取得関数
+create or replace function public.get_my_groups()
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_result json;
+begin
+  -- ログイン中のユーザーIDを取得
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- 自分が所属しているグループ一覧を GroupSummary[] の配列形式JSONで取得
+  select coalesce(
+    json_agg(
+      json_build_object(
+        'id', g.id,
+        'name', g.name,
+        'is_solo', g.is_solo,
+        'created_at', g.created_at,
+        'updated_at', g.updated_at
+      )
+      order by g.created_at desc
+    ),
+    '[]'::json
+  )
+  into v_result
+  from public.groups g
+  inner join public.group_members gm on g.id = gm.group_id
+  where gm.user_id = v_user_id;
+
+  return v_result;
+end;
+$$;
