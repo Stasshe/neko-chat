@@ -129,7 +129,188 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
 
--- グループ投稿一覧取得関数（グループ情報＋投稿一覧＋投稿者プロフィール）
+--------------------------------------------------
+-- B担当 API関数群（修正版）
+--------------------------------------------------
+
+-- 1. 一人モード開始関数
+create or replace function public.start_solo_mode(
+  p_group_name text default '一人モード'
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_group_id uuid;
+  v_result json;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- グループ作成
+  insert into public.groups (name, owner_id)
+  values (p_group_name, v_user_id)
+  returning id into v_group_id;
+
+  -- メンバー追加 (owner)
+  insert into public.group_members (group_id, user_id, role)
+  values (v_group_id, v_user_id, 'owner');
+
+  select json_build_object(
+    'id', g.id,
+    'name', g.name,
+    'owner_id', g.owner_id,
+    'created_at', g.created_at,
+    'updated_at', g.updated_at
+  )
+  into v_result
+  from public.groups g
+  where g.id = v_group_id;
+
+  return v_result;
+end;
+$$;
+
+-- 2. 通常グループ作成関数
+create or replace function public.create_group_with_invite(
+  p_name text
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_group_id uuid;
+  v_result json;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  insert into public.groups (name, owner_id)
+  values (p_name, v_user_id)
+  returning id into v_group_id;
+
+  insert into public.group_members (group_id, user_id, role)
+  values (v_group_id, v_user_id, 'owner');
+
+  select json_build_object(
+    'id', g.id,
+    'name', g.name,
+    'owner_id', g.owner_id,
+    'created_at', g.created_at,
+    'updated_at', g.updated_at
+  )
+  into v_result
+  from public.groups g
+  where g.id = v_group_id;
+
+  return v_result;
+end;
+$$;
+
+-- 3. 所属グループ一覧取得関数
+create or replace function public.get_my_groups()
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_result json;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  select coalesce(
+    json_agg(
+      json_build_object(
+        'id', g.id,
+        'name', g.name,
+        'owner_id', g.owner_id,
+        'created_at', g.created_at,
+        'updated_at', g.updated_at
+      )
+      order by g.created_at desc
+    ),
+    '[]'::json
+  )
+  into v_result
+  from public.groups g
+  inner join public.group_members gm on g.id = gm.group_id
+  where gm.user_id = v_user_id;
+
+  return v_result;
+end;
+$$;
+
+-- 4. 投稿作成関数
+create or replace function public.create_post(
+  p_group_id uuid,
+  p_content text,
+  p_cat_expression text default 'normal'
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_is_member boolean;
+  v_post_id uuid;
+  v_result json;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  if length(p_content) > 100 or length(p_content) = 0 then
+    raise exception 'Post content must be between 1 and 100 characters';
+  end if;
+
+  if p_cat_expression not in ('normal', 'happy', 'sad', 'angry', 'sleepy', 'excited') then
+    raise exception 'Invalid cat_expression value';
+  end if;
+
+  select exists(
+    select 1 from public.group_members
+    where group_id = p_group_id and user_id = v_user_id
+  ) into v_is_member;
+
+  if not v_is_member then
+    raise exception 'You are not a member of this group';
+  end if;
+
+  insert into public.posts (group_id, user_id, content, cat_expression)
+  values (p_group_id, v_user_id, p_content, p_cat_expression)
+  returning id into v_post_id;
+
+  select json_build_object(
+    'id', p.id,
+    'group_id', p.group_id,
+    'user_id', p.user_id,
+    'content', p.content,
+    'cat_expression', p.cat_expression,
+    'created_at', p.created_at
+  )
+  into v_result
+  from public.posts p
+  where p.id = v_post_id;
+
+  return v_result;
+end;
+$$;
+
+-- 5. グループ投稿一覧取得関数
 create or replace function public.get_group_posts(
   p_group_id uuid
 )
@@ -144,13 +325,11 @@ declare
   v_posts json;
   v_result json;
 begin
-  -- ログイン中のユーザーIDを取得
   v_user_id := auth.uid();
   if v_user_id is null then
     raise exception 'Unauthorized';
   end if;
 
-  -- 1. グループメンバーかチェック
   select exists(
     select 1 from public.group_members
     where group_id = p_group_id and user_id = v_user_id
@@ -160,11 +339,10 @@ begin
     raise exception 'You are not a member of this group';
   end if;
 
-  -- 2. グループ基本情報の取得
   select json_build_object(
     'id', g.id,
     'name', g.name,
-    'is_solo', g.is_solo,
+    'owner_id', g.owner_id,
     'created_at', g.created_at,
     'updated_at', g.updated_at
   )
@@ -172,20 +350,19 @@ begin
   from public.groups g
   where g.id = p_group_id;
 
-  -- 3. 投稿一覧の取得（投稿者の profile 情報も含める）
   select coalesce(
     json_agg(
       json_build_object(
         'id', p.id,
         'group_id', p.group_id,
         'user_id', p.user_id,
-        'body', p.body,
-        'emotion', p.emotion,
+        'content', p.content,
+        'cat_expression', p.cat_expression,
         'created_at', p.created_at,
         'user', json_build_object(
           'id', prof.id,
           'username', prof.username,
-          'cat_type', prof.cat_type
+          'avatar_type', prof.avatar_type
         )
       )
       order by p.created_at desc
@@ -197,7 +374,6 @@ begin
   left join public.profiles prof on p.user_id = prof.id
   where p.group_id = p_group_id;
 
-  -- 4. group と posts をまとめたオブジェクトを返却
   select json_build_object(
     'group', v_group,
     'posts', v_posts
