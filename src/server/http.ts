@@ -16,6 +16,14 @@ export function success<T>(data: T, status = 200): Response {
   return Response.json({ ok: true, data }, { status });
 }
 
+export async function readJson<T>(request: Request): Promise<T> {
+  try {
+    return (await request.json()) as T;
+  } catch {
+    throw new AppError("VALIDATION_ERROR", "JSON形式のリクエスト本文が必要です。");
+  }
+}
+
 export function failure(error: object): Response {
   if (error instanceof AppError) {
     return Response.json(

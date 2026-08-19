@@ -1,5 +1,5 @@
 import { authenticate } from "@/server/auth";
-import { failure, success } from "@/server/http";
+import { failure, readJson, success } from "@/server/http";
 import { getProfile, updateProfile } from "@/server/repository";
 import { readCatType, readUsername } from "@/server/validation";
 
@@ -20,7 +20,7 @@ export async function GET(request: Request): Promise<Response> {
 export async function PATCH(request: Request): Promise<Response> {
   try {
     const user = await authenticate(request);
-    const input = (await request.json()) as ProfileInput;
+    const input = await readJson<ProfileInput>(request);
     const username = readUsername(input.username ?? "");
     const catType = readCatType(input.catType ?? "");
     return success({ profile: await updateProfile(user, username, catType) });

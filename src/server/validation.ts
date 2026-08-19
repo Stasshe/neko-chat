@@ -31,6 +31,14 @@ export function readInviteCode(value: string): string {
   return code;
 }
 
+export function readId(value: string): string {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuid.test(value)) {
+    throw new AppError("VALIDATION_ERROR", "IDの形式が正しくありません。");
+  }
+  return value;
+}
+
 export function readPostBody(value: string): string {
   const body = value.trim();
   if (body.length < 1 || body.length > 30) {

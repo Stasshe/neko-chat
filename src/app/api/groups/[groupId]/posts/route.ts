@@ -1,7 +1,7 @@
 import { authenticate } from "@/server/auth";
-import { failure, success } from "@/server/http";
+import { failure, readJson, success } from "@/server/http";
 import { addPost, getPosts } from "@/server/repository";
-import { readEmotion, readPostBody } from "@/server/validation";
+import { readEmotion, readId, readPostBody } from "@/server/validation";
 
 type RouteContext = {
   params: Promise<{ groupId: string }>;
@@ -15,7 +15,8 @@ type PostInput = {
 export async function GET(request: Request, context: RouteContext): Promise<Response> {
   try {
     const user = await authenticate(request);
-    const { groupId } = await context.params;
+    const params = await context.params;
+    const groupId = readId(params.groupId);
     return success(await getPosts(user, groupId));
   } catch (error) {
     return failure(error as object);
@@ -25,8 +26,9 @@ export async function GET(request: Request, context: RouteContext): Promise<Resp
 export async function POST(request: Request, context: RouteContext): Promise<Response> {
   try {
     const user = await authenticate(request);
-    const { groupId } = await context.params;
-    const input = (await request.json()) as PostInput;
+    const params = await context.params;
+    const groupId = readId(params.groupId);
+    const input = await readJson<PostInput>(request);
     const body = readPostBody(input.body ?? "");
     const emotion = readEmotion(input.emotion ?? "");
     return success({ post: await addPost(user, groupId, body, emotion) }, 201);

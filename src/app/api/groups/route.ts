@@ -1,5 +1,5 @@
 import { authenticate } from "@/server/auth";
-import { failure, success } from "@/server/http";
+import { failure, readJson, success } from "@/server/http";
 import { createGroup, getGroups, startSoloGroup } from "@/server/repository";
 import { readGroupName } from "@/server/validation";
 import { AppError } from "@/types/app";
@@ -21,7 +21,7 @@ export async function GET(request: Request): Promise<Response> {
 export async function POST(request: Request): Promise<Response> {
   try {
     const user = await authenticate(request);
-    const input = (await request.json()) as GroupInput;
+    const input = await readJson<GroupInput>(request);
     if (input.mode === "solo") {
       return success({ group: await startSoloGroup(user) }, 201);
     }
