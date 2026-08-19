@@ -128,3 +128,39 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
+
+--------------------------------------------------
+-- グループ人数上限（5人）チェック
+--------------------------------------------------
+
+-- 1. 5人制限チェック用のトリガー関数
+create or replace function public.check_group_member_limit()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  v_member_count integer;
+begin
+  -- 追加しようとしているグループの現在の人数をカウント
+  select count(*)
+    into v_member_count
+    from public.group_members
+   where group_id = new.group_id;
+
+  -- 5人以上ならエラーを発生させる
+  if v_member_count >= 5 then
+    raise exception 'グループの人数上限（5人）に達しています。';
+  end if;
+
+  return new;
+end;
+$$;
+
+-- 2. group_members テーブルへの追加前に実行するトリガー
+drop trigger if exists check_group_member_limit_trigger on public.group_members;
+
+create trigger check_group_member_limit_trigger
+  before insert on public.group_members
+  for each row
+  execute function public.check_group_member_limit();
