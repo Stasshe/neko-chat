@@ -120,4 +120,5 @@ create policy "グループメンバーのみ投稿を参照可能" on public.po
 create policy "グループメンバーのみ自分名義で投稿可能" on public.posts for insert with check (auth.uid() = user_id and is_group_member(group_id, auth.uid()));
 
 -- 11. Realtime の有効化
+create publication supabase_realtime;
 alter publication supabase_realtime add table public.posts;
