@@ -128,3 +128,81 @@ create policy "自分の投稿のみ削除可能" on public.posts for delete usi
 
 -- 11. Realtime の有効化
 alter publication supabase_realtime add table public.posts;
+
+-- グループ投稿一覧取得関数（グループ情報＋投稿一覧＋投稿者プロフィール）
+create or replace function public.get_group_posts(
+  p_group_id uuid
+)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  v_user_id uuid;
+  v_is_member boolean;
+  v_group json;
+  v_posts json;
+  v_result json;
+begin
+  -- ログイン中のユーザーIDを取得
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  -- 1. グループメンバーかチェック
+  select exists(
+    select 1 from public.group_members
+    where group_id = p_group_id and user_id = v_user_id
+  ) into v_is_member;
+
+  if not v_is_member then
+    raise exception 'You are not a member of this group';
+  end if;
+
+  -- 2. グループ基本情報の取得
+  select json_build_object(
+    'id', g.id,
+    'name', g.name,
+    'is_solo', g.is_solo,
+    'created_at', g.created_at,
+    'updated_at', g.updated_at
+  )
+  into v_group
+  from public.groups g
+  where g.id = p_group_id;
+
+  -- 3. 投稿一覧の取得（投稿者の profile 情報も含める）
+  select coalesce(
+    json_agg(
+      json_build_object(
+        'id', p.id,
+        'group_id', p.group_id,
+        'user_id', p.user_id,
+        'body', p.body,
+        'emotion', p.emotion,
+        'created_at', p.created_at,
+        'user', json_build_object(
+          'id', prof.id,
+          'username', prof.username,
+          'cat_type', prof.cat_type
+        )
+      )
+      order by p.created_at desc
+    ),
+    '[]'::json
+  )
+  into v_posts
+  from public.posts p
+  left join public.profiles prof on p.user_id = prof.id
+  where p.group_id = p_group_id;
+
+  -- 4. group と posts をまとめたオブジェクトを返却
+  select json_build_object(
+    'group', v_group,
+    'posts', v_posts
+  ) into v_result;
+
+  return v_result;
+end;
+$$;
