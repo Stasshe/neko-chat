@@ -51,6 +51,8 @@ DBスキーマの正本は `supabase/schemas/*.sql` とする。
 
 ## 画面
 
+オンボーディングは `/onboarding/profile` から開始し、ユーザー名、モード、グループ作成／参加、猫選択の順でAPIへ保存する。既存ユーザーの主要画面は `/home` を起点にする。
+
 - `/onboarding/cat`: 猫選択とプロフィール保存
 - `/onboarding/invite`: 招待コード表示・コピー
 - `/home`: 現在のグループの投稿空間
