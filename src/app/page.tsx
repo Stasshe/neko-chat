@@ -27,7 +27,7 @@ export default function Home() {
     setIsSigningIn(true);
     const { error: signInError } = await client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/home` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
 
     if (signInError) {
@@ -49,7 +49,10 @@ export default function Home() {
     setIsSigningIn(true);
 
     if (emailMode === "signin") {
-      const { error: signInError } = await client.auth.signInWithPassword({ email, password });
+      const { error: signInError } = await client.auth.signInWithPassword({
+        email,
+        password,
+      });
       setIsSigningIn(false);
       if (signInError) {
         setError("メールアドレスまたはパスワードが違います。");
@@ -59,7 +62,10 @@ export default function Home() {
       return;
     }
 
-    const { data, error: signUpError } = await client.auth.signUp({ email, password });
+    const { data, error: signUpError } = await client.auth.signUp({
+      email,
+      password,
+    });
     setIsSigningIn(false);
     if (signUpError) {
       setError("登録に失敗しました。もう一度お試しください。");
