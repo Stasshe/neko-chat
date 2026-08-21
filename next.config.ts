@@ -14,7 +14,9 @@ if (normalizedBasePath && !normalizedBasePath.startsWith("/")) {
 }
 const basePath = basePathSchema.parse(normalizedBasePath);
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  reactCompiler: true,
+};
 if (basePath) {
   nextConfig.basePath = basePath;
   nextConfig.assetPrefix = basePath;
