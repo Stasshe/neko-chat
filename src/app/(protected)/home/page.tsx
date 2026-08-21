@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
 import { BottomTabBar, TopBar } from "@/components/navigation";
@@ -29,16 +27,14 @@ function getCatPose(index: number): "sit" | "stand" | "lie" {
 
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
-  const members = useMemo(() => {
-    const unique = new Map<string, PostUser>();
-    if (profile) {
-      unique.set(profile.id, profile);
-    }
-    for (const post of posts) {
-      unique.set(post.user.id, post.user);
-    }
-    return [...unique.values()];
-  }, [posts, profile]);
+  const uniqueMembers = new Map<string, PostUser>();
+  if (profile) {
+    uniqueMembers.set(profile.id, profile);
+  }
+  for (const post of posts) {
+    uniqueMembers.set(post.user.id, post.user);
+  }
+  const members = [...uniqueMembers.values()];
 
   return (
     <MobileShell scene>

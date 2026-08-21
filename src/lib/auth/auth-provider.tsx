@@ -1,7 +1,7 @@
 "use client";
 
 import type { Session } from "@supabase/supabase-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -23,14 +23,13 @@ async function signOut() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => Boolean(getSupabaseClient()));
 
   useEffect(() => {
     let isMounted = true;
     const maybeClient = getSupabaseClient();
 
     if (!maybeClient) {
-      setIsLoading(false);
       return;
     }
 
@@ -69,16 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
-  const value = useMemo(
-    () => ({
-      isLoading,
-      isAuthenticated: !!session,
-      userId: session?.user.id ?? null,
-      session,
-      signOut,
-    }),
-    [isLoading, session],
-  );
+  const value = {
+    isLoading,
+    isAuthenticated: !!session,
+    userId: session?.user.id ?? null,
+    session,
+    signOut,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

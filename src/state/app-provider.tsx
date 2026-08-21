@@ -4,10 +4,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   type ReactNode,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
+  useEffectEvent,
   useState,
 } from "react";
 
@@ -68,6 +67,18 @@ function normalizeError(error: unknown): Error {
   return new Error(String(error));
 }
 
+async function withLoading<T>(
+  setLoading: (loading: boolean) => void,
+  operation: () => Promise<T>,
+): Promise<T> {
+  setLoading(true);
+  try {
+    return await operation();
+  } finally {
+    setLoading(false);
+  }
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -78,49 +89,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadPosts = useCallback(async (group: GroupSummary) => {
+  async function loadPosts(group: GroupSummary) {
     const nextPosts = await getGroupPosts(group.id);
     setPosts(nextPosts);
-  }, []);
+  }
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  async function refresh() {
     setError(null);
-    try {
-      const [nextProfile, nextGroups] = await Promise.all([getMyProfile(), getMyGroups()]);
-      setProfile(nextProfile);
-      setGroups(nextGroups);
+    await withLoading(setLoading, async () => {
+      try {
+        const [nextProfile, nextGroups] = await Promise.all([getMyProfile(), getMyGroups()]);
+        setProfile(nextProfile);
+        setGroups(nextGroups);
 
-      const storedId = window.localStorage.getItem(currentGroupKey);
-      const storedGroup = nextGroups.find((group) => group.id === storedId);
-      const nextGroup = storedGroup ?? nextGroups[0] ?? null;
-      setCurrentGroup(nextGroup);
-      if (nextGroup) {
-        window.localStorage.setItem(currentGroupKey, nextGroup.id);
-        await loadPosts(nextGroup);
-      } else {
-        setPosts([]);
+        const storedId = window.localStorage.getItem(currentGroupKey);
+        const storedGroup = nextGroups.find((group) => group.id === storedId);
+        const nextGroup = storedGroup ?? nextGroups[0] ?? null;
+        setCurrentGroup(nextGroup);
+        if (nextGroup) {
+          window.localStorage.setItem(currentGroupKey, nextGroup.id);
+          await loadPosts(nextGroup);
+        } else {
+          setPosts([]);
+        }
+      } catch (requestError) {
+        const normalized = normalizeError(requestError);
+        setError(getErrorMessage(normalized));
       }
-    } catch (requestError) {
-      const normalized = normalizeError(requestError);
-      setError(getErrorMessage(normalized));
-    } finally {
-      setLoading(false);
-    }
-  }, [loadPosts]);
+    });
+  }
+
+  const refreshAfterNavigation = useEffectEvent(refresh);
 
   useEffect(() => {
     if (pathname.startsWith("/onboarding")) {
-      setLoading(false);
       return;
     }
-    void refresh();
-  }, [pathname, refresh]);
+    void refreshAfterNavigation();
+  }, [pathname]);
 
-  const selectGroup = useCallback(
-    async (group: GroupSummary) => {
-      setLoading(true);
-      setError(null);
+  async function selectGroup(group: GroupSummary) {
+    setError(null);
+    await withLoading(setLoading, async () => {
       try {
         await loadPosts(group);
         setCurrentGroup(group);
@@ -129,89 +139,81 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } catch (requestError) {
         const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
-      } finally {
-        setLoading(false);
       }
-    },
-    [loadPosts, router],
-  );
+    });
+  }
 
-  const startSolo = useCallback(async () => {
-    setLoading(true);
+  async function startSolo() {
     setError(null);
-    try {
-      const group = await startSoloMode();
-      setCurrentGroup(group);
-      setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
-      window.localStorage.setItem(currentGroupKey, group.id);
-      return group;
-    } catch (requestError) {
-      const normalized = normalizeError(requestError);
-      setError(getErrorMessage(normalized));
-      throw normalized;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const createGroup = useCallback(async (name: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await createGroupWithInvite(name);
-      setCurrentGroup(result.group);
-      setGroups((current) => [result.group, ...current]);
-      window.localStorage.setItem(currentGroupKey, result.group.id);
-      return result;
-    } catch (requestError) {
-      const normalized = normalizeError(requestError);
-      setError(getErrorMessage(normalized));
-      throw normalized;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const joinGroup = useCallback(async (code: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const group = await joinGroupByInviteCode(code);
-      setCurrentGroup(group);
-      setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
-      window.localStorage.setItem(currentGroupKey, group.id);
-      return group;
-    } catch (requestError) {
-      const normalized = normalizeError(requestError);
-      setError(getErrorMessage(normalized));
-      throw normalized;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const saveProfile = useCallback(async (username: string, catType: CatType) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const nextProfile = await updateMyProfile(username, catType);
-      setProfile(nextProfile);
-    } catch (requestError) {
-      const normalized = normalizeError(requestError);
-      setError(getErrorMessage(normalized));
-      throw normalized;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const publishPost = useCallback(
-    async (body: string, emotion: Emotion) => {
-      if (!currentGroup) {
-        throw new AppError("NOT_FOUND", "投稿先のグループがありません。");
+    return withLoading(setLoading, async () => {
+      try {
+        const group = await startSoloMode();
+        setCurrentGroup(group);
+        setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
+        window.localStorage.setItem(currentGroupKey, group.id);
+        return group;
+      } catch (requestError) {
+        const normalized = normalizeError(requestError);
+        setError(getErrorMessage(normalized));
+        throw normalized;
       }
-      setLoading(true);
-      setError(null);
+    });
+  }
+
+  async function createGroup(name: string) {
+    setError(null);
+    return withLoading(setLoading, async () => {
+      try {
+        const result = await createGroupWithInvite(name);
+        setCurrentGroup(result.group);
+        setGroups((current) => [result.group, ...current]);
+        window.localStorage.setItem(currentGroupKey, result.group.id);
+        return result;
+      } catch (requestError) {
+        const normalized = normalizeError(requestError);
+        setError(getErrorMessage(normalized));
+        throw normalized;
+      }
+    });
+  }
+
+  async function joinGroup(code: string) {
+    setError(null);
+    return withLoading(setLoading, async () => {
+      try {
+        const group = await joinGroupByInviteCode(code);
+        setCurrentGroup(group);
+        setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
+        window.localStorage.setItem(currentGroupKey, group.id);
+        return group;
+      } catch (requestError) {
+        const normalized = normalizeError(requestError);
+        setError(getErrorMessage(normalized));
+        throw normalized;
+      }
+    });
+  }
+
+  async function saveProfile(username: string, catType: CatType) {
+    setError(null);
+    await withLoading(setLoading, async () => {
+      try {
+        const nextProfile = await updateMyProfile(username, catType);
+        setProfile(nextProfile);
+      } catch (requestError) {
+        const normalized = normalizeError(requestError);
+        setError(getErrorMessage(normalized));
+        throw normalized;
+      }
+    });
+  }
+
+  async function publishPost(body: string, emotion: Emotion) {
+    if (!currentGroup) {
+      throw new AppError("NOT_FOUND", "投稿先のグループがありません。");
+    }
+    setError(null);
+    await withLoading(setLoading, async () => {
       try {
         await createPostRequest(currentGroup.id, body, emotion);
         await loadPosts(currentGroup);
@@ -219,14 +221,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
         throw normalized;
-      } finally {
-        setLoading(false);
       }
-    },
-    [currentGroup, loadPosts],
-  );
+    });
+  }
 
-  const signOut = useCallback(async () => {
+  async function signOut() {
     const client = getSupabaseClient();
     if (!client) {
       setError("Supabase の接続情報が設定されていません。");
@@ -239,43 +238,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     window.localStorage.removeItem(currentGroupKey);
     router.replace("/");
-  }, [router]);
+  }
 
-  const value = useMemo(
-    () => ({
-      profile,
-      groups,
-      currentGroup,
-      posts,
-      loading,
-      error,
-      refresh,
-      selectGroup,
-      startSolo,
-      createGroup,
-      joinGroup,
-      saveProfile,
-      publishPost,
-      signOut,
-      clearError: () => setError(null),
-    }),
-    [
-      profile,
-      groups,
-      currentGroup,
-      posts,
-      loading,
-      error,
-      refresh,
-      selectGroup,
-      startSolo,
-      createGroup,
-      joinGroup,
-      saveProfile,
-      publishPost,
-      signOut,
-    ],
-  );
+  const value = {
+    profile,
+    groups,
+    currentGroup,
+    posts,
+    loading,
+    error,
+    refresh,
+    selectGroup,
+    startSolo,
+    createGroup,
+    joinGroup,
+    saveProfile,
+    publishPost,
+    signOut,
+    clearError: () => setError(null),
+  };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
