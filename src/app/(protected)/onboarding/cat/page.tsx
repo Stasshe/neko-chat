@@ -38,6 +38,8 @@ function CatSelectionContent() {
     }
     try {
       await saveProfile(username, selected);
+      // Closed allowlist compare, not an open redirect: only "settings" routes anywhere.
+      // react-doctor-disable-next-line react-doctor/url-prefilled-privileged-action
       if (searchParams.get("returnTo") === "settings") {
         router.push("/settings");
         return;

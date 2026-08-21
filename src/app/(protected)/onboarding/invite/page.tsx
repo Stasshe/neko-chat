@@ -1,67 +1,11 @@
-"use client";
+import { InviteCreatedContent } from "./content";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+type InviteCreatedPageProps = {
+  searchParams: Promise<{ code?: string | string[] }>;
+};
 
-import { CopyIcon } from "@/components/icons";
-import { MobileShell } from "@/components/mobile-shell";
+export default async function InviteCreatedPage({ searchParams }: InviteCreatedPageProps) {
+  const { code } = await searchParams;
 
-function getCopyLabel(copied: boolean): string {
-  if (copied) {
-    return "コピーしました";
-  }
-  return "コードをコピー";
-}
-
-export default function InviteCreatedPage() {
-  const router = useRouter();
-  const [code, setCode] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setCode(params.get("code") ?? "");
-  }, []);
-
-  async function copy() {
-    if (!code) {
-      setCopyError("コピーする招待コードがありません。");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setCopyError(null);
-    } catch (error) {
-      console.error(error);
-      setCopyError("コピーできませんでした。コードを長押ししてコピーしてください。");
-    }
-  }
-
-  return (
-    <MobileShell>
-      <section className="invite-created">
-        <span className="accent-lines" aria-hidden="true" />
-        <h1>グループが作成されました</h1>
-        <div className="paw-mark" aria-hidden="true">
-          ●
-        </div>
-        <h2>招待コード</h2>
-        <output>{code || "------"}</output>
-        <button className="copy-button" type="button" onClick={() => void copy()} disabled={!code}>
-          <CopyIcon />
-          {getCopyLabel(copied)}
-        </button>
-        {copyError && <p className="form-error">{copyError}</p>}
-        <button
-          className="primary-button"
-          type="button"
-          onClick={() => router.push("/onboarding/cat")}
-        >
-          つぎへ
-        </button>
-      </section>
-    </MobileShell>
-  );
+  return <InviteCreatedContent code={typeof code === "string" ? code : ""} />;
 }
