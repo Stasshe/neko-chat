@@ -1,6 +1,9 @@
 import type { Preview } from "@storybook/nextjs-vite";
 import React from "react";
 
+import "../src/app/globals.css";
+import "../src/app/status.css";
+
 import { AuthContext } from "../src/lib/auth/context";
 
 const mockAuth = {
