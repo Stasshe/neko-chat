@@ -10,7 +10,9 @@
     "lint:fix": "biome check --write src/",
     "format": "biome format --write src/",
     "format:check": "biome format src/",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "packageManager": "pnpm@11.9.0",
   "dependencies": {
@@ -29,6 +31,9 @@
     "babel-plugin-react-compiler": "1.0.0",
     "react-doctor": "^0.9.12",
     "tailwindcss": "4.3.2",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "storybook": "^10.5.10",
+    "@storybook/nextjs-vite": "^10.5.10",
+    "@storybook/addon-docs": "^10.5.10"
   }
 }

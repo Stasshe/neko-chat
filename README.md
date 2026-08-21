@@ -9,6 +9,8 @@ pnpm install
 pnpm dev
 ```
 
+コンポーネント単体確認は `pnpm storybook`。詳細は [STORYBOOK.md](./STORYBOOK.md)。
+
 `.env.example` を `.env.local` へコピーして設定する。
 
 ```dotenv
