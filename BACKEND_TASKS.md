@@ -219,10 +219,10 @@
 11. 自分の所属グループ一覧取得処理を作る
 12. 投稿作成処理を作る
 13. グループ投稿一覧取得処理を作る
-14. グループ関連のRLSを入れる
-15. 投稿関連のRLSを入れる
+14. グループ関連のRLSを `supabase/schemas/06_group_post_rls.sql` に入れる
+15. 投稿関連のRLSを `supabase/schemas/06_group_post_rls.sql` に入れる
 16. 投稿文字数と emotion の値チェックを入れる
-17. 自分が担当した変更を `supabase/schemas/02_groups.sql`〜`supabase/schemas/05_posts.sql` の該当ファイルに反映する
+17. 自分が担当した変更を `supabase/schemas/02_groups.sql`〜`supabase/schemas/06_group_post_rls.sql` の該当ファイルに反映する
 18. `GroupSummary`, `InviteCode`, `Post`, `Post.user` の返り値をフロント向けの形に揃える
 19. グループ系・投稿系のエラー形を揃える
 

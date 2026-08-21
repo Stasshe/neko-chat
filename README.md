@@ -33,8 +33,9 @@ DBスキーマの正本は `supabase/schemas/*.sql` とする。
 | 3 | `supabase/schemas/03_group_members.sql` | `group_members` |
 | 4 | `supabase/schemas/04_invite_codes.sql` | `invite_codes` |
 | 5 | `supabase/schemas/05_posts.sql` | `posts` |
+| 6 | `supabase/schemas/06_group_post_rls.sql` | `groups` / `group_members` / `posts` のRLS Policyと補助関数 |
 
-外部キーの依存関係があるため、初回構築時は必ず `01` から `05` の順で実行する。
+外部キーの依存関係があるため、初回構築時は必ず `01` から `06` の順で実行する。
 
 スキーマ変更時のルール:
 
