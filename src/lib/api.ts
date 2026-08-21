@@ -49,10 +49,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new AppError("UNKNOWN", "サーバーへ接続できませんでした。");
   }
 
-  const result = (await response.json()) as ApiSuccess<T> | ApiFailure;
-  if (!result.ok) {
+  if (!response.ok) {
+    const result = (await response.json()) as ApiFailure;
     throw new AppError(result.error.code, result.error.message);
   }
+
+  const result = (await response.json()) as ApiSuccess<T>;
   return result.data;
 }
 
