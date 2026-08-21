@@ -1,55 +1,51 @@
-import { AppError, type CatType, catTypes, type Emotion, emotions } from "@/types/app";
+import { z } from "zod";
 
-export function readUsername(value: string): string {
-  const username = value.trim();
-  if (username.length < 1 || username.length > 20) {
-    throw new AppError("VALIDATION_ERROR", "名前は1〜20文字で入力してください。");
-  }
-  return username;
-}
+import { catTypes, emotions, resourceIdPattern } from "@/types/app";
 
-export function readCatType(value: string): CatType {
-  if (!catTypes.includes(value as CatType)) {
-    throw new AppError("VALIDATION_ERROR", "猫の種類が正しくありません。");
-  }
-  return value as CatType;
-}
+const usernameMessage = "名前は1〜20文字で入力してください。";
+const groupNameMessage = "グループ名は1〜30文字で入力してください。";
+const inviteCodeMessage = "招待コードは英数字6文字で入力してください。";
+const postBodyMessage = "つぶやきは1〜30文字で入力してください。";
 
-export function readGroupName(value: string): string {
-  const name = value.trim();
-  if (name.length < 1 || name.length > 30) {
-    throw new AppError("VALIDATION_ERROR", "グループ名は1〜30文字で入力してください。");
-  }
-  return name;
-}
+export const idSchema = z
+  .string({ error: "IDの形式が正しくありません。" })
+  .regex(resourceIdPattern, "IDの形式が正しくありません。");
 
-export function readInviteCode(value: string): string {
-  const code = value.trim().toUpperCase();
-  if (!/^[A-Z0-9]{6}$/.test(code)) {
-    throw new AppError("VALIDATION_ERROR", "招待コードは英数字6文字で入力してください。");
-  }
-  return code;
-}
+export const profileInputSchema = z.object({
+  username: z
+    .string({ error: usernameMessage })
+    .trim()
+    .min(1, usernameMessage)
+    .max(20, usernameMessage),
+  catType: z.enum(catTypes, { error: "猫の種類が正しくありません。" }),
+});
 
-export function readId(value: string): string {
-  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (!uuid.test(value)) {
-    throw new AppError("VALIDATION_ERROR", "IDの形式が正しくありません。");
-  }
-  return value;
-}
+export const groupInputSchema = z.object({
+  mode: z.enum(["solo", "create"], {
+    error: "グループ作成モードが正しくありません。",
+  }),
+  name: z.unknown().optional(),
+});
 
-export function readPostBody(value: string): string {
-  const body = value.trim();
-  if (body.length < 1 || body.length > 30) {
-    throw new AppError("VALIDATION_ERROR", "つぶやきは1〜30文字で入力してください。");
-  }
-  return body;
-}
+export const groupNameSchema = z
+  .string({ error: groupNameMessage })
+  .trim()
+  .min(1, groupNameMessage)
+  .max(30, groupNameMessage);
 
-export function readEmotion(value: string): Emotion {
-  if (!emotions.includes(value as Emotion)) {
-    throw new AppError("VALIDATION_ERROR", "猫の表情が正しくありません。");
-  }
-  return value as Emotion;
-}
+export const joinInputSchema = z.object({
+  code: z
+    .string({ error: inviteCodeMessage })
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9]{6}$/, inviteCodeMessage),
+});
+
+export const postInputSchema = z.object({
+  body: z
+    .string({ error: postBodyMessage })
+    .trim()
+    .min(1, postBodyMessage)
+    .max(30, postBodyMessage),
+  emotion: z.enum(emotions, { error: "猫の表情が正しくありません。" }),
+});

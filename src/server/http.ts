@@ -1,3 +1,5 @@
+import type { z } from "zod";
+
 import { type ApiErrorCode, AppError } from "@/types/app";
 
 const statusByCode: Record<ApiErrorCode, number> = {
@@ -16,15 +18,28 @@ export function success<T>(data: T, status = 200): Response {
   return Response.json({ ok: true, data }, { status });
 }
 
-export async function readJson<T>(request: Request): Promise<T> {
+export function parseValue<T>(schema: z.ZodType<T>, value: unknown): T {
+  const result = schema.safeParse(value);
+  if (!result.success) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      result.error.issues[0]?.message ?? "入力内容が正しくありません。",
+    );
+  }
+  return result.data;
+}
+
+export async function readJson<T>(request: Request, schema: z.ZodType<T>): Promise<T> {
+  let value: unknown;
   try {
-    return (await request.json()) as T;
+    value = await request.json();
   } catch {
     throw new AppError("VALIDATION_ERROR", "JSON形式のリクエスト本文が必要です。");
   }
+  return parseValue(schema, value);
 }
 
-export function failure(error: object): Response {
+export function failure(error: unknown): Response {
   if (error instanceof AppError) {
     return Response.json(
       {

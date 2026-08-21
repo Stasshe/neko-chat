@@ -1,30 +1,23 @@
 import { authenticate } from "@/server/auth";
 import { failure, readJson, success } from "@/server/http";
 import { getProfile, updateProfile } from "@/server/repository";
-import { readCatType, readUsername } from "@/server/validation";
-
-type ProfileInput = {
-  username?: string;
-  catType?: string;
-};
+import { profileInputSchema } from "@/server/validation";
 
 export async function GET(request: Request): Promise<Response> {
   try {
     const user = await authenticate(request);
     return success({ profile: await getProfile(user) });
   } catch (error) {
-    return failure(error as object);
+    return failure(error);
   }
 }
 
 export async function PATCH(request: Request): Promise<Response> {
   try {
     const user = await authenticate(request);
-    const input = await readJson<ProfileInput>(request);
-    const username = readUsername(input.username ?? "");
-    const catType = readCatType(input.catType ?? "");
-    return success({ profile: await updateProfile(user, username, catType) });
+    const input = await readJson(request, profileInputSchema);
+    return success({ profile: await updateProfile(user, input.username, input.catType) });
   } catch (error) {
-    return failure(error as object);
+    return failure(error);
   }
 }

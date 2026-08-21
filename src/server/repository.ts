@@ -1,6 +1,20 @@
 import type { User } from "@supabase/supabase-js";
+import { z } from "zod";
 
 import { getAdminClient } from "@/server/admin";
+import {
+  type GroupRow,
+  groupReferenceRowSchema,
+  groupRowSchema,
+  idRowSchema,
+  membershipRowSchema,
+  type PostRow,
+  type ProfileRow,
+  parseData,
+  postRowSchema,
+  profileRowSchema,
+  slotRowSchema,
+} from "@/server/rows";
 import {
   AppError,
   type CatType,
@@ -13,35 +27,6 @@ import {
 type DataError = {
   code?: string;
   message: string;
-};
-
-type ProfileRow = {
-  id: string;
-  username: string;
-  cat_type: CatType;
-  created_at: string;
-  updated_at: string;
-};
-
-type GroupRow = {
-  id: string;
-  name: string;
-  is_solo: boolean;
-};
-
-type MembershipRow = {
-  group_id: string;
-  joined_at: string;
-  slot: number;
-};
-
-type PostRow = {
-  id: string;
-  group_id: string;
-  user_id: string;
-  body: string;
-  emotion: Emotion;
-  created_at: string;
 };
 
 function mapProfile(row: ProfileRow): Profile {
@@ -106,7 +91,7 @@ async function ensureProfile(user: User): Promise<ProfileRow> {
     fail(existing.error, "プロフィールを取得できませんでした。");
   }
   if (existing.data) {
-    return existing.data as ProfileRow;
+    return parseData(profileRowSchema, existing.data, "プロフィールを取得できませんでした。");
   }
 
   const inserted = await admin
@@ -120,7 +105,7 @@ async function ensureProfile(user: User): Promise<ProfileRow> {
     }
     fail(inserted.error, "プロフィールを作成できませんでした。");
   }
-  return inserted.data as ProfileRow;
+  return parseData(profileRowSchema, inserted.data, "プロフィールを作成できませんでした。");
 }
 
 async function getGroup(groupId: string): Promise<GroupSummary> {
@@ -141,7 +126,13 @@ async function getGroup(groupId: string): Promise<GroupSummary> {
   if (countResult.error) {
     fail(countResult.error, "グループの人数を取得できませんでした。");
   }
-  return mapGroup(groupResult.data as GroupRow, countResult.count ?? 0);
+  const group = parseData(groupRowSchema, groupResult.data, "グループを取得できませんでした。");
+  const memberCount = parseData(
+    z.number().int().nonnegative(),
+    countResult.count ?? 0,
+    "グループの人数を取得できませんでした。",
+  );
+  return mapGroup(group, memberCount);
 }
 
 async function requireMembership(groupId: string, userId: string): Promise<void> {
@@ -157,6 +148,7 @@ async function requireMembership(groupId: string, userId: string): Promise<void>
   if (!result.data) {
     throw new AppError("FORBIDDEN", "このグループにはアクセスできません。");
   }
+  parseData(groupReferenceRowSchema, result.data, "グループの参加状態を確認できませんでした。");
 }
 
 function createInviteCode(): string {
@@ -206,7 +198,9 @@ export async function updateProfile(
   if (result.error) {
     fail(result.error, "プロフィールを更新できませんでした。");
   }
-  return mapProfile(result.data as ProfileRow);
+  return mapProfile(
+    parseData(profileRowSchema, result.data, "プロフィールを更新できませんでした。"),
+  );
 }
 
 export async function getGroups(user: User): Promise<GroupSummary[]> {
@@ -219,7 +213,11 @@ export async function getGroups(user: User): Promise<GroupSummary[]> {
   if (membershipResult.error) {
     fail(membershipResult.error, "グループ一覧を取得できませんでした。");
   }
-  const memberships = membershipResult.data as MembershipRow[];
+  const memberships = parseData(
+    z.array(membershipRowSchema),
+    membershipResult.data,
+    "グループ一覧を取得できませんでした。",
+  );
   if (memberships.length === 0) {
     return [];
   }
@@ -235,10 +233,19 @@ export async function getGroups(user: User): Promise<GroupSummary[]> {
     fail(membersResult.error, "グループの人数を取得できませんでした。");
   }
   const groups = new Map(
-    (groupsResult.data as GroupRow[]).map((group) => [group.id, group] as const),
+    parseData(
+      z.array(groupRowSchema),
+      groupsResult.data,
+      "グループ一覧を取得できませんでした。",
+    ).map((group) => [group.id, group] as const),
   );
   const counts = new Map<string, number>();
-  for (const member of membersResult.data as { group_id: string }[]) {
+  const members = parseData(
+    z.array(groupReferenceRowSchema),
+    membersResult.data,
+    "グループの人数を取得できませんでした。",
+  );
+  for (const member of members) {
     counts.set(member.group_id, (counts.get(member.group_id) ?? 0) + 1);
   }
   return memberships.flatMap((membership) => {
@@ -262,7 +269,9 @@ export async function startSoloGroup(user: User): Promise<GroupSummary> {
   if (existing.error) {
     fail(existing.error, "一人モードを確認できませんでした。");
   }
-  let groupId = (existing.data as { id: string } | null)?.id;
+  let groupId = existing.data
+    ? parseData(idRowSchema, existing.data, "一人モードを確認できませんでした。").id
+    : undefined;
   if (!groupId) {
     const inserted = await admin
       .from("groups")
@@ -275,7 +284,7 @@ export async function startSoloGroup(user: User): Promise<GroupSummary> {
       }
       fail(inserted.error, "一人モードを開始できませんでした。");
     }
-    groupId = (inserted.data as { id: string }).id;
+    groupId = parseData(idRowSchema, inserted.data, "一人モードを開始できませんでした。").id;
   }
   const membership = await admin
     .from("group_members")
@@ -300,7 +309,7 @@ export async function createGroup(
   if (inserted.error) {
     fail(inserted.error, "グループを作成できませんでした。");
   }
-  const groupId = (inserted.data as { id: string }).id;
+  const groupId = parseData(idRowSchema, inserted.data, "グループを作成できませんでした。").id;
   const membership = await admin
     .from("group_members")
     .insert({ group_id: groupId, user_id: user.id, slot: 1 });
@@ -328,7 +337,10 @@ export async function joinGroup(user: User, code: string): Promise<GroupSummary>
   if (invitation.error) {
     fail(invitation.error, "招待コードを確認できませんでした。");
   }
-  const groupId = (invitation.data as { group_id: string } | null)?.group_id;
+  const groupId = invitation.data
+    ? parseData(groupReferenceRowSchema, invitation.data, "招待コードを確認できませんでした。")
+        .group_id
+    : undefined;
   if (!groupId) {
     throw new AppError("INVALID_INVITE_CODE", "招待コードが見つかりません。");
   }
@@ -342,6 +354,7 @@ export async function joinGroup(user: User, code: string): Promise<GroupSummary>
     fail(existing.error, "グループの参加状態を確認できませんでした。");
   }
   if (existing.data) {
+    parseData(groupReferenceRowSchema, existing.data, "グループの参加状態を確認できませんでした。");
     throw new AppError("ALREADY_JOINED", "このグループには参加済みです。");
   }
 
@@ -350,7 +363,12 @@ export async function joinGroup(user: User, code: string): Promise<GroupSummary>
     if (slotsResult.error) {
       fail(slotsResult.error, "グループの人数を確認できませんでした。");
     }
-    const occupied = new Set((slotsResult.data as { slot: number }[]).map((row) => row.slot));
+    const slots = parseData(
+      z.array(slotRowSchema),
+      slotsResult.data,
+      "グループの人数を確認できませんでした。",
+    );
+    const occupied = new Set(slots.map((row) => row.slot));
     const slot = [1, 2, 3, 4, 5].find((candidate) => !occupied.has(candidate));
     if (!slot) {
       throw new AppError("GROUP_FULL", "このグループは5人に達しています。");
@@ -381,7 +399,7 @@ export async function getPosts(
   if (postsResult.error) {
     fail(postsResult.error, "投稿を取得できませんでした。");
   }
-  const rows = postsResult.data as PostRow[];
+  const rows = parseData(z.array(postRowSchema), postsResult.data, "投稿を取得できませんでした。");
   const userIds = [...new Set(rows.map((row) => row.user_id))];
   let profiles = new Map<string, ProfileRow>();
   if (userIds.length > 0) {
@@ -393,7 +411,11 @@ export async function getPosts(
       fail(profileResult.error, "投稿者情報を取得できませんでした。");
     }
     profiles = new Map(
-      (profileResult.data as ProfileRow[]).map((profile) => [profile.id, profile] as const),
+      parseData(
+        z.array(profileRowSchema),
+        profileResult.data,
+        "投稿者情報を取得できませんでした。",
+      ).map((profile) => [profile.id, profile] as const),
     );
   }
   const posts = rows.map((row) => {
@@ -421,5 +443,6 @@ export async function addPost(
   if (result.error) {
     fail(result.error, "投稿を作成できませんでした。");
   }
-  return mapPost(result.data as PostRow, await ensureProfile(user));
+  const post = parseData(postRowSchema, result.data, "投稿を作成できませんでした。");
+  return mapPost(post, await ensureProfile(user));
 }

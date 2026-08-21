@@ -809,7 +809,7 @@ SUPABASE_SECRET_KEYはVercel環境変数だけに置く。
 
 30. 入力Validation
 
-共通ValidationにはZodなどを利用する。
+共通ValidationにはZodを利用する。Route Handler入力、APIレスポンス、Supabase Data API取得行、環境変数を利用前に検証する。型はスキーマから推論し、境界での型アサーションは行わない。
 
 username
 
@@ -1010,6 +1010,8 @@ API境界は`API_TYPES.md`。画面はDB行やSupabase生レスポンスを扱�
 
 35.3 主要画面
 
+オンボーディングは `/onboarding/profile` のユーザー名入力から始まり、モード選択、一人モード／グループ作成／招待コード参加、猫選択の順に進む。グループ作成・参加はRoute Handlerで保存し、失敗時は入力を保持したまま画面内に理由を表示する。
+
 `/onboarding/cat`は5種類から猫を選び、プロフィールを保存する。`/onboarding/invite`は発行済みコードを表示しClipboard APIでコピーする。
 
 `/home`は現在グループ、メンバー、最大4件の近況を空間UIへ配置する。0件、読み込み中、取得失敗を区別する。
@@ -1020,7 +1022,7 @@ API境界は`API_TYPES.md`。画面はDB行やSupabase生レスポンスを扱�
 
 35.4 接続失敗
 
-`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_SECRET_KEY`が必要。未設定、認証切れ、権限不足、入力不正、グループ満員、招待コード不正を画面内エラーとして顕在化する。Secret Keyはブラウザへ配布しない。
+`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_SECRET_KEY`が必要。URL形式と空値を起動境界で検証する。未設定、認証切れ、権限不足、入力不正、グループ満員、招待コード不正を画面内エラーとして顕在化する。Secret Keyはブラウザへ配布しない。
 
 35.5 Vercel API
 

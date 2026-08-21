@@ -8,6 +8,7 @@ import {
   type Emotion,
   type GroupSummary,
   groupSummarySchema,
+  inviteCodeSchema,
   type Post,
   type Profile,
   postSchema,
@@ -118,10 +119,14 @@ export async function startSoloMode(): Promise<GroupSummary> {
 export async function createGroupWithInvite(
   name: string,
 ): Promise<{ group: GroupSummary; inviteCode: string }> {
-  return request("/api/groups", z.object({ group: groupSummarySchema, inviteCode: z.string() }), {
-    method: "POST",
-    body: JSON.stringify({ mode: "create", name }),
-  });
+  return request(
+    "/api/groups",
+    z.object({ group: groupSummarySchema, inviteCode: inviteCodeSchema }),
+    {
+      method: "POST",
+      body: JSON.stringify({ mode: "create", name }),
+    },
+  );
 }
 
 export async function joinGroupByInviteCode(code: string): Promise<GroupSummary> {
