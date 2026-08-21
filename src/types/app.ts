@@ -37,16 +37,19 @@ export type Post = {
   user: PostUser;
 };
 
-export type ApiErrorCode =
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "NOT_FOUND"
-  | "VALIDATION_ERROR"
-  | "GROUP_FULL"
-  | "INVALID_INVITE_CODE"
-  | "ALREADY_JOINED"
-  | "CONFIGURATION_ERROR"
-  | "UNKNOWN";
+export const apiErrorCodes = [
+  "UNAUTHORIZED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "VALIDATION_ERROR",
+  "GROUP_FULL",
+  "INVALID_INVITE_CODE",
+  "ALREADY_JOINED",
+  "CONFIGURATION_ERROR",
+  "UNKNOWN",
+] as const;
+
+export type ApiErrorCode = (typeof apiErrorCodes)[number];
 
 export class AppError extends Error {
   readonly code: ApiErrorCode;

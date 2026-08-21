@@ -1,6 +1,8 @@
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
+  type ApiErrorCode,
   AppError,
+  apiErrorCodes,
   type CatType,
   type Emotion,
   type GroupSummary,
@@ -11,7 +13,7 @@ import {
 type ApiFailure = {
   ok: false;
   error: {
-    code: AppError["code"];
+    code: ApiErrorCode;
     message: string;
   };
 };
@@ -20,6 +22,47 @@ type ApiSuccess<T> = {
   ok: true;
   data: T;
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isApiErrorCode(value: unknown): value is ApiErrorCode {
+  return typeof value === "string" && apiErrorCodes.some((code) => code === value);
+}
+
+function isApiFailure(value: unknown): value is ApiFailure {
+  if (!isRecord(value) || value.ok !== false || !isRecord(value.error)) {
+    return false;
+  }
+  return isApiErrorCode(value.error.code) && typeof value.error.message === "string";
+}
+
+function isApiSuccess<T>(value: unknown): value is ApiSuccess<T> {
+  return isRecord(value) && value.ok === true && Object.hasOwn(value, "data");
+}
+
+async function readResponse<T>(response: Response): Promise<T> {
+  let result: unknown;
+  try {
+    result = await response.json();
+  } catch (error) {
+    console.error("API response was not valid JSON.", error);
+    throw new AppError("UNKNOWN", "サーバーから不正な応答を受信しました。");
+  }
+
+  if (isApiFailure(result)) {
+    throw new AppError(result.error.code, result.error.message);
+  }
+  if (!response.ok || !isApiSuccess<T>(result)) {
+    console.error("API response did not match the expected format.", {
+      status: response.status,
+      result,
+    });
+    throw new AppError("UNKNOWN", "サーバーから不正な応答を受信しました。");
+  }
+  return result.data;
+}
 
 async function getAccessToken(): Promise<string> {
   const client = getSupabaseClient();
@@ -49,11 +92,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new AppError("UNKNOWN", "サーバーへ接続できませんでした。");
   }
 
-  const result = (await response.json()) as ApiSuccess<T> | ApiFailure;
-  if (!result.ok) {
-    throw new AppError(result.error.code, result.error.message);
-  }
-  return result.data;
+  return readResponse<T>(response);
 }
 
 export async function getMyProfile(): Promise<Profile> {
