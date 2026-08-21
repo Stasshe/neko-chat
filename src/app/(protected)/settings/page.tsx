@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { CatDisplay } from "@/components/cat-display";
 import { ArrowLeftIcon } from "@/components/icons";
@@ -11,15 +11,10 @@ import { useApp } from "@/state/app-provider";
 
 export default function SettingsPage() {
   const { profile, loading, error, saveProfile, signOut } = useApp();
-  const [username, setUsername] = useState("");
+  const [editedUsername, setEditedUsername] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (profile) {
-      setUsername(profile.username);
-    }
-  }, [profile]);
+  const username = editedUsername ?? profile?.username ?? "";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,6 +27,7 @@ export default function SettingsPage() {
     setSaved(false);
     try {
       await saveProfile(trimmed, profile.catType);
+      setEditedUsername(null);
       setSaved(true);
     } catch {
       // The provider exposes the actionable error message.
@@ -59,7 +55,7 @@ export default function SettingsPage() {
                 id="username"
                 value={username}
                 onChange={(event) => {
-                  setUsername(event.target.value);
+                  setEditedUsername(event.target.value);
                   setSaved(false);
                 }}
                 maxLength={20}

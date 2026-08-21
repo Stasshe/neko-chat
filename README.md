@@ -67,6 +67,9 @@ DBスキーマの正本は `supabase/schemas/*.sql` とする。
 
 ```bash
 pnpm lint
+pnpm format:check
 pnpm exec tsc --noEmit
 pnpm build
 ```
+
+Pull Requestと`main`へのpushでは、GitHub Actionsがlint、format、buildを検証する。`main`のRepository rulesでは`ci-lint`、`ci-format`、`ci-build`をrequired checksに指定する。

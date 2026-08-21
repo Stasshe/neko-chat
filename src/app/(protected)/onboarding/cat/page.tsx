@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -24,16 +24,11 @@ function getButtonLabel(loading: boolean): string {
   return "決定";
 }
 
-export default function CatSelectionPage() {
+function CatSelectionContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { profile, loading, error, saveProfile } = useApp();
   const [selected, setSelected] = useState<CatType>("white");
-  const [returnTo, setReturnTo] = useState("home");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setReturnTo(params.get("returnTo") ?? "home");
-  }, []);
 
   async function confirm() {
     const username = profile?.username ?? window.localStorage.getItem("neko-chat.username") ?? "";
@@ -43,7 +38,13 @@ export default function CatSelectionPage() {
     }
     try {
       await saveProfile(username, selected);
-      router.push(`/${returnTo}`);
+      // Closed allowlist compare, not an open redirect: only "settings" routes anywhere.
+      // react-doctor-disable-next-line react-doctor/url-prefilled-privileged-action
+      if (searchParams.get("returnTo") === "settings") {
+        router.push("/settings");
+        return;
+      }
+      router.push("/home");
     } catch {
       // The provider exposes the actionable error message.
     }
@@ -77,5 +78,13 @@ export default function CatSelectionPage() {
         </button>
       </section>
     </MobileShell>
+  );
+}
+
+export default function CatSelectionPage() {
+  return (
+    <Suspense fallback={null}>
+      <CatSelectionContent />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { CopyIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
@@ -13,16 +13,10 @@ function getCopyLabel(copied: boolean): string {
   return "コードをコピー";
 }
 
-export default function InviteCreatedPage() {
+export function InviteCreatedContent({ code }: { code: string }) {
   const router = useRouter();
-  const [code, setCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setCode(params.get("code") ?? "");
-  }, []);
 
   async function copy() {
     if (!code) {
