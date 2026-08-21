@@ -1,11 +1,25 @@
 "use client";
 
 import type { Session } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 import { AuthContext } from "./context";
+
+async function signOut() {
+  const client = getSupabaseClient();
+
+  if (!client) {
+    return;
+  }
+
+  const { error } = await client.auth.signOut();
+
+  if (error) {
+    console.error("Failed to sign out", error);
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -55,27 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
-  async function signOut() {
-    const client = getSupabaseClient();
-
-    if (!client) {
-      return;
-    }
-
-    const { error } = await client.auth.signOut();
-
-    if (error) {
-      console.error("Failed to sign out", error);
-    }
-  }
-
-  const value = {
-    isLoading,
-    isAuthenticated: !!session,
-    userId: session?.user.id ?? null,
-    session,
-    signOut,
-  };
+  const value = useMemo(
+    () => ({
+      isLoading,
+      isAuthenticated: !!session,
+      userId: session?.user.id ?? null,
+      session,
+      signOut,
+    }),
+    [isLoading, session],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
