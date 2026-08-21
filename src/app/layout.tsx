@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 
+import { AuthProvider } from "@/lib/auth/auth-provider";
+
 import "./globals.css";
 import "./status.css";
 import { AppProvider } from "@/state/app-provider";
 
 export const metadata: Metadata = {
   title: "猫チャット",
-  description: "猫の表情と一言で、ゆるく近況を共有するグループアプリ",
+  description: "猫モチーフのグループチャットアプリ",
 };
 
 export default function RootLayout({
@@ -16,8 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body>
-        <AppProvider>{children}</AppProvider>
+      <body className="antialiased bg-background text-foreground">
+        <AuthProvider>
+          <AppProvider>{children}</AppProvider>
+        </AuthProvider>
       </body>
     </html>
   );
