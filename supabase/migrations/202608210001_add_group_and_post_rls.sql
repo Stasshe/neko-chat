@@ -1,3 +1,23 @@
+do $$
+declare
+  existing_policy record;
+begin
+  for existing_policy in
+    select schemaname, tablename, policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename in ('groups', 'group_members', 'posts')
+  loop
+    execute format(
+      'drop policy %I on %I.%I',
+      existing_policy.policyname,
+      existing_policy.schemaname,
+      existing_policy.tablename
+    );
+  end loop;
+end;
+$$;
+
 create or replace function public.is_group_member(
   target_group_id uuid,
   target_user_id uuid
