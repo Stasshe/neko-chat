@@ -1,48 +1,35 @@
+import { z } from "zod";
+
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
-  type ApiErrorCode,
   AppError,
-  apiErrorCodes,
+  apiErrorCodeSchema,
   type CatType,
   type Emotion,
   type GroupSummary,
+  groupSummarySchema,
   type Post,
   type Profile,
+  postSchema,
+  profileSchema,
 } from "@/types/app";
 
-type ApiFailure = {
-  ok: false;
-  error: {
-    code: ApiErrorCode;
-    message: string;
-  };
-};
+const apiFailureSchema = z.object({
+  ok: z.literal(false),
+  error: z.object({
+    code: apiErrorCodeSchema,
+    message: z.string(),
+  }),
+});
 
-type ApiSuccess<T> = {
-  ok: true;
-  data: T;
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+function createApiResultSchema<T>(dataSchema: z.ZodType<T>) {
+  return z.discriminatedUnion("ok", [
+    z.object({ ok: z.literal(true), data: dataSchema }),
+    apiFailureSchema,
+  ]);
 }
 
-function isApiErrorCode(value: unknown): value is ApiErrorCode {
-  return typeof value === "string" && apiErrorCodes.some((code) => code === value);
-}
-
-function isApiFailure(value: unknown): value is ApiFailure {
-  if (!isRecord(value) || value.ok !== false || !isRecord(value.error)) {
-    return false;
-  }
-  return isApiErrorCode(value.error.code) && typeof value.error.message === "string";
-}
-
-function isApiSuccess<T>(value: unknown): value is ApiSuccess<T> {
-  return isRecord(value) && value.ok === true && Object.hasOwn(value, "data");
-}
-
-async function readResponse<T>(response: Response): Promise<T> {
+async function readResponse<T>(response: Response, dataSchema: z.ZodType<T>): Promise<T> {
   let result: unknown;
   try {
     result = await response.json();
@@ -51,17 +38,24 @@ async function readResponse<T>(response: Response): Promise<T> {
     throw new AppError("UNKNOWN", "サーバーから不正な応答を受信しました。");
   }
 
-  if (isApiFailure(result)) {
-    throw new AppError(result.error.code, result.error.message);
-  }
-  if (!response.ok || !isApiSuccess<T>(result)) {
+  const parsed = createApiResultSchema(dataSchema).safeParse(result);
+  if (!parsed.success) {
     console.error("API response did not match the expected format.", {
       status: response.status,
-      result,
+      issues: parsed.error.issues,
     });
     throw new AppError("UNKNOWN", "サーバーから不正な応答を受信しました。");
   }
-  return result.data;
+  if (!parsed.data.ok) {
+    throw new AppError(parsed.data.error.code, parsed.data.error.message);
+  }
+  if (!response.ok) {
+    console.error("API returned a success body with an error status.", {
+      status: response.status,
+    });
+    throw new AppError("UNKNOWN", "サーバーから不正な応答を受信しました。");
+  }
+  return parsed.data.data;
 }
 
 async function getAccessToken(): Promise<string> {
@@ -76,7 +70,7 @@ async function getAccessToken(): Promise<string> {
   return data.session.access_token;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, dataSchema: z.ZodType<T>, init?: RequestInit): Promise<T> {
   const accessToken = await getAccessToken();
   const headers = new Headers(init?.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
@@ -92,16 +86,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new AppError("UNKNOWN", "サーバーへ接続できませんでした。");
   }
 
-  return readResponse<T>(response);
+  return readResponse(response, dataSchema);
 }
 
 export async function getMyProfile(): Promise<Profile> {
-  const data = await request<{ profile: Profile }>("/api/profile");
+  const data = await request("/api/profile", z.object({ profile: profileSchema }));
   return data.profile;
 }
 
 export async function updateMyProfile(username: string, catType: CatType): Promise<Profile> {
-  const data = await request<{ profile: Profile }>("/api/profile", {
+  const data = await request("/api/profile", z.object({ profile: profileSchema }), {
     method: "PATCH",
     body: JSON.stringify({ username, catType }),
   });
@@ -109,12 +103,12 @@ export async function updateMyProfile(username: string, catType: CatType): Promi
 }
 
 export async function getMyGroups(): Promise<GroupSummary[]> {
-  const data = await request<{ groups: GroupSummary[] }>("/api/groups");
+  const data = await request("/api/groups", z.object({ groups: z.array(groupSummarySchema) }));
   return data.groups;
 }
 
 export async function startSoloMode(): Promise<GroupSummary> {
-  const data = await request<{ group: GroupSummary }>("/api/groups", {
+  const data = await request("/api/groups", z.object({ group: groupSummarySchema }), {
     method: "POST",
     body: JSON.stringify({ mode: "solo" }),
   });
@@ -124,14 +118,14 @@ export async function startSoloMode(): Promise<GroupSummary> {
 export async function createGroupWithInvite(
   name: string,
 ): Promise<{ group: GroupSummary; inviteCode: string }> {
-  return request("/api/groups", {
+  return request("/api/groups", z.object({ group: groupSummarySchema, inviteCode: z.string() }), {
     method: "POST",
     body: JSON.stringify({ mode: "create", name }),
   });
 }
 
 export async function joinGroupByInviteCode(code: string): Promise<GroupSummary> {
-  const data = await request<{ group: GroupSummary }>("/api/groups/join", {
+  const data = await request("/api/groups/join", z.object({ group: groupSummarySchema }), {
     method: "POST",
     body: JSON.stringify({ code }),
   });
@@ -139,14 +133,15 @@ export async function joinGroupByInviteCode(code: string): Promise<GroupSummary>
 }
 
 export async function getGroupPosts(groupId: string): Promise<Post[]> {
-  const data = await request<{ group: GroupSummary; posts: Post[] }>(
+  const data = await request(
     `/api/groups/${groupId}/posts`,
+    z.object({ group: groupSummarySchema, posts: z.array(postSchema) }),
   );
   return data.posts;
 }
 
 export async function createPost(groupId: string, body: string, emotion: Emotion): Promise<Post> {
-  const data = await request<{ post: Post }>(`/api/groups/${groupId}/posts`, {
+  const data = await request(`/api/groups/${groupId}/posts`, z.object({ post: postSchema }), {
     method: "POST",
     body: JSON.stringify({ body, emotion }),
   });

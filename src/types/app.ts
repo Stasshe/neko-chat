@@ -1,43 +1,57 @@
-export const catTypes = ["white", "black", "mike", "sham", "chatora"] as const;
+import { z } from "zod";
 
-export type CatType = (typeof catTypes)[number];
+export const catTypeSchema = z.enum(["white", "black", "mike", "sham", "chatora"]);
 
-export const emotions = ["positive", "neutral", "negative", "random"] as const;
+export const catTypes = catTypeSchema.options;
 
-export type Emotion = (typeof emotions)[number];
+export type CatType = z.infer<typeof catTypeSchema>;
 
-export type Profile = {
-  id: string;
-  username: string;
-  catType: CatType;
-  createdAt: string;
-  updatedAt: string;
-};
+export const emotionSchema = z.enum(["positive", "neutral", "negative", "random"]);
 
-export type GroupSummary = {
-  id: string;
-  name: string;
-  isSolo: boolean;
-  memberCount: number;
-};
+export const emotions = emotionSchema.options;
 
-export type PostUser = {
-  id: string;
-  username: string;
-  catType: CatType;
-};
+export type Emotion = z.infer<typeof emotionSchema>;
 
-export type Post = {
-  id: string;
-  groupId: string;
-  userId: string;
-  body: string;
-  emotion: Emotion;
-  createdAt: string;
-  user: PostUser;
-};
+export const profileSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  catType: catTypeSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
 
-export const apiErrorCodes = [
+export type Profile = z.infer<typeof profileSchema>;
+
+export const groupSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  isSolo: z.boolean(),
+  memberCount: z.number(),
+});
+
+export type GroupSummary = z.infer<typeof groupSummarySchema>;
+
+export const postUserSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  catType: catTypeSchema,
+});
+
+export type PostUser = z.infer<typeof postUserSchema>;
+
+export const postSchema = z.object({
+  id: z.string(),
+  groupId: z.string(),
+  userId: z.string(),
+  body: z.string(),
+  emotion: emotionSchema,
+  createdAt: z.string(),
+  user: postUserSchema,
+});
+
+export type Post = z.infer<typeof postSchema>;
+
+export const apiErrorCodeSchema = z.enum([
   "UNAUTHORIZED",
   "FORBIDDEN",
   "NOT_FOUND",
@@ -47,9 +61,9 @@ export const apiErrorCodes = [
   "ALREADY_JOINED",
   "CONFIGURATION_ERROR",
   "UNKNOWN",
-] as const;
+]);
 
-export type ApiErrorCode = (typeof apiErrorCodes)[number];
+export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
 
 export class AppError extends Error {
   readonly code: ApiErrorCode;
