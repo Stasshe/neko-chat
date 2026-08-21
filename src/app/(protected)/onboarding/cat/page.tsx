@@ -24,15 +24,22 @@ function getButtonLabel(loading: boolean): string {
   return "決定";
 }
 
+function getReturnPath(value: string | null): "/home" | "/settings" {
+  if (value === "settings") {
+    return "/settings";
+  }
+  return "/home";
+}
+
 export default function CatSelectionPage() {
   const router = useRouter();
   const { profile, loading, error, saveProfile } = useApp();
   const [selected, setSelected] = useState<CatType>("white");
-  const returnTo = useRef("home");
+  const returnPath = useRef<"/home" | "/settings">("/home");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    returnTo.current = params.get("returnTo") ?? "home";
+    returnPath.current = getReturnPath(params.get("returnTo"));
   }, []);
 
   async function confirm() {
@@ -43,7 +50,7 @@ export default function CatSelectionPage() {
     }
     try {
       await saveProfile(username, selected);
-      router.push(`/${returnTo.current}`);
+      router.push(returnPath.current);
     } catch {
       // The provider exposes the actionable error message.
     }

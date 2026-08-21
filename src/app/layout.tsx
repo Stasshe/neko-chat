@@ -4,7 +4,6 @@ import { AuthProvider } from "@/lib/auth/auth-provider";
 
 import "./globals.css";
 import "./status.css";
-import { AppProvider } from "@/state/app-provider";
 
 export const metadata: Metadata = {
   title: "猫チャット",
@@ -19,9 +18,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="antialiased bg-background text-foreground">
-        <AuthProvider>
-          <AppProvider>{children}</AppProvider>
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
