@@ -12,7 +12,9 @@
     "format:check": "biome format src/",
     "doctor": "npx react-doctor@latest",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "packageManager": "pnpm@11.22.0",
   "dependencies": {
@@ -34,6 +36,7 @@
     "react-doctor": "^0.9.12",
     "storybook": "^10.5.10",
     "tailwindcss": "4.3.2",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.11"
   }
 }
