@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/button";
 import { CopyIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 
@@ -48,13 +49,7 @@ export function InviteCreatedContent({ code }: { code: string }) {
           {getCopyLabel(copied)}
         </button>
         {copyError && <p className="form-error">{copyError}</p>}
-        <button
-          className="primary-button"
-          type="button"
-          onClick={() => router.push("/onboarding/cat")}
-        >
-          つぎへ
-        </button>
+        <Button onClick={() => router.push("/onboarding/cat")}>つぎへ</Button>
       </section>
     </MobileShell>
   );

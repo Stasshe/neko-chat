@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { Button } from "@/components/button";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
+import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
 
 export default function JoinPage() {
@@ -36,20 +38,18 @@ export default function JoinPage() {
           　◡
         </div>
         <form onSubmit={submit}>
-          <label className="field-label" htmlFor="invite-code">
-            招待コード
-          </label>
-          <input
+          <TextField
             id="invite-code"
+            label="招待コード"
             value={code}
-            onChange={(event) => setCode(event.target.value.toUpperCase())}
+            onChange={(value) => setCode(value.toUpperCase())}
             maxLength={6}
             placeholder="招待コードを入力してください"
           />
           {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
-          <button className="primary-button" type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? "参加中" : "参加する"}
-          </button>
+          </Button>
         </form>
       </section>
     </MobileShell>

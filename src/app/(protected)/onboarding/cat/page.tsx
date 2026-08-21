@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
@@ -68,14 +69,9 @@ function CatSelectionContent() {
           ))}
         </div>
         {error && <ErrorState message={error} />}
-        <button
-          className="primary-button"
-          type="button"
-          onClick={() => void confirm()}
-          disabled={loading}
-        >
+        <Button onClick={() => void confirm()} disabled={loading}>
           {getButtonLabel(loading)}
-        </button>
+        </Button>
       </section>
     </MobileShell>
   );
