@@ -1,52 +1,78 @@
-export const catTypes = ["white", "black", "mike", "sham", "chatora"] as const;
+import { z } from "zod";
 
-export type CatType = (typeof catTypes)[number];
+export const resourceIdPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const emotions = ["positive", "neutral", "negative", "random"] as const;
+export const resourceIdSchema = z.string().regex(resourceIdPattern);
 
-export type Emotion = (typeof emotions)[number];
+export const timestampSchema = z.iso.datetime({ offset: true });
 
-export type Profile = {
-  id: string;
-  username: string;
-  catType: CatType;
-  createdAt: string;
-  updatedAt: string;
-};
+export const inviteCodeSchema = z.string().regex(/^[A-Z0-9]{6}$/);
 
-export type GroupSummary = {
-  id: string;
-  name: string;
-  isSolo: boolean;
-  memberCount: number;
-};
+export const catTypeSchema = z.enum(["white", "black", "mike", "sham", "chatora"]);
 
-export type PostUser = {
-  id: string;
-  username: string;
-  catType: CatType;
-};
+export const catTypes = catTypeSchema.options;
 
-export type Post = {
-  id: string;
-  groupId: string;
-  userId: string;
-  body: string;
-  emotion: Emotion;
-  createdAt: string;
-  user: PostUser;
-};
+export type CatType = z.infer<typeof catTypeSchema>;
 
-export type ApiErrorCode =
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "NOT_FOUND"
-  | "VALIDATION_ERROR"
-  | "GROUP_FULL"
-  | "INVALID_INVITE_CODE"
-  | "ALREADY_JOINED"
-  | "CONFIGURATION_ERROR"
-  | "UNKNOWN";
+export const emotionSchema = z.enum(["positive", "neutral", "negative", "random"]);
+
+export const emotions = emotionSchema.options;
+
+export type Emotion = z.infer<typeof emotionSchema>;
+
+export const profileSchema = z.object({
+  id: resourceIdSchema,
+  username: z.string().min(1).max(20),
+  catType: catTypeSchema,
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema,
+});
+
+export type Profile = z.infer<typeof profileSchema>;
+
+export const groupSummarySchema = z.object({
+  id: resourceIdSchema,
+  name: z.string().min(1).max(30),
+  isSolo: z.boolean(),
+  memberCount: z.number().int().min(1).max(5),
+});
+
+export type GroupSummary = z.infer<typeof groupSummarySchema>;
+
+export const postUserSchema = z.object({
+  id: resourceIdSchema,
+  username: z.string().min(1).max(20),
+  catType: catTypeSchema,
+});
+
+export type PostUser = z.infer<typeof postUserSchema>;
+
+export const postSchema = z.object({
+  id: resourceIdSchema,
+  groupId: resourceIdSchema,
+  userId: resourceIdSchema,
+  body: z.string().min(1).max(30),
+  emotion: emotionSchema,
+  createdAt: timestampSchema,
+  user: postUserSchema,
+});
+
+export type Post = z.infer<typeof postSchema>;
+
+export const apiErrorCodeSchema = z.enum([
+  "UNAUTHORIZED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "VALIDATION_ERROR",
+  "GROUP_FULL",
+  "INVALID_INVITE_CODE",
+  "ALREADY_JOINED",
+  "CONFIGURATION_ERROR",
+  "UNKNOWN",
+]);
+
+export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
 
 export class AppError extends Error {
   readonly code: ApiErrorCode;

@@ -1,36 +1,27 @@
 import { authenticate } from "@/server/auth";
-import { failure, readJson, success } from "@/server/http";
+import { failure, parseValue, readJson, success } from "@/server/http";
 import { createGroup, getGroups, startSoloGroup } from "@/server/repository";
-import { readGroupName } from "@/server/validation";
-import { AppError } from "@/types/app";
-
-type GroupInput = {
-  mode?: string;
-  name?: string;
-};
+import { groupInputSchema, groupNameSchema } from "@/server/validation";
 
 export async function GET(request: Request): Promise<Response> {
   try {
     const user = await authenticate(request);
     return success({ groups: await getGroups(user) });
   } catch (error) {
-    return failure(error as object);
+    return failure(error);
   }
 }
 
 export async function POST(request: Request): Promise<Response> {
   try {
     const user = await authenticate(request);
-    const input = await readJson<GroupInput>(request);
+    const input = await readJson(request, groupInputSchema);
     if (input.mode === "solo") {
       return success({ group: await startSoloGroup(user) }, 201);
     }
-    if (input.mode === "create") {
-      const name = readGroupName(input.name ?? "");
-      return success(await createGroup(user, name), 201);
-    }
-    throw new AppError("VALIDATION_ERROR", "グループ作成モードが正しくありません。");
+    const name = parseValue(groupNameSchema, input.name);
+    return success(await createGroup(user, name), 201);
   } catch (error) {
-    return failure(error as object);
+    return failure(error);
   }
 }
