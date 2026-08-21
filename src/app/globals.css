@@ -1,3 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent-strong);
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--ink);
+  --color-secondary: var(--accent-soft);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--accent-soft);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--accent-soft);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--paper);
+  --color-card: var(--paper);
+  --color-card-foreground: var(--ink);
+}
+
 :root {
   --paper: #fffefd;
   --ink: #24201f;
@@ -9,8 +31,8 @@
   --grass: #c9e08f;
   --sky: #def3fa;
   --danger: #a83f35;
-  --radius-sm: 10px;
-  --radius-md: 18px;
+  --panel-radius-sm: 10px;
+  --panel-radius-md: 18px;
   --shadow-float: 0 3px 5px rgb(44 34 24 / 18%);
 }
 
@@ -402,7 +424,7 @@ a {
   min-height: 128px;
   padding: 18px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border-radius: var(--panel-radius-md);
   outline: none;
   resize: none;
   font-size: 16px;
@@ -436,7 +458,7 @@ a {
   min-width: 0;
   padding: 5px 2px 7px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--panel-radius-sm);
   flex-direction: column;
   align-items: center;
   font-size: 8px;
@@ -507,7 +529,7 @@ a {
   padding: 0 0 9px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border-radius: var(--panel-radius-md);
   flex-direction: column;
   align-items: center;
   background: white;
@@ -568,7 +590,7 @@ a {
 }
 .settings-form section {
   padding: 20px;
-  border-radius: var(--radius-md);
+  border-radius: var(--panel-radius-md);
   background: var(--accent-soft);
 }
 .settings-form h2 {
@@ -595,7 +617,7 @@ a {
   width: 100%;
   padding: 11px 12px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--panel-radius-sm);
   outline: 0;
   background: white;
 }
@@ -652,7 +674,7 @@ a {
   min-height: 150px;
   padding: 8px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border-radius: var(--panel-radius-md);
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -715,7 +737,7 @@ a {
   width: 100%;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border-radius: var(--panel-radius-md);
   font-size: 24px;
   font-weight: 600;
   letter-spacing: 9px;
