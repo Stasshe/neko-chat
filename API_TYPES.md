@@ -147,6 +147,20 @@ type Post = {
 
 ## 主機能の API 入出力型
 
+HTTP境界:
+
+| Method | Path | Operation |
+| --- | --- | --- |
+| `GET` | `/api/profile` | `createProfileIfNeeded`, `getMyProfile` |
+| `PATCH` | `/api/profile` | `updateMyProfile` |
+| `GET` | `/api/groups` | `getMyGroups` |
+| `POST` | `/api/groups` | `startSoloMode`, `createGroupWithInvite` |
+| `POST` | `/api/groups/join` | `joinGroupByInviteCode` |
+| `GET` | `/api/groups/:groupId/posts` | `getGroupPosts` |
+| `POST` | `/api/groups/:groupId/posts` | `createPost` |
+
+ブラウザはSupabase AuthのBearer tokenを送る。Vercel Route Handlerが認証・認可・Supabase Data API呼び出しを担当する。Supabase RPCは使わない。
+
 ### `createProfileIfNeeded`
 
 ```ts
@@ -267,6 +281,7 @@ type ApiErrorCode =
   | "GROUP_FULL"
   | "INVALID_INVITE_CODE"
   | "ALREADY_JOINED"
+  | "CONFIGURATION_ERROR"
   | "UNKNOWN";
 ```
 

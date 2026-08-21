@@ -801,9 +801,9 @@ Security
 * XSS対策
 * CSRFを考慮した認証設計
 * UUIDによるResource ID
-* Service Role KeyをClientへ公開しない
+* Secret KeyをClientへ公開しない
 
-SUPABASE_SERVICE_ROLE_KEYはブラウザへ絶対に配布しない。
+SUPABASE_SECRET_KEYはVercel環境変数だけに置く。
 
 ⸻
 
@@ -821,7 +821,7 @@ group name
 
 post
 
-1 <= length <= 100
+1 <= length <= 30
 
 ⸻
 
@@ -987,3 +987,45 @@ Reaction
 をグループ画面の中心UIとする。
 
 これが猫チャットにおける最も重要なプロダクト上の特徴である。
+
+⸻
+
+35. フロントエンド実装境界
+
+35.1 デザイン
+
+完成像の正は `figma-img/` の393×852書き出し。
+
+画面は393pxを基準幅とし、狭い端末では親幅へ縮む。高さは`100dvh`、safe areaを含める。デスクトップではモバイル面を中央に置く。
+
+色、角丸、影はCSS変数で共有する。猫、TopBar、BottomTabBar、MemberAvatars、SpeechBubbleは画面から分離する。書き出し画像そのものを画面背景にしない。
+
+35.2 状態
+
+API境界は`API_TYPES.md`。画面はDB行やSupabase生レスポンスを扱わない。Vercel Route HandlerがDB行をアプリ型へ変換する。
+
+現在グループIDだけをlocalStorageへ保存する。プロフィール、グループ、投稿の正はSupabase。グループ切り替え時は対象投稿の取得成功後に現在グループを更新する。
+
+猫選択、プロフィール更新、投稿は保存成功後だけ遷移する。失敗時は入力を保持して画面内に理由を表示する。
+
+35.3 主要画面
+
+`/onboarding/cat`は5種類から猫を選び、プロフィールを保存する。`/onboarding/invite`は発行済みコードを表示しClipboard APIでコピーする。
+
+`/home`は現在グループ、メンバー、最大4件の近況を空間UIへ配置する。0件、読み込み中、取得失敗を区別する。
+
+`/compose`は本文1〜30文字と4種の感情を受け取り、保存後に投稿一覧を再取得してホームへ戻る。
+
+`/groups`は所属グループと人数を表示し、選択したグループへ切り替える。`/settings`は名前更新、猫再選択、ログアウトを提供する。
+
+35.4 接続失敗
+
+`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_SECRET_KEY`が必要。未設定、認証切れ、権限不足、入力不正、グループ満員、招待コード不正を画面内エラーとして顕在化する。Secret Keyはブラウザへ配布しない。
+
+35.5 Vercel API
+
+ブラウザはSupabase Authのaccess tokenをBearer tokenとして`/api`へ送る。Route Handlerは毎回Supabase Authでユーザーを検証する。
+
+プロフィール、所属グループ、投稿の読み書きはVercelからSecret Key付きでSupabase Data APIを呼ぶ。Supabase RPC、DBトリガー、公開RLSポリシーは使わない。RLSは有効化し、ブラウザからの直接DB操作を拒否する。
+
+グループメンバーはgroup内で1〜5のslotを持ち、`group_id, slot`を一意にする。招待参加の同時実行時もslot競合を再試行し、6人目をDB制約で拒否する。複数行を作るグループ作成に失敗した場合は作成済みgroupを削除し、cascadeで中間データを回収する。
