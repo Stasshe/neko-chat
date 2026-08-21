@@ -1,19 +1,11 @@
 "use client";
 
 import type { Session } from "@supabase/supabase-js";
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-type AuthContextValue = {
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  userId: string | null;
-  session: Session | null;
-  signOut: () => Promise<void>;
-};
-
-export const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from "./context";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -28,11 +28,11 @@ export default function CatSelectionPage() {
   const router = useRouter();
   const { profile, loading, error, saveProfile } = useApp();
   const [selected, setSelected] = useState<CatType>("white");
-  const [returnTo, setReturnTo] = useState("home");
+  const returnTo = useRef("home");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setReturnTo(params.get("returnTo") ?? "home");
+    returnTo.current = params.get("returnTo") ?? "home";
   }, []);
 
   async function confirm() {
@@ -43,7 +43,7 @@ export default function CatSelectionPage() {
     }
     try {
       await saveProfile(username, selected);
-      router.push(`/${returnTo}`);
+      router.push(`/${returnTo.current}`);
     } catch {
       // The provider exposes the actionable error message.
     }
