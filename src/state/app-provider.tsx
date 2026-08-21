@@ -12,10 +12,13 @@ import {
 } from "react";
 
 import {
+  createGroupWithInvite,
   createPost as createPostRequest,
   getGroupPosts,
   getMyGroups,
   getMyProfile,
+  joinGroupByInviteCode,
+  startSoloMode,
   updateMyProfile,
 } from "@/lib/api";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -39,6 +42,9 @@ type AppContextValue = {
   error: string | null;
   refresh: () => Promise<void>;
   selectGroup: (group: GroupSummary) => Promise<void>;
+  startSolo: () => Promise<GroupSummary>;
+  createGroup: (name: string) => Promise<{ group: GroupSummary; inviteCode: string }>;
+  joinGroup: (code: string) => Promise<GroupSummary>;
   saveProfile: (username: string, catType: CatType) => Promise<void>;
   publishPost: (body: string, emotion: Emotion) => Promise<void>;
   signOut: () => Promise<void>;
@@ -55,7 +61,7 @@ function getErrorMessage(error: Error): string {
   return "読み込みに失敗しました。時間をおいてもう一度お試しください。";
 }
 
-function normalizeError(error: object): Error {
+function normalizeError(error: unknown): Error {
   if (error instanceof Error) {
     return error;
   }
@@ -69,7 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [currentGroup, setCurrentGroup] = useState<GroupSummary | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadPosts = useCallback(async (group: GroupSummary) => {
@@ -96,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setPosts([]);
       }
     } catch (requestError) {
-      const normalized = normalizeError(requestError as object);
+      const normalized = normalizeError(requestError);
       setError(getErrorMessage(normalized));
     } finally {
       setLoading(false);
@@ -121,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         window.localStorage.setItem(currentGroupKey, group.id);
         router.push("/home");
       } catch (requestError) {
-        const normalized = normalizeError(requestError as object);
+        const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
       } finally {
         setLoading(false);
@@ -130,6 +136,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [loadPosts, router],
   );
 
+  const startSolo = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const group = await startSoloMode();
+      setCurrentGroup(group);
+      setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
+      window.localStorage.setItem(currentGroupKey, group.id);
+      return group;
+    } catch (requestError) {
+      const normalized = normalizeError(requestError);
+      setError(getErrorMessage(normalized));
+      throw normalized;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createGroup = useCallback(async (name: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await createGroupWithInvite(name);
+      setCurrentGroup(result.group);
+      setGroups((current) => [result.group, ...current]);
+      window.localStorage.setItem(currentGroupKey, result.group.id);
+      return result;
+    } catch (requestError) {
+      const normalized = normalizeError(requestError);
+      setError(getErrorMessage(normalized));
+      throw normalized;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const joinGroup = useCallback(async (code: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const group = await joinGroupByInviteCode(code);
+      setCurrentGroup(group);
+      setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
+      window.localStorage.setItem(currentGroupKey, group.id);
+      return group;
+    } catch (requestError) {
+      const normalized = normalizeError(requestError);
+      setError(getErrorMessage(normalized));
+      throw normalized;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const saveProfile = useCallback(async (username: string, catType: CatType) => {
     setLoading(true);
     setError(null);
@@ -137,7 +197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const nextProfile = await updateMyProfile(username, catType);
       setProfile(nextProfile);
     } catch (requestError) {
-      const normalized = normalizeError(requestError as object);
+      const normalized = normalizeError(requestError);
       setError(getErrorMessage(normalized));
       throw normalized;
     } finally {
@@ -156,7 +216,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await createPostRequest(currentGroup.id, body, emotion);
         await loadPosts(currentGroup);
       } catch (requestError) {
-        const normalized = normalizeError(requestError as object);
+        const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
         throw normalized;
       } finally {
@@ -191,6 +251,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       error,
       refresh,
       selectGroup,
+      startSolo,
+      createGroup,
+      joinGroup,
       saveProfile,
       publishPost,
       signOut,
@@ -205,6 +268,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       error,
       refresh,
       selectGroup,
+      startSolo,
+      createGroup,
+      joinGroup,
       saveProfile,
       publishPost,
       signOut,
