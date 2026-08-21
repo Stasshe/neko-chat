@@ -14,7 +14,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.22.0",
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
     "next": "^16.2.9",
@@ -24,16 +24,16 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
+    "@storybook/addon-docs": "^10.5.10",
+    "@storybook/nextjs-vite": "^10.5.10",
     "@tailwindcss/postcss": "4.3.2",
     "@types/node": "26.0.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
     "react-doctor": "^0.9.12",
-    "tailwindcss": "4.3.2",
-    "typescript": "6.0.3",
     "storybook": "^10.5.10",
-    "@storybook/nextjs-vite": "^10.5.10",
-    "@storybook/addon-docs": "^10.5.10"
+    "tailwindcss": "4.3.2",
+    "typescript": "6.0.3"
   }
 }
