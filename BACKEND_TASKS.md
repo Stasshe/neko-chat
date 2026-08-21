@@ -190,7 +190,7 @@
 8. 自分のプロフィール取得処理を作る
 9. 自分のプロフィール更新処理を作る
 10. `username` と `cat_type` の更新時バリデーションを入れる
-11. 自分が担当した変更を `supabase/schema.sql` に反映する
+11. 自分が担当した変更を `supabase/schemas/01_profiles.sql` に反映する
 12. `Profile` の返り値をフロント向けの形に揃える
 13. プロフィール系のエラー形を揃える
 
@@ -222,7 +222,7 @@
 14. グループ関連のRLSを入れる
 15. 投稿関連のRLSを入れる
 16. 投稿文字数と emotion の値チェックを入れる
-17. 自分が担当した変更を `supabase/schema.sql` に反映する
+17. 自分が担当した変更を `supabase/schemas/02_groups.sql`〜`supabase/schemas/05_posts.sql` の該当ファイルに反映する
 18. `GroupSummary`, `InviteCode`, `Post`, `Post.user` の返り値をフロント向けの形に揃える
 19. グループ系・投稿系のエラー形を揃える
 

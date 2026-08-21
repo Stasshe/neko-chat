@@ -21,6 +21,30 @@ SUPABASE_SECRET_KEY=
 
 既存プロジェクトはSupabase SQL Editorで `supabase/migrations/202608190001_vercel_access.sql` を一度適用する。Vercel用権限と5人上限を保証するmember slot制約が入る。
 
+### Supabaseスキーマの管理
+
+DBスキーマの正本は `supabase/schemas/*.sql` とする。
+テーブル定義、インデックス、RLS、権限を変更する場合は、担当するテーブルのファイルへ反映する。
+
+| 実行順 | ファイル | 管理対象 |
+| --- | --- | --- |
+| 1 | `supabase/schemas/01_profiles.sql` | `profiles` |
+| 2 | `supabase/schemas/02_groups.sql` | `groups` |
+| 3 | `supabase/schemas/03_group_members.sql` | `group_members` |
+| 4 | `supabase/schemas/04_invite_codes.sql` | `invite_codes` |
+| 5 | `supabase/schemas/05_posts.sql` | `posts` |
+
+外部キーの依存関係があるため、初回構築時は必ず `01` から `05` の順で実行する。
+
+スキーマ変更時のルール:
+
+- 変更対象のテーブルに対応するSQLファイルだけを編集する
+- 複数テーブルにまたがる変更は、各テーブルのファイルへ分けて反映する
+- 新しいテーブルを追加する場合は、外部キーの依存順に番号を付ける
+- `supabase/schema.sql` は使用しない
+- 既存環境の更新は `supabase/migrations/` のmigrationで行う
+- `DROP TABLE`、`DROP COLUMN` などの破壊的変更は、適用前に必ずレビューする
+
 ## データ境界
 
 ブラウザはアクセストークン付きで `/api` を呼ぶ。Route Handlerがトークン検証、入力検証、認可、Supabase Data API呼び出しを担当する。5人上限はメンバーslotの一意制約で保証する。Supabase RPC、DBトリガー、ブラウザからの直接DB操作は使わない。
