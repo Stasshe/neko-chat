@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
+import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { ArrowLeftIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState, LoadingState } from "@/components/status";
+import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
 
 export default function SettingsPage() {
@@ -50,12 +52,13 @@ export default function SettingsPage() {
           <div className="settings-profile">
             <CatDisplay type={profile?.catType ?? "white"} />
             <div>
-              <label htmlFor="username">名前</label>
-              <input
+              <TextField
                 id="username"
+                label="名前"
+                labelClassName=""
                 value={username}
-                onChange={(event) => {
-                  setEditedUsername(event.target.value);
+                onChange={(value) => {
+                  setEditedUsername(value);
                   setSaved(false);
                 }}
                 maxLength={20}
@@ -68,12 +71,12 @@ export default function SettingsPage() {
         </section>
         {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
         {saved && <p className="success-message">プロフィールを更新しました。</p>}
-        <button className="primary-button" type="submit" disabled={loading || !profile}>
+        <Button type="submit" disabled={loading || !profile}>
           保存する
-        </button>
-        <button className="logout-button" type="button" onClick={() => void signOut()}>
+        </Button>
+        <Button variant="logout" onClick={() => void signOut()}>
           ログアウト
-        </button>
+        </Button>
       </form>
     </MobileShell>
   );

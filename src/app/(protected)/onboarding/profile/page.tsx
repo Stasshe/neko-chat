@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { Button } from "@/components/button";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
+import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
 
 export default function ProfileOnboardingPage() {
@@ -39,20 +41,19 @@ export default function ProfileOnboardingPage() {
         </div>
         <h1>まずは名前を教えてね</h1>
         <form onSubmit={submit}>
-          <label className="sr-only" htmlFor="username">
-            ユーザー名
-          </label>
-          <input
+          <TextField
             id="username"
+            label="ユーザー名"
+            hideLabel
             value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            onChange={setUsername}
             maxLength={20}
             placeholder="ユーザー名を入力してください"
           />
           {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
-          <button className="primary-button" type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? "保存中" : "つぎへ"}
-          </button>
+          </Button>
         </form>
       </section>
     </MobileShell>

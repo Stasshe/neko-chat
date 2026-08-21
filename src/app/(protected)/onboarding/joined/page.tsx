@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Button } from "@/components/button";
 import { MobileShell } from "@/components/mobile-shell";
 
 function JoinedContent() {
@@ -15,13 +16,7 @@ function JoinedContent() {
         <div className="paw-mark" aria-hidden="true">
           ●
         </div>
-        <button
-          className="primary-button"
-          type="button"
-          onClick={() => router.push("/onboarding/cat")}
-        >
-          つぎへ
-        </button>
+        <Button onClick={() => router.push("/onboarding/cat")}>つぎへ</Button>
       </section>
     </MobileShell>
   );

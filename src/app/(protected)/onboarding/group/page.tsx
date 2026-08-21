@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { Button } from "@/components/button";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
+import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
 
 export default function GroupPage() {
@@ -36,20 +38,19 @@ export default function GroupPage() {
           　◡
         </div>
         <form onSubmit={submit}>
-          <label className="sr-only" htmlFor="group-name">
-            グループ名
-          </label>
-          <input
+          <TextField
             id="group-name"
+            label="グループ名"
+            hideLabel
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={setName}
             maxLength={30}
             placeholder="グループ名を入力してください"
           />
           {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
-          <button className="primary-button" type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? "作成中" : "作成"}
-          </button>
+          </Button>
         </form>
       </section>
     </MobileShell>
