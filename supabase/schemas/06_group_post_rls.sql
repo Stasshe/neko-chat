@@ -78,8 +78,7 @@ on public.group_members
 for insert
 to authenticated
 with check (
-  user_id = auth.uid()
-  and public.is_group_owner(group_id, auth.uid())
+  public.is_group_owner(group_id, auth.uid())
 );
 
 create policy "group_members_delete_self_or_owner"
