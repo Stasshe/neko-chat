@@ -47,7 +47,7 @@ DBスキーマの正本は `supabase/schemas/*.sql` とする。
 
 ## データ境界
 
-ブラウザはアクセストークン付きで `/api` を呼ぶ。Route Handlerがトークン検証、入力検証、認可、Supabase Data API呼び出しを担当する。5人上限はメンバーslotの一意制約で保証する。Supabase RPC、DBトリガー、ブラウザからの直接DB操作は使わない。
+ブラウザはアクセストークン付きで `/api` を呼ぶ。Route Handlerがトークン検証、入力検証、認可、Supabase Data API呼び出しを担当する。リクエスト、APIレスポンス、Supabaseの取得行、環境変数はZodで境界検証する。5人上限はメンバーslotの一意制約で保証する。Supabase RPC、DBトリガー、ブラウザからの直接DB操作は使わない。
 
 ## 画面
 

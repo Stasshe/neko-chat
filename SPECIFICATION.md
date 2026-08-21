@@ -809,7 +809,7 @@ SUPABASE_SECRET_KEYはVercel環境変数だけに置く。
 
 30. 入力Validation
 
-共通ValidationにはZodなどを利用する。
+共通ValidationにはZodを利用する。Route Handler入力、APIレスポンス、Supabase Data API取得行、環境変数を利用前に検証する。型はスキーマから推論し、境界での型アサーションは行わない。
 
 username
 
@@ -1022,7 +1022,7 @@ API境界は`API_TYPES.md`。画面はDB行やSupabase生レスポンスを扱�
 
 35.4 接続失敗
 
-`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_SECRET_KEY`が必要。未設定、認証切れ、権限不足、入力不正、グループ満員、招待コード不正を画面内エラーとして顕在化する。Secret Keyはブラウザへ配布しない。
+`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`、`SUPABASE_SECRET_KEY`が必要。URL形式と空値を起動境界で検証する。未設定、認証切れ、権限不足、入力不正、グループ満員、招待コード不正を画面内エラーとして顕在化する。Secret Keyはブラウザへ配布しない。
 
 35.5 Vercel API
 
