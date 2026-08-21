@@ -125,6 +125,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (pathname.startsWith("/onboarding")) {
       return;
     }
+    // Effect Event kicks off the nav-triggered refresh; loading flag flip is intentional, not derivable.
+    // react-doctor-disable-next-line react-hooks-js/set-state-in-effect
     void refreshAfterNavigation();
   }, [pathname]);
 
