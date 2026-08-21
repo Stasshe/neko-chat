@@ -3,7 +3,7 @@
 import type { Session } from "@supabase/supabase-js";
 import { createContext, useEffect, useState } from "react";
 
-import { supabase } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 type AuthContextValue = {
   isLoading: boolean;
@@ -21,9 +21,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    const maybeClient = getSupabaseClient();
+
+    if (!maybeClient) {
+      setIsLoading(false);
+      return;
+    }
+
+    const client = maybeClient;
 
     async function restoreSession() {
-      const { data, error } = await supabase.auth.getSession();
+      const { data, error } = await client.auth.getSession();
 
       if (error) {
         console.error("Failed to restore auth session", error);
@@ -37,11 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
 
-    restoreSession();
+    void restoreSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = client.auth.onAuthStateChange((_event, nextSession) => {
       if (!isMounted) {
         return;
       }
@@ -55,9 +63,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
-
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
+    const client = getSupabaseClient();
+
+    if (!client) {
+      return;
+    }
+
+    const { error } = await client.auth.signOut();
 
     if (error) {
       console.error("Failed to sign out", error);

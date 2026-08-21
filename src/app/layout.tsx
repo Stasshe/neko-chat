@@ -18,13 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-<body
-  className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
->
-  <AuthProvider>
-    <AppProvider>{children}</AppProvider>
-  </AuthProvider>
-</body>
+      <body className="antialiased bg-background text-foreground">
+        <AuthProvider>
+          <AppProvider>{children}</AppProvider>
+        </AuthProvider>
       </body>
     </html>
   );
