@@ -61,7 +61,7 @@ function getErrorMessage(error: Error): string {
   return "読み込みに失敗しました。時間をおいてもう一度お試しください。";
 }
 
-function normalizeError(error: object): Error {
+function normalizeError(error: unknown): Error {
   if (error instanceof Error) {
     return error;
   }
@@ -102,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setPosts([]);
       }
     } catch (requestError) {
-      const normalized = normalizeError(requestError as object);
+      const normalized = normalizeError(requestError);
       setError(getErrorMessage(normalized));
     } finally {
       setLoading(false);
@@ -127,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         window.localStorage.setItem(currentGroupKey, group.id);
         router.push("/home");
       } catch (requestError) {
-        const normalized = normalizeError(requestError as object);
+        const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
       } finally {
         setLoading(false);
@@ -146,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(currentGroupKey, group.id);
       return group;
     } catch (requestError) {
-      const normalized = normalizeError(requestError as object);
+      const normalized = normalizeError(requestError);
       setError(getErrorMessage(normalized));
       throw normalized;
     } finally {
@@ -164,7 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(currentGroupKey, result.group.id);
       return result;
     } catch (requestError) {
-      const normalized = normalizeError(requestError as object);
+      const normalized = normalizeError(requestError);
       setError(getErrorMessage(normalized));
       throw normalized;
     } finally {
@@ -182,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(currentGroupKey, group.id);
       return group;
     } catch (requestError) {
-      const normalized = normalizeError(requestError as object);
+      const normalized = normalizeError(requestError);
       setError(getErrorMessage(normalized));
       throw normalized;
     } finally {
@@ -197,7 +197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const nextProfile = await updateMyProfile(username, catType);
       setProfile(nextProfile);
     } catch (requestError) {
-      const normalized = normalizeError(requestError as object);
+      const normalized = normalizeError(requestError);
       setError(getErrorMessage(normalized));
       throw normalized;
     } finally {
@@ -216,7 +216,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await createPostRequest(currentGroup.id, body, emotion);
         await loadPosts(currentGroup);
       } catch (requestError) {
-        const normalized = normalizeError(requestError as object);
+        const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
         throw normalized;
       } finally {

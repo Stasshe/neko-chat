@@ -2,5 +2,4 @@ allowBuilds:
   '@biomejs/biome': false
   '@tailwindcss/oxide': false
   sharp: false
-minimumReleaseAge: 10080
-trustPolicy: no-downgrade
+minimumReleaseAge: 1440

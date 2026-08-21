@@ -1,18 +1,14 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { AppError } from "@/types/app";
+import { getServerEnv } from "@/config/server";
 
 let client: SupabaseClient | null = null;
 
 export function getAdminClient(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secretKey = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !secretKey) {
-    throw new AppError("CONFIGURATION_ERROR", "Supabaseのサーバー接続情報がありません。");
-  }
+  const env = getServerEnv();
 
   if (!client) {
-    client = createClient(url, secretKey, {
+    client = createClient(env.supabaseUrl, env.supabaseSecretKey, {
       auth: {
         autoRefreshToken: false,
         detectSessionInUrl: false,
