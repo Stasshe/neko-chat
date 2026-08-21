@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "biome check src/",
+    "lint": "biome lint src/",
     "lint:fix": "biome check --write src/",
     "format": "biome format --write src/",
+    "format:check": "biome format src/",
     "doctor": "npx react-doctor@latest"
   },
   "packageManager": "pnpm@11.9.0",
