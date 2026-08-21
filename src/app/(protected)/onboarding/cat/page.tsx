@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -24,23 +24,11 @@ function getButtonLabel(loading: boolean): string {
   return "決定";
 }
 
-function getReturnPath(value: string | null): "/home" | "/settings" {
-  if (value === "settings") {
-    return "/settings";
-  }
-  return "/home";
-}
-
-export default function CatSelectionPage() {
+function CatSelectionContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { profile, loading, error, saveProfile } = useApp();
   const [selected, setSelected] = useState<CatType>("white");
-  const returnPath = useRef<"/home" | "/settings">("/home");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    returnPath.current = getReturnPath(params.get("returnTo"));
-  }, []);
 
   async function confirm() {
     const username = profile?.username ?? window.localStorage.getItem("neko-chat.username") ?? "";
@@ -50,7 +38,11 @@ export default function CatSelectionPage() {
     }
     try {
       await saveProfile(username, selected);
-      router.push(returnPath.current);
+      if (searchParams.get("returnTo") === "settings") {
+        router.push("/settings");
+        return;
+      }
+      router.push("/home");
     } catch {
       // The provider exposes the actionable error message.
     }
@@ -84,5 +76,13 @@ export default function CatSelectionPage() {
         </button>
       </section>
     </MobileShell>
+  );
+}
+
+export default function CatSelectionPage() {
+  return (
+    <Suspense fallback={null}>
+      <CatSelectionContent />
+    </Suspense>
   );
 }
