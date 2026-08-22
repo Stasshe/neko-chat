@@ -290,6 +290,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return withLoading(setLoading, async () => {
       try {
         const group = await joinGroupByInviteCode(code);
+        await loadPosts(group);
         setCurrentGroup(group);
         setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
         window.localStorage.setItem(currentGroupKey, group.id);
