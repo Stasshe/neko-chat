@@ -3,16 +3,37 @@
 import { animate, type JSAnimation, stagger } from "animejs";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { Step } from "react-joyride";
 
 import { CatDisplay } from "@/components/cat-display";
 import { ComposeIcon, MenuIcon, SettingsIcon } from "@/components/icons";
 import { MemberAvatars } from "@/components/member-avatars";
 import { MobileShell } from "@/components/mobile-shell";
+import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
+import { tourStorageKey } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
+
+const homeTourSteps: Step[] = [
+  {
+    target: ".home-header__title",
+    content: "ここに今いる場所が表示されるよ。",
+    placement: "bottom",
+  },
+  {
+    target: ".park-scene",
+    content: "みんなのつぶやきがここに集まるよ。",
+    placement: "bottom",
+  },
+  {
+    target: ".home-dock__compose",
+    content: "ここから気持ちをつぶやいてみよう。",
+    placement: "top",
+  },
+];
 
 function getBubbleAlignment(index: number): "left" | "right" {
   if (index % 2 === 0) {
@@ -36,10 +57,7 @@ function useParkAnimation(postCount: number) {
 
   useEffect(() => {
     const scene = sceneRef.current;
-    if (
-      !scene ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
+    if (!scene || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
 
@@ -81,7 +99,25 @@ function useParkAnimation(postCount: number) {
 
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
+  const [tourRun, setTourRun] = useState(false);
   const sceneRef = useParkAnimation(posts.length);
+
+  useEffect(() => {
+    if (!currentGroup?.isSolo) {
+      return;
+    }
+
+    const stage = window.localStorage.getItem(tourStorageKey);
+    if (stage === null || stage === "home") {
+      setTourRun(true);
+    }
+  }, [currentGroup]);
+
+  function finishHomeTour() {
+    window.localStorage.setItem(tourStorageKey, "compose");
+    setTourRun(false);
+  }
+
   const uniqueMembers = new Map<string, PostUser>();
 
   if (profile) {
@@ -96,12 +132,9 @@ export default function HomePage() {
 
   return (
     <MobileShell scene>
+      <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
       <header className="home-header">
-        <Link
-          className="home-header__action"
-          href="/groups"
-          aria-label="グループ一覧"
-        >
+        <Link className="home-header__action" href="/groups" aria-label="グループ一覧">
           <MenuIcon />
           <span>チャット</span>
         </Link>
@@ -109,21 +142,13 @@ export default function HomePage() {
           <MemberAvatars members={members} />
           <strong>{currentGroup?.name ?? "グループ名"}</strong>
         </div>
-        <Link
-          className="home-header__action"
-          href="/settings"
-          aria-label="設定"
-        >
+        <Link className="home-header__action" href="/settings" aria-label="設定">
           <SettingsIcon />
           <span>設定</span>
         </Link>
       </header>
 
-      <section
-        ref={sceneRef}
-        className="park-scene"
-        aria-label="グループの近況"
-      >
+      <section ref={sceneRef} className="park-scene" aria-label="グループの近況">
         <Image
           src="/images/ui/backgrounds/home-green.png"
           alt=""
@@ -169,22 +194,15 @@ export default function HomePage() {
         />
 
         {loading && <LoadingState label="みんなの近況を読み込み中" />}
-        {!loading && error && (
-          <ErrorState message={error} retry={() => void refresh()} />
-        )}
+        {!loading && error && <ErrorState message={error} retry={() => void refresh()} />}
         {!loading && !error && posts.length === 0 && (
           <EmptyState message="まだつぶやきがありません。最初の一言を届けよう。" />
         )}
         {!loading &&
           !error &&
           posts.slice(0, 4).map((post, index) => (
-            <article
-              className={`scene-post scene-post--${index + 1}`}
-              key={post.id}
-            >
-              <SpeechBubble align={getBubbleAlignment(index)}>
-                {post.body}
-              </SpeechBubble>
+            <article className={`scene-post scene-post--${index + 1}`} key={post.id}>
+              <SpeechBubble align={getBubbleAlignment(index)}>{post.body}</SpeechBubble>
               <CatDisplay
                 type={post.user.catType}
                 emotion={post.emotion}
@@ -199,12 +217,7 @@ export default function HomePage() {
 
       <nav className="home-dock" aria-label="メインナビゲーション">
         <Link className="home-dock__item" href="/home" aria-current="page">
-          <Image
-            src="/images/ui/navigation/home-button.png"
-            alt=""
-            width={51}
-            height={49}
-          />
+          <Image src="/images/ui/navigation/home-button.png" alt="" width={51} height={49} />
           <span>ホーム</span>
         </Link>
         <Link className="home-dock__compose" href="/compose">
@@ -214,12 +227,7 @@ export default function HomePage() {
           <span>つぶやく</span>
         </Link>
         <Link className="home-dock__item" href="/groups">
-          <Image
-            src="/images/ui/navigation/group-button.png"
-            alt=""
-            width={56}
-            height={20}
-          />
+          <Image src="/images/ui/navigation/group-button.png" alt="" width={56} height={20} />
           <span>グループ</span>
         </Link>
       </nav>

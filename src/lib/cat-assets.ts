@@ -46,7 +46,7 @@ function pickEmotionFromSeed(seed: string): "positive" | "neutral" | "negative" 
     hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   }
 
-  return randomEmotionFallbacks[hash % randomEmotionFallbacks.length];
+  return randomEmotionFallbacks[hash % randomEmotionFallbacks.length] ?? "neutral";
 }
 
 function normalizeEmotion(
@@ -83,6 +83,6 @@ export function getCatImageSrc(
   pose: CatPose,
   seed?: string,
 ): string {
-  const normalizedEmotion = normalizeEmotion(emotion, pose, seed);
+  const normalizedEmotion = normalizeEmotion(emotion, pose, seed ?? `${type}:${pose}`);
   return catImagePaths[type][normalizedEmotion];
 }
