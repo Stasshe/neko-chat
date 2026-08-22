@@ -1,4 +1,6 @@
 import { ComposeSheet } from "@/components/compose-sheet";
+import { BottomTabBar } from "@/components/navigation";
+import { RouteTransition, TabTransitionProvider } from "@/components/route-transition";
 import { AuthGuard } from "@/lib/auth/auth-guard";
 import { AppProvider } from "@/state/app-provider";
 
@@ -10,8 +12,11 @@ export default function ProtectedLayout({
   return (
     <AuthGuard>
       <AppProvider>
-        {children}
-        <ComposeSheet />
+        <TabTransitionProvider>
+          <RouteTransition>{children}</RouteTransition>
+          <BottomTabBar />
+          <ComposeSheet />
+        </TabTransitionProvider>
       </AppProvider>
     </AuthGuard>
   );

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { MobileShell } from "@/components/mobile-shell";
 
@@ -36,6 +37,7 @@ export function InviteCreatedContent({ code }: { code: string }) {
 
   return (
     <MobileShell>
+      <BackLink href="/groups" label="グループ一覧へ戻る" />
       <section className="invite-created">
         <span className="accent-lines" aria-hidden="true" />
         <h1>グループが作成されました</h1>
@@ -52,7 +54,7 @@ export function InviteCreatedContent({ code }: { code: string }) {
           {getCopyLabel(copied)}
         </button>
         {copyError && <p className="form-error">{copyError}</p>}
-        <Button onClick={() => router.push("/onboarding/cat")}>つぎへ</Button>
+        <Button onClick={() => router.replace("/onboarding/cat")}>つぎへ</Button>
       </section>
     </MobileShell>
   );

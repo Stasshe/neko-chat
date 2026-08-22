@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -24,13 +25,14 @@ export default function GroupPage() {
     setValidationError(null);
     try {
       const result = await createGroup(value);
-      router.push(`/onboarding/invite?code=${result.inviteCode}`);
+      router.replace(`/onboarding/invite?code=${result.inviteCode}`);
     } catch {
       /* provider state */
     }
   }
   return (
     <MobileShell>
+      <BackLink href="/onboarding/mode" />
       <section className="onboarding-form">
         <h1>グループを作成しよう</h1>
         <div className="onboarding-cat-group" aria-hidden="true">

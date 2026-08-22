@@ -1,13 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import { type MotionStyle, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
 import { useEffect, useRef } from "react";
 import type { Step } from "react-joyride";
 import { animate, type JSAnimation, stagger } from "animejs";
 
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
-import { BottomTabBar, TopBar } from "@/components/navigation";
+import { TopBar } from "@/components/navigation";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
@@ -30,6 +32,44 @@ const homeTourSteps: Step[] = [
     target: ".bottom-tabs__item:nth-child(2)",
     content: "ここから気持ちをつぶやいてみよう。",
     placement: "top",
+  },
+];
+
+type ScenePostLayout = MotionStyle & {
+  "--scene-cat-height": string;
+  "--scene-cat-width": string;
+};
+
+const firstScenePostLayout: ScenePostLayout = {
+  top: "23%",
+  right: "4%",
+  width: 130,
+  "--scene-cat-width": "110px",
+  "--scene-cat-height": "82px",
+};
+
+const scenePostLayouts: ScenePostLayout[] = [
+  firstScenePostLayout,
+  {
+    top: "51%",
+    left: "2%",
+    width: 130,
+    "--scene-cat-width": "110px",
+    "--scene-cat-height": "82px",
+  },
+  {
+    right: "1%",
+    bottom: "13%",
+    width: 175,
+    "--scene-cat-width": "155px",
+    "--scene-cat-height": "100px",
+  },
+  {
+    bottom: "7%",
+    left: "3%",
+    width: 130,
+    "--scene-cat-width": "110px",
+    "--scene-cat-height": "82px",
   },
 ];
 
@@ -64,7 +104,7 @@ function useParkAnimation(postCount: number) {
     }
     if (postCount > 0) {
       animations.push(
-        animate(scene.querySelectorAll(".scene-post"), {
+        animate(scene.querySelectorAll(".scene-post__float"), {
           y: -5,
           duration: 2200,
           delay: stagger(320),
@@ -90,6 +130,7 @@ export default function HomePage() {
   const tourStage = useTourStage();
   const tourRun = Boolean(currentGroup?.isSolo && (tourStage === null || tourStage === "home"));
   const sceneRef = useParkAnimation(posts.length);
+  const reducedMotion = useReducedMotion();
 
   function finishHomeTour() {
     setTourStage("compose");
@@ -160,19 +201,29 @@ export default function HomePage() {
         {!loading &&
           !error &&
           posts.slice(0, 4).map((post, index) => (
-            <article className={`scene-post scene-post--${index + 1}`} key={post.id}>
-              <SpeechBubble align={getBubbleAlignment(index)}>{post.body}</SpeechBubble>
-              <CatDisplay
-                type={post.user.catType}
-                emotion={post.emotion}
-                className="scene-post__cat"
-                seed={post.id}
-              />
-              <span className="scene-post__name">{post.user.username}</span>
-            </article>
+            <m.article
+              className="scene-post"
+              style={scenePostLayouts[index] ?? firstScenePostLayout}
+              key={post.id}
+              drag={!reducedMotion}
+              dragConstraints={sceneRef}
+              dragMomentum={false}
+              whileDrag={{ scale: 1.04, zIndex: 12 }}
+            >
+              <div className="scene-post__float">
+                <SpeechBubble align={getBubbleAlignment(index)}>{post.body}</SpeechBubble>
+                <CatDisplay
+                  type={post.user.catType}
+                  emotion={post.emotion}
+                  className="scene-post__cat"
+                  seed={post.id}
+                  priority={index === 0}
+                />
+                <span className="scene-post__name">{post.user.username}</span>
+              </div>
+            </m.article>
           ))}
       </section>
-      <BottomTabBar />
     </MobileShell>
   );
 }

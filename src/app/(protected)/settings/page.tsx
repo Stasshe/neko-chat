@@ -6,7 +6,6 @@ import { type FormEvent, useState } from "react";
 
 import { ArrowLeftIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
-import { BottomTabBar } from "@/components/navigation";
 import { ErrorState, LoadingState } from "@/components/status";
 import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
@@ -127,7 +126,6 @@ export default function SettingsPage() {
         {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
         {saved && <p className="success-message">プロフィールを更新しました。</p>}
       </div>
-      <BottomTabBar />
     </MobileShell>
   );
 }

@@ -22,6 +22,7 @@ import {
   updateMyProfile,
 } from "@/lib/api";
 import { resolveEmotion } from "@/lib/cat-assets";
+import { defaultUsername } from "@/lib/profile";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   AppError,
@@ -33,8 +34,6 @@ import {
 } from "@/types/app";
 
 const currentGroupKey = "neko-chat.current-group";
-const defaultUsername = "ななしの猫";
-
 type AppContextValue = {
   profile: Profile | null;
   groups: GroupSummary[];
