@@ -335,34 +335,41 @@ a {
   position: fixed;
   inset: 0;
   z-index: 40;
+  display: none;
   width: 100%;
   max-width: none;
   height: 100%;
   max-height: none;
   margin: 0;
-  padding: 0;
+  padding: 16px;
   border: 0;
+  overflow: clip;
   background: transparent;
 }
 .compose-overlay[open] {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
 }
 .compose-overlay::backdrop {
-  background: rgb(36 32 31 / 45%);
+  background: transparent;
 }
 .compose-overlay__backdrop {
   position: absolute;
   inset: 0;
   border: 0;
-  background: transparent;
+  background: rgb(36 32 31 / 52%);
 }
 .compose-sheet {
   position: relative;
-  width: min(100%, 393px);
-  padding: 20px 24px max(24px, env(safe-area-inset-bottom));
-  border-radius: 28px 28px 0 0;
+  z-index: 1;
+  width: min(100%, 353px);
+  min-height: min(540px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 28px 24px max(28px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 28px;
   background: var(--paper);
   box-shadow: var(--shadow-float);
 }
@@ -382,14 +389,14 @@ a {
 .compose-sheet__cat {
   position: relative;
   display: block;
-  width: 96px;
-  height: 64px;
-  margin: 0 auto 8px;
+  width: 144px;
+  height: 96px;
+  margin: 18px auto 20px;
 }
 .compose-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
 }
 .compose-form__row {
   display: flex;
@@ -417,7 +424,7 @@ a {
   padding: 0;
   border: 0;
   flex-direction: column;
-  gap: 6px;
+  gap: 9px;
 }
 .emotion-picker legend {
   margin-bottom: 4px;

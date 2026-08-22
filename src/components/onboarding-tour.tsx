@@ -26,10 +26,12 @@ export function OnboardingTour({
   steps,
   run,
   onFinish,
+  portalElement,
 }: {
   steps: Step[];
   run: boolean;
   onFinish: () => void;
+  portalElement?: HTMLElement | string;
 }) {
   function handleEvent(data: EventData) {
     const isTourEnd = data.type === EVENTS.TOUR_END;
@@ -39,8 +41,14 @@ export function OnboardingTour({
     }
   }
 
+  const portalProps: { portalElement?: HTMLElement | string } = {};
+  if (portalElement) {
+    portalProps.portalElement = portalElement;
+  }
+
   return (
     <Joyride
+      {...portalProps}
       steps={steps}
       run={run}
       continuous
