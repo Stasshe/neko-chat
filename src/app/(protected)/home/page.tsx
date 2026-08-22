@@ -1,12 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import type { Step } from "react-joyride";
+
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
 import { BottomTabBar, TopBar } from "@/components/navigation";
+import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
+import { tourStorageKey } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
+
+const homeTourSteps: Step[] = [
+  {
+    target: ".top-bar__title",
+    content: "ここに今いる場所が表示されるよ。",
+    placement: "bottom",
+  },
+  {
+    target: ".park-scene",
+    content: "みんなのつぶやきがここに集まるよ。",
+    placement: "bottom",
+  },
+  {
+    target: ".bottom-tabs__item:nth-child(2)",
+    content: "ここから気持ちをつぶやいてみよう。",
+    placement: "top",
+  },
+];
 
 function getBubbleAlignment(index: number): "left" | "right" {
   if (index % 2 === 0) {
@@ -27,6 +50,23 @@ function getCatPose(index: number): "sit" | "stand" | "lie" {
 
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
+  const [tourRun, setTourRun] = useState(false);
+
+  useEffect(() => {
+    if (!currentGroup?.isSolo) {
+      return;
+    }
+    const stage = window.localStorage.getItem(tourStorageKey);
+    if (stage === null || stage === "home") {
+      setTourRun(true);
+    }
+  }, [currentGroup]);
+
+  function finishHomeTour() {
+    window.localStorage.setItem(tourStorageKey, "compose");
+    setTourRun(false);
+  }
+
   const uniqueMembers = new Map<string, PostUser>();
   if (profile) {
     uniqueMembers.set(profile.id, profile);
@@ -38,6 +78,7 @@ export default function HomePage() {
 
   return (
     <MobileShell scene>
+      <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
       <TopBar groupName={currentGroup?.name ?? "グループ"} members={members} />
       <section className="park-scene" aria-label="グループの近況">
         <div className="park-scene__sky" />
