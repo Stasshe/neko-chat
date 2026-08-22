@@ -198,10 +198,9 @@ export default function HomePage() {
         <Image
           src="/images/ui/backgrounds/home-green.png"
           alt=""
-          width={393}
-          height={852}
+          fill
           priority
-          sizes="(min-width: 768px) 100vw, 393px"
+          sizes="393px"
           className="park-scene__bg"
         />
         <HomeSceneDecorations />
