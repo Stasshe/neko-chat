@@ -12,6 +12,7 @@ setup("投稿可能なテストユーザーを準備する", async ({ page }) =>
   await page.locator('form button[type="button"]').click();
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
+
   const signupResponsePromise = page.waitForResponse(
     (response) =>
       response.url().includes("/auth/v1/signup") && response.request().method() === "POST",
@@ -21,6 +22,17 @@ setup("投稿可能なテストユーザーを準備する", async ({ page }) =>
 
   const signupResponse = await signupResponsePromise;
   expect(signupResponse.ok()).toBe(true);
+
+  const signupPayload = (await signupResponse.json()) as {
+    user?: {
+      id?: string;
+    };
+  };
+  const userId = signupPayload.user?.id;
+
+  if (!userId) {
+    throw new Error("E2EテストユーザーのIDを取得できませんでした。");
+  }
 
   // 登録成功後にホーム画面へ移動することも確認する
   await expect(page).toHaveURL(/\/home$/);
@@ -39,10 +51,10 @@ setup("投稿可能なテストユーザーを準備する", async ({ page }) =>
   await page.locator(".primary-button").click();
   await expect(page).toHaveURL(/\/home$/);
 
-  // 操作説明がE2Eテストを邪魔しないようにする
-  await page.evaluate(() => {
-    window.localStorage.setItem("neko-chat.tour-stage", "done");
-  });
+  // 操作説明がE2Eテストを邪魔しないよう、ユーザー別のキーへ完了状態を保存する
+  await page.evaluate((id) => {
+    window.localStorage.setItem(`neko-chat.tour-stage.${id}`, "done");
+  }, userId);
 
   // ログイン状態とlocalStorageを保存する
   await page.context().storageState({ path: authFile });
