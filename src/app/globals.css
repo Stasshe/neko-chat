@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "YD Waosagi";
+  src: url("/fonts/YDWaosagi.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 @theme {
   --color-border: var(--line);
   --color-input: var(--line);
@@ -1057,8 +1065,7 @@ img {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.onboarding-form h1,
-.mode-selection h1 {
+.onboarding-form h1 {
   margin: 0;
   font-family: serif;
   font-size: 20px;
@@ -1090,6 +1097,21 @@ img {
   width: 176px;
   margin-top: 28px;
 }
+.onboarding-form--group {
+  padding-top: max(128px, env(safe-area-inset-top));
+  font-family: "YD Waosagi", serif;
+}
+.onboarding-form--group h1 {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.onboarding-form--group form {
+  margin-top: 46px;
+}
+.onboarding-form--group .primary-button {
+  margin-top: 60px;
+  font-weight: 400;
+}
 .onboarding-form--profile {
   padding-top: max(172px, env(safe-area-inset-top));
 }
@@ -1103,26 +1125,26 @@ img {
 }
 .onboarding-cat-group {
   position: relative;
-  width: 270px;
-  height: 150px;
+  width: 340px;
+  height: 170px;
   margin-top: 68px;
 }
 .onboarding-cat-group .cat-display {
   position: absolute;
-  width: 135px;
-  height: 100px;
+  width: 180px;
+  height: 110px;
 }
 .onboarding-cat-group .cat-display:nth-child(1) {
   top: 0;
   left: 0;
 }
 .onboarding-cat-group .cat-display:nth-child(2) {
-  top: 2px;
-  right: -2px;
+  top: 0;
+  right: 0;
 }
 .onboarding-cat-group .cat-display:nth-child(3) {
-  right: 58px;
-  bottom: -2px;
+  right: 70px;
+  bottom: 0;
 }
 .field-label {
   width: 100%;
@@ -1135,77 +1157,115 @@ img {
   display: flex;
   flex: 1;
   min-height: 0;
-  padding: max(74px, env(safe-area-inset-top)) 40px 30px;
+  padding: max(80px, env(safe-area-inset-top)) 41px 30px;
   flex-direction: column;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+.mode-selection h1 {
+  margin: 0;
+  margin-top: 4px;
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
 .mode-list {
   display: grid;
-  margin-top: 6px;
-  gap: 6px;
+  margin-top: 34px;
+  gap: 43px;
 }
 .mode-list button {
   position: relative;
-  display: grid;
-  min-height: 188px;
-  padding: 26px 28px;
-  border: 1px solid #bdb9b5;
-  border-radius: 20px;
+  min-height: 154px;
+  padding: 24px 28px 20px;
+  border: 1px solid #c8c3be;
+  border-radius: 23px;
   background: white;
-  grid-template-columns: 1fr 92px;
-  grid-template-rows: auto 1fr;
   text-align: left;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 70%) inset;
 }
 .mode-list strong {
-  font-family: serif;
+  display: block;
+  font-family: "YD Waosagi", serif;
   font-size: 20px;
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 .mode-list span {
+  display: block;
+  margin-top: 13px;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: "YD Waosagi", serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.42;
+  letter-spacing: 0.01em;
+}
+.mode-list button > span:not(.mode-cats) {
+  white-space: nowrap;
 }
 .mode-list .mode-cats {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  display: block;
   width: 92px;
-  height: 88px;
+  height: 92px;
+  margin: 0;
+  transform: translateY(-50%);
   color: var(--ink);
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
 }
 .mode-cats img {
   position: absolute;
-  width: 52px;
+  width: 54px;
   height: auto;
 }
 .mode-cats--1 img {
-  top: 18px;
-  left: 20px;
+  top: 12px;
+  left: -13px;
+  width: 96px;
 }
 .mode-cats--join img {
-  left: 3px;
+  width: 54px;
 }
 .mode-cats--3 img:nth-child(1) {
-  top: 4px;
-  left: 21px;
+  top: 17px;
+  left: 19px;
 }
 .mode-cats--3 img:nth-child(2) {
-  bottom: 2px;
-  left: 1px;
+  top: 52px;
+  left: -1px;
 }
 .mode-cats--3 img:nth-child(3) {
-  right: 0;
-  bottom: 2px;
+  top: 52px;
+  right: -1px;
+}
+.mode-cats--join.mode-cats--2 img:nth-child(1) {
+  top: 24px;
+  left: 19px;
+}
+.mode-cats--join.mode-cats--2 img:nth-child(2) {
+  top: 59px;
+  left: -1px;
 }
 .mode-list .mode-cats__plus {
   position: absolute;
-  right: 4px;
-  bottom: 12px;
-  font-family: serif;
-  font-size: 30px;
-  font-weight: 300;
+  right: -1px;
+  bottom: -10px;
+  display: block;
+  width: 54px;
+  margin: 0;
+  font-family: "YD Waosagi", serif;
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  color: #9e9893;
 }
 .mode-selection > .status {
   margin-top: 16px;

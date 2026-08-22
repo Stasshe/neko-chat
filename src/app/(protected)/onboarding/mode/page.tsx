@@ -2,14 +2,13 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { BackLink } from "@/components/back-link";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
 
 const modeCatSlots = ["first", "second", "third"] as const;
 
-function ModeCats({ count, join = false }: { count: 1 | 3; join?: boolean }) {
+function ModeCats({ count, join = false }: { count: 1 | 2 | 3; join?: boolean }) {
   const classes = ["mode-cats", `mode-cats--${count}`];
   if (join) {
     classes.push("mode-cats--join");
@@ -39,7 +38,6 @@ export default function ModePage() {
 
   return (
     <MobileShell>
-      <BackLink href="/onboarding/profile" />
       <section className="mode-selection">
         <h1>どのようにはじめる？</h1>
         <div className="mode-list">
@@ -68,7 +66,7 @@ export default function ModePage() {
               <br />
               グループに参加しよう
             </span>
-            <ModeCats count={1} join />
+            <ModeCats count={2} join />
           </button>
         </div>
         {error && <ErrorState message={error} />}
