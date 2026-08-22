@@ -1,5 +1,7 @@
 "use client";
 
+import { AnimatePresence, domAnimation, LazyMotion, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { Step } from "react-joyride";
 
@@ -45,11 +47,13 @@ export function ComposeSheet() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const tourStage = useTourStage();
   const tourRun = composeOpen && tourStage === "compose";
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (composeOpen && dialog && !dialog.open) {
       dialog.showModal();
+      dialog.querySelector<HTMLInputElement>("#post-body")?.focus();
     }
   }, [composeOpen]);
 
@@ -58,8 +62,11 @@ export function ComposeSheet() {
   }
 
   function dismiss() {
-    dialogRef.current?.close();
     closeCompose();
+  }
+
+  function handleExitComplete() {
+    dialogRef.current?.close();
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -74,14 +81,10 @@ export function ComposeSheet() {
       await publishPost(trimmed, emotion);
       setBody("");
       setEmotion("neutral");
-      closeCompose();
+      dismiss();
     } catch {
       // The provider exposes the actionable error message.
     }
-  }
-
-  if (!composeOpen) {
-    return null;
   }
 
   return (
@@ -94,68 +97,94 @@ export function ComposeSheet() {
         dismiss();
       }}
     >
-      <button
-        type="button"
-        className="compose-overlay__backdrop"
-        aria-label="閉じる"
-        onClick={dismiss}
-      />
-      <section className="compose-sheet">
-        <OnboardingTour steps={composeTourSteps} run={tourRun} onFinish={finishComposeTour} />
-        <button
-          type="button"
-          className="compose-sheet__close"
-          onClick={dismiss}
-          aria-label="閉じる"
-        >
-          ×
-        </button>
-        <CatDisplay
-          type={profile?.catType ?? "white"}
-          emotion={emotion}
-          className="compose-sheet__cat"
-        />
-        <form className="compose-form" onSubmit={submit}>
-          <div className="compose-form__row">
-            <label className="sr-only" htmlFor="post-body">
-              つぶやき
-            </label>
-            <input
-              id="post-body"
-              autoFocus
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
-              maxLength={30}
-              placeholder="いまなにしてる？"
-              autoComplete="off"
-            />
-            <button
-              className="send-button"
-              type="submit"
-              disabled={loading || !currentGroup}
-              aria-label="つぶやく"
-            >
-              <SendIcon />
-            </button>
-          </div>
-          <fieldset className="emotion-picker">
-            <legend>ねこの気分</legend>
-            {emotions.map((value) => (
-              <label key={value} data-selected={emotion === value}>
-                <input
-                  type="radio"
-                  name="emotion"
-                  value={value}
-                  checked={emotion === value}
-                  onChange={() => setEmotion(value)}
-                />
-                <span>{emotionLabels[value]}</span>
-              </label>
-            ))}
-          </fieldset>
-          {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
-        </form>
-      </section>
+      <LazyMotion features={domAnimation} strict>
+        <AnimatePresence onExitComplete={handleExitComplete}>
+          {composeOpen
+            ? [
+                <m.button
+                  key="backdrop"
+                  type="button"
+                  className="compose-overlay__backdrop"
+                  aria-label="閉じる"
+                  tabIndex={-1}
+                  onClick={dismiss}
+                  initial={reducedMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />,
+                <m.section
+                  key="sheet"
+                  className="compose-sheet"
+                  initial={reducedMotion ? false : { y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", stiffness: 340, damping: 32 }}
+                >
+                  <OnboardingTour
+                    steps={composeTourSteps}
+                    run={tourRun}
+                    onFinish={finishComposeTour}
+                  />
+                  <button
+                    type="button"
+                    className="compose-sheet__close"
+                    onClick={dismiss}
+                    aria-label="閉じる"
+                  >
+                    ×
+                  </button>
+                  <CatDisplay
+                    type={profile?.catType ?? "white"}
+                    emotion={emotion}
+                    className="compose-sheet__cat"
+                  />
+                  <form className="compose-form" onSubmit={submit}>
+                    <div className="compose-form__row">
+                      <label className="sr-only" htmlFor="post-body">
+                        つぶやき
+                      </label>
+                      <input
+                        id="post-body"
+                        value={body}
+                        onChange={(event) => setBody(event.target.value)}
+                        maxLength={30}
+                        placeholder="いまなにしてる？"
+                        autoComplete="off"
+                      />
+                      <button
+                        className="send-button"
+                        type="submit"
+                        disabled={loading || !currentGroup}
+                        aria-label="つぶやく"
+                      >
+                        <SendIcon />
+                      </button>
+                    </div>
+                    <fieldset className="emotion-picker">
+                      <legend>ねこの気分</legend>
+                      {emotions.map((value) => (
+                        <label key={value} data-selected={emotion === value}>
+                          <input
+                            type="radio"
+                            name="emotion"
+                            value={value}
+                            checked={emotion === value}
+                            onChange={() => setEmotion(value)}
+                          />
+                          <span>{emotionLabels[value]}</span>
+                        </label>
+                      ))}
+                    </fieldset>
+                    {(validationError || error) && (
+                      <ErrorState message={validationError ?? error ?? ""} />
+                    )}
+                  </form>
+                </m.section>,
+              ]
+            : null}
+        </AnimatePresence>
+      </LazyMotion>
     </dialog>
   );
 }

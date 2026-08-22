@@ -41,7 +41,9 @@
 }
 html,
 body {
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 html {
   background: #eceae7;
@@ -89,14 +91,11 @@ a {
   position: relative;
   display: flex;
   width: min(100%, 393px);
-  min-height: 100dvh;
+  height: 100dvh;
   margin-inline: auto;
   overflow: hidden;
   flex-direction: column;
   background: var(--paper);
-}
-.mobile-shell--scene {
-  height: 100dvh;
 }
 .cat-display {
   position: relative;
@@ -487,12 +486,14 @@ a {
 }
 .group-list {
   display: grid;
+  flex: 1;
   min-height: 0;
   padding: 0 20px 102px;
   align-content: start;
   gap: 14px 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .group-list > .status {
   grid-column: 1 / -1;
@@ -624,6 +625,8 @@ a {
   padding: 100px 42px 104px;
   flex: 1;
   flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .settings-section + .settings-section {
   margin-top: 40px;
@@ -713,10 +716,13 @@ a {
 .cat-selection,
 .invite-created {
   display: flex;
-  min-height: 100dvh;
+  flex: 1;
+  min-height: 0;
   padding: max(74px, env(safe-area-inset-top)) 28px max(22px, env(safe-area-inset-bottom));
   flex-direction: column;
   align-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .cat-grid {
   display: grid;
@@ -817,10 +823,13 @@ a {
 
 .onboarding-form {
   display: flex;
-  min-height: 100dvh;
+  flex: 1;
+  min-height: 0;
   padding: max(96px, env(safe-area-inset-top)) 40px max(36px, env(safe-area-inset-bottom));
   flex-direction: column;
   align-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .onboarding-form h1,
 .mode-selection h1 {
@@ -897,8 +906,13 @@ a {
   font-weight: 700;
 }
 .mode-selection {
-  min-height: 100dvh;
+  display: flex;
+  flex: 1;
+  min-height: 0;
   padding: max(74px, env(safe-area-inset-top)) 40px 30px;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .mode-list {
   display: grid;
@@ -1012,7 +1026,8 @@ a {
 }
 @media (min-width: 768px) {
   .mobile-shell {
-    width: min(100%, 460px);
+    width: 100%;
+    box-shadow: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

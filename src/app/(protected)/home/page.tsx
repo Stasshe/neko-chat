@@ -104,7 +104,7 @@ export default function HomePage() {
   const members = [...uniqueMembers.values()];
 
   return (
-    <MobileShell scene>
+    <MobileShell>
       <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
       <TopBar groupName={currentGroup?.name ?? "グループ"} members={members} />
       <section ref={sceneRef} className="park-scene" aria-label="グループの近況">
@@ -113,7 +113,7 @@ export default function HomePage() {
           alt=""
           fill
           priority
-          sizes="393px"
+          sizes="(min-width: 768px) 100vw, 393px"
           className="park-scene__bg"
         />
         <Image
