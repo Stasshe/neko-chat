@@ -52,6 +52,7 @@ export default function Home() {
       const { error: signInError } = await client.auth.signInWithPassword({ email, password });
       setIsSigningIn(false);
       if (signInError) {
+        console.error("Sign in failed.", signInError);
         setError("メールアドレスまたはパスワードが違います。");
         return;
       }
@@ -62,6 +63,12 @@ export default function Home() {
     const { data, error: signUpError } = await client.auth.signUp({ email, password });
     setIsSigningIn(false);
     if (signUpError) {
+      console.error("Sign up failed.", signUpError);
+      if (signUpError.code === "user_already_exists") {
+        setError("このメールアドレスは登録済みです。ログインしてください。");
+        setEmailMode("signin");
+        return;
+      }
       setError("登録に失敗しました。もう一度お試しください。");
       return;
     }

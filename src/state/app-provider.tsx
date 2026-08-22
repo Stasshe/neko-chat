@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useEffectEvent,
+  useRef,
   useState,
 } from "react";
 
@@ -120,12 +121,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const refreshAfterNavigation = useEffectEvent(refresh);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (pathname.startsWith("/onboarding")) {
+    if (hasLoadedRef.current || pathname.startsWith("/onboarding")) {
       return;
     }
-    // Effect Event kicks off the nav-triggered refresh; loading flag flip is intentional, not derivable.
+    hasLoadedRef.current = true;
+    // Effect Event kicks off the initial load; loading flag flip is intentional, not derivable.
     // react-doctor-disable-next-line react-hooks-js/set-state-in-effect
     void refreshAfterNavigation();
   }, [pathname]);
