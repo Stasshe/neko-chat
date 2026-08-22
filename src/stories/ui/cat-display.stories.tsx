@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { CatDisplay } from "./cat-display";
+import { CatDisplay } from "@/components/cat-display";
 import { catTypes } from "@/types/app";
 
 const meta: Meta<typeof CatDisplay> = {

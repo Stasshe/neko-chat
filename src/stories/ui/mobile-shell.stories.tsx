@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { MobileShell } from "./mobile-shell";
+import { MobileShell } from "@/components/mobile-shell";
 
 const meta: Meta<typeof MobileShell> = {
   component: MobileShell,

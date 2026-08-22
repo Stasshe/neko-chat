@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { SpeechBubble } from "./speech-bubble";
+import { SpeechBubble } from "@/components/speech-bubble";
 
 const meta: Meta<typeof SpeechBubble> = {
   component: SpeechBubble,
