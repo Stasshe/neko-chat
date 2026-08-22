@@ -123,6 +123,7 @@ export default function HomePage() {
           alt=""
           fill
           priority
+          sizes="393px"
           className="park-scene__bg"
         />
         <Image

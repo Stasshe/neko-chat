@@ -271,7 +271,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
     window.localStorage.removeItem(currentGroupKey);
-    router.replace("/");
   }
 
   const value = {

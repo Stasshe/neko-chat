@@ -121,7 +121,12 @@ export function ComposeSheet() {
               placeholder="いまなにしてる？"
               autoComplete="off"
             />
-            <button className="send-button" type="submit" disabled={loading || !currentGroup}>
+            <button
+              className="send-button"
+              type="submit"
+              disabled={loading || !currentGroup}
+              aria-label="つぶやく"
+            >
               <SendIcon />
             </button>
           </div>
