@@ -901,6 +901,11 @@ a {
     box-shadow: 0 0 28px rgb(40 35 30 / 10%);
   }
 }
+@media (min-width: 768px) {
+  .mobile-shell {
+    width: min(100%, 460px);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .status__spinner {
     animation-duration: 1.5s;
