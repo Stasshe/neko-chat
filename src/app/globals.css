@@ -111,6 +111,10 @@ img {
   align-items: center;
   justify-content: center;
   gap: 1px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
   font-size: 9px;
   font-weight: 700;
 }

@@ -26,7 +26,7 @@ const homeTourSteps: Step[] = [
   {
     target: ".park-scene",
     content: "みんなのつぶやきがここに集まるよ。",
-    placement: "bottom",
+    placement: "center",
   },
   {
     target: ".bottom-tabs__item:nth-child(2)",
@@ -127,13 +127,15 @@ function useParkAnimation(postCount: number) {
 
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
-  const tourStage = useTourStage();
-  const tourRun = Boolean(currentGroup?.isSolo && (tourStage === null || tourStage === "home"));
+  const tourStage = useTourStage(profile?.id);
+  const tourRun = Boolean(profile && currentGroup && (tourStage === null || tourStage === "home"));
   const sceneRef = useParkAnimation(posts.length);
   const reducedMotion = useReducedMotion();
 
   function finishHomeTour() {
-    setTourStage("compose");
+    if (profile) {
+      setTourStage(profile.id, "compose");
+    }
   }
   const uniqueMembers = new Map<string, PostUser>();
   if (profile) {

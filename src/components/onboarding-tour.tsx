@@ -16,6 +16,7 @@ const options = {
   overlayColor: "rgba(36, 32, 31, 0.55)",
   primaryColor: "var(--accent-strong)",
   textColor: "var(--ink)",
+  width: "min(320px, calc(100vw - 32px))",
   zIndex: 1000,
   showProgress: true,
   skipBeacon: true,
@@ -54,6 +55,7 @@ export function OnboardingTour({
       continuous
       locale={locale}
       options={options}
+      floatingOptions={{ strategy: "fixed", shiftOptions: { padding: 16 } }}
       onEvent={handleEvent}
     />
   );

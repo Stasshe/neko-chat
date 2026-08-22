@@ -39,7 +39,7 @@ export default function Home() {
     setIsSigningIn(true);
     const { error: signInError } = await client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/home` },
+      options: { redirectTo: `${window.location.origin}/onboarding/profile` },
     });
 
     if (signInError) {
