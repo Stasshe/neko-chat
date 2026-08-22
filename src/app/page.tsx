@@ -75,14 +75,18 @@ export default function Home() {
       router.push("/home");
       return;
     }
-    setNotice("確認メールを送信しました。メール内のリンクから認証してください。");
+    setNotice(
+      "確認メールを送信しました。メール内のリンクから認証してください。",
+    );
   }
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-6 py-12 text-center">
         <div className="space-y-4">
-          <p className="text-sm tracking-[0.2em] text-muted-foreground">NEKO CHAT</p>
+          <p className="text-sm tracking-[0.2em] text-muted-foreground">
+            NEKO CHAT
+          </p>
           <h1 className="text-4xl font-bold">猫チャット</h1>
           <p className="text-sm leading-6 text-muted-foreground">
             ゆるく近況を共有する、猫モチーフのグループチャットアプリ
@@ -106,7 +110,10 @@ export default function Home() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={handleEmailSubmit} className="mt-6 w-full space-y-3 text-left">
+        <form
+          onSubmit={handleEmailSubmit}
+          className="mt-6 w-full space-y-3 text-left"
+        >
           <label htmlFor="email" className="sr-only">
             メールアドレス
           </label>
@@ -152,8 +159,12 @@ export default function Home() {
           </button>
         </form>
 
-        {error ? <p className="mt-4 text-xs text-destructive">{error}</p> : null}
-        {notice ? <p className="mt-4 text-xs text-muted-foreground">{notice}</p> : null}
+        {error ? (
+          <p className="mt-4 text-xs text-destructive">{error}</p>
+        ) : null}
+        {notice ? (
+          <p className="mt-4 text-xs text-muted-foreground">{notice}</p>
+        ) : null}
       </div>
     </main>
   );
