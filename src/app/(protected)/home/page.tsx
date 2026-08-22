@@ -1,25 +1,23 @@
 "use client";
 
-import { animate, type JSAnimation, stagger } from "animejs";
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { Step } from "react-joyride";
+import { animate, type JSAnimation, stagger } from "animejs";
 
 import { CatDisplay } from "@/components/cat-display";
-import { ComposeIcon, MenuIcon, SettingsIcon } from "@/components/icons";
-import { MemberAvatars } from "@/components/member-avatars";
 import { MobileShell } from "@/components/mobile-shell";
+import { BottomTabBar, TopBar } from "@/components/navigation";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
-import { tourStorageKey } from "@/lib/tour";
+import { setTourStage, useTourStage } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
 
 const homeTourSteps: Step[] = [
   {
-    target: ".home-header__title",
+    target: ".top-bar__title",
     content: "ここに今いる場所が表示されるよ。",
     placement: "bottom",
   },
@@ -29,7 +27,7 @@ const homeTourSteps: Step[] = [
     placement: "bottom",
   },
   {
-    target: ".home-dock__compose",
+    target: ".bottom-tabs__item:nth-child(2)",
     content: "ここから気持ちをつぶやいてみよう。",
     placement: "top",
   },
@@ -40,16 +38,6 @@ function getBubbleAlignment(index: number): "left" | "right" {
     return "left";
   }
   return "right";
-}
-
-function getCatPose(index: number): "sit" | "stand" | "lie" {
-  if (index === 2) {
-    return "lie";
-  }
-  if (index === 1) {
-    return "sit";
-  }
-  return "stand";
 }
 
 function useParkAnimation(postCount: number) {
@@ -99,97 +87,68 @@ function useParkAnimation(postCount: number) {
 
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
-  const [tourRun, setTourRun] = useState(false);
+  const tourStage = useTourStage();
+  const tourRun = Boolean(currentGroup?.isSolo && (tourStage === null || tourStage === "home"));
   const sceneRef = useParkAnimation(posts.length);
 
-  useEffect(() => {
-    if (!currentGroup?.isSolo) {
-      return;
-    }
-
-    const stage = window.localStorage.getItem(tourStorageKey);
-    if (stage === null || stage === "home") {
-      setTourRun(true);
-    }
-  }, [currentGroup]);
-
   function finishHomeTour() {
-    window.localStorage.setItem(tourStorageKey, "compose");
-    setTourRun(false);
+    setTourStage("compose");
   }
-
   const uniqueMembers = new Map<string, PostUser>();
-
   if (profile) {
     uniqueMembers.set(profile.id, profile);
   }
-
   for (const post of posts) {
     uniqueMembers.set(post.user.id, post.user);
   }
-
   const members = [...uniqueMembers.values()];
 
   return (
-    <MobileShell scene>
+    <MobileShell>
       <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
-      <header className="home-header">
-        <Link className="home-header__action" href="/groups" aria-label="グループ一覧">
-          <MenuIcon />
-          <span>チャット</span>
-        </Link>
-        <div className="home-header__title">
-          <MemberAvatars members={members} />
-          <strong>{currentGroup?.name ?? "グループ名"}</strong>
-        </div>
-        <Link className="home-header__action" href="/settings" aria-label="設定">
-          <SettingsIcon />
-          <span>設定</span>
-        </Link>
-      </header>
-
+      <TopBar groupName={currentGroup?.name ?? "グループ"} members={members} />
       <section ref={sceneRef} className="park-scene" aria-label="グループの近況">
         <Image
           src="/images/ui/backgrounds/home-green.png"
           alt=""
           fill
           priority
-          sizes="(max-width: 768px) 100vw, 393px"
-          className="park-scene__background"
+          sizes="(min-width: 768px) 100vw, 393px"
+          className="park-scene__bg"
         />
         <Image
           src="/images/ui/decorations/cloud.png"
           alt=""
-          width={83}
-          height={44}
+          width={57}
+          height={36}
           className="park-scene__cloud park-scene__cloud--one"
         />
         <Image
           src="/images/ui/decorations/cloud.png"
           alt=""
-          width={83}
-          height={44}
+          width={43}
+          height={27}
           className="park-scene__cloud park-scene__cloud--two"
         />
         <Image
           src="/images/ui/decorations/tree.png"
           alt=""
-          width={164}
-          height={145}
+          width={90}
+          height={90}
           className="park-scene__tree park-scene__tree--large"
         />
         <Image
           src="/images/ui/decorations/tree.png"
           alt=""
-          width={164}
-          height={145}
+          width={63}
+          height={63}
           className="park-scene__tree park-scene__tree--small"
         />
         <Image
           src="/images/ui/decorations/tree-stump.png"
           alt=""
-          width={102}
-          height={82}
+          width={78}
+          height={55}
           className="park-scene__stump"
         />
 
@@ -206,7 +165,6 @@ export default function HomePage() {
               <CatDisplay
                 type={post.user.catType}
                 emotion={post.emotion}
-                pose={getCatPose(index)}
                 className="scene-post__cat"
                 seed={post.id}
               />
@@ -214,23 +172,7 @@ export default function HomePage() {
             </article>
           ))}
       </section>
-
-      <nav className="home-dock" aria-label="メインナビゲーション">
-        <Link className="home-dock__item" href="/home" aria-current="page">
-          <Image src="/images/ui/navigation/home-button.png" alt="" width={51} height={49} />
-          <span>ホーム</span>
-        </Link>
-        <Link className="home-dock__compose" href="/compose">
-          <span className="home-dock__compose-circle">
-            <ComposeIcon />
-          </span>
-          <span>つぶやく</span>
-        </Link>
-        <Link className="home-dock__item" href="/groups">
-          <Image src="/images/ui/navigation/group-button.png" alt="" width={56} height={20} />
-          <span>グループ</span>
-        </Link>
-      </nav>
+      <BottomTabBar />
     </MobileShell>
   );
 }

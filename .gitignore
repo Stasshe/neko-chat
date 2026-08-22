@@ -58,3 +58,5 @@ storybook-static
 /playwright-report/
 /test-results/
 /playwright/.auth/
+
+.claude/skills/

@@ -6,8 +6,8 @@ import type { CatType, Emotion } from "@/types/app";
 type CatDisplayProps = {
   type: CatType;
   emotion?: Emotion;
-  pose?: "sit" | "stand" | "lie";
   className?: string;
+  pose?: "sit" | "stand" | "lie";
   seed?: string;
 };
 
@@ -19,19 +19,11 @@ export function CatDisplay({
   seed,
 }: CatDisplayProps) {
   const src = getCatImageSrc(type, emotion, pose, seed);
-  const label = `${type} cat`;
-  const wrapperClassName = className ? `cat-display ${className}` : "cat-display";
-  const wrapperStyle = className ? undefined : { width: 72, height: 72 };
+  const classes = className ? `cat-display ${className}` : "cat-display";
 
   return (
-    <span className={wrapperClassName} style={wrapperStyle}>
-      <Image
-        src={src}
-        alt={label}
-        fill
-        sizes="(max-width: 768px) 25vw, 96px"
-        className="cat-display__image"
-      />
+    <span className={classes}>
+      <Image src={src} alt={`${type} cat`} fill sizes="200px" className="cat-display__img" />
     </span>
   );
 }

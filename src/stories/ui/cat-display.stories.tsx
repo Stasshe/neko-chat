@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { CatDisplay } from "./cat-display";
+import { CatDisplay } from "@/components/cat-display";
 import { catTypes } from "@/types/app";
 
 const meta: Meta<typeof CatDisplay> = {
@@ -8,26 +8,24 @@ const meta: Meta<typeof CatDisplay> = {
   args: {
     type: "white",
     emotion: "neutral",
-    pose: "sit",
   },
   argTypes: {
     type: { control: "select", options: catTypes },
     emotion: { control: "select", options: ["positive", "neutral", "negative", "random"] },
-    pose: { control: "select", options: ["sit", "stand", "lie"] },
   },
 };
 export default meta;
 
 type Story = StoryObj<typeof CatDisplay>;
 
-export const Sit: Story = {};
-
-export const Stand: Story = {
-  args: { pose: "stand" },
+export const Positive: Story = {
+  args: { emotion: "positive" },
 };
 
-export const Lie: Story = {
-  args: { pose: "lie" },
+export const Neutral: Story = {};
+
+export const Negative: Story = {
+  args: { emotion: "negative" },
 };
 
 export const AllTypes: Story = {

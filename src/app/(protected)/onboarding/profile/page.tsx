@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { Button } from "@/components/button";
+import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { TextField } from "@/components/text-field";
@@ -36,9 +37,7 @@ export default function ProfileOnboardingPage() {
   return (
     <MobileShell>
       <section className="onboarding-form onboarding-form--profile">
-        <div className="onboarding-cat-mark" aria-hidden="true">
-          ∿
-        </div>
+        <CatDisplay type="white" emotion="positive" className="onboarding-profile-cat" />
         <h1>まずは名前を教えてね</h1>
         <form onSubmit={submit}>
           <TextField

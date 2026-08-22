@@ -1,6 +1,7 @@
 "use client";
 
-import { type HTMLMotionProps, motion, useReducedMotion } from "motion/react";
+import { domAnimation, type HTMLMotionProps, LazyMotion, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
 
 type ButtonVariant = "primary" | "logout";
 
@@ -21,12 +22,14 @@ export function Button({ variant = "primary", className, type = "button", ...pro
     tapAnimation = { scale: 0.97 };
   }
   return (
-    <motion.button
-      type={type}
-      className={classes}
-      {...props}
-      whileTap={tapAnimation}
-      transition={{ duration: 0.14 }}
-    />
+    <LazyMotion features={domAnimation} strict>
+      <m.button
+        type={type}
+        className={classes}
+        {...props}
+        whileTap={tapAnimation}
+        transition={{ duration: 0.14 }}
+      />
+    </LazyMotion>
   );
 }

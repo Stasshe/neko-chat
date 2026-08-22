@@ -15,3 +15,6 @@ react-doctorはたまに誤検知するから、すべてを信じるな。
 
 完成イメージmockは figma-img/にあるからUI作るときは必ずそれを参照しろ
 キャラクター素材はあとから追加するため、入れ替えやすいようにしておけ
+
+ユーザーフローはfigma-img/flow/
+assetsはpublic/images/にある。
