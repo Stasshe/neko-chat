@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { BackLink } from "@/components/back-link";
 import { CatDisplay } from "@/components/cat-display";
-import { PlusIcon } from "@/components/icons";
+import { KeyIcon, PlusIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
@@ -75,6 +75,10 @@ export default function GroupsPage() {
         <Link className="group-tile group-tile--add" href="/onboarding/group?returnTo=groups">
           <PlusIcon />
           <span>新規グループを作成</span>
+        </Link>
+        <Link className="group-tile group-tile--add" href="/onboarding/join?returnTo=groups">
+          <KeyIcon />
+          <span>招待コードで参加</span>
         </Link>
       </section>
     </MobileShell>
