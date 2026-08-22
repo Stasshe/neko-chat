@@ -11,7 +11,31 @@ pnpm dev
 
 コンポーネント単体確認は `pnpm storybook`。詳細は [STORYBOOK.md](./STORYBOOK.md)。
 
-`.env.example` を `.env.local` へコピーして設定する。
+### 環境変数
+
+Next.jsのモード別env読み込みで、ローカル用と本番用を分離している。コピーや切り替えは不要。
+
+| ファイル | 使われるタイミング |
+| --- | --- |
+| `.env.development.local` | `pnpm dev` |
+| `.env.production.local` | `pnpm build` / `pnpm start` |
+
+初回セットアップ:
+
+```bash
+cp .env.development.local.example .env.development.local
+pnpm db:start   # Docker上にローカルSupabaseを起動
+```
+
+`pnpm db:start` の出力(`SECRET_KEY`)を `.env.development.local` の `SUPABASE_SECRET_KEY` に貼る。service-role鍵なのでコミットしない。
+
+```bash
+pnpm dev
+```
+
+停止は `pnpm db:stop`、スキーマ変更後は `pnpm db:reset`。ログインはメール/パスワードで完結するので、Google OAuthの設定なしで動作確認できる。
+
+本番Supabaseに接続して確認したい場合は `.env.production.local` に値を設定し、`pnpm build && pnpm start` で起動する。
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=
