@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Button } from "@/components/button";
@@ -12,10 +13,15 @@ function JoinedContent() {
   return (
     <MobileShell>
       <section className="invite-created joined">
+        <span className="accent-lines" aria-hidden="true" />
         <h1>{name} に参加しました</h1>
-        <div className="paw-mark" aria-hidden="true">
-          ●
-        </div>
+        <Image
+          className="paw-mark"
+          src="/images/ui/icons/paw-print.png"
+          alt=""
+          width={198}
+          height={198}
+        />
         <Button onClick={() => router.push("/onboarding/cat")}>つぎへ</Button>
       </section>
     </MobileShell>

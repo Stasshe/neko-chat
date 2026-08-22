@@ -83,7 +83,7 @@ DBスキーマの正本は `supabase/schemas/*.sql` とする。
 - `/onboarding/cat`: 猫選択とプロフィール保存
 - `/onboarding/invite`: 招待コード表示・コピー
 - `/home`: 現在のグループの投稿空間
-- `/compose`: 30文字投稿と表情選択
+- ホームのつぶやきパネル: 30文字投稿と表情選択
 - `/groups`: 所属グループ一覧・切り替え
 - `/settings`: 名前・猫・ログアウト
 

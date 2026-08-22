@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef } from "react";
 import type { Step } from "react-joyride";
 import { animate, type JSAnimation, stagger } from "animejs";
 
@@ -10,7 +11,7 @@ import { BottomTabBar, TopBar } from "@/components/navigation";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
-import { tourStorageKey } from "@/lib/tour";
+import { setTourStage, useTourStage } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
 
@@ -37,16 +38,6 @@ function getBubbleAlignment(index: number): "left" | "right" {
     return "left";
   }
   return "right";
-}
-
-function getCatPose(index: number): "sit" | "stand" | "lie" {
-  if (index === 2) {
-    return "lie";
-  }
-  if (index === 1) {
-    return "sit";
-  }
-  return "stand";
 }
 
 function useParkAnimation(postCount: number) {
@@ -96,22 +87,12 @@ function useParkAnimation(postCount: number) {
 
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
-  const [tourRun, setTourRun] = useState(false);
+  const tourStage = useTourStage();
+  const tourRun = Boolean(currentGroup?.isSolo && (tourStage === null || tourStage === "home"));
   const sceneRef = useParkAnimation(posts.length);
 
-  useEffect(() => {
-    if (!currentGroup?.isSolo) {
-      return;
-    }
-    const stage = window.localStorage.getItem(tourStorageKey);
-    if (stage === null || stage === "home") {
-      setTourRun(true);
-    }
-  }, [currentGroup]);
-
   function finishHomeTour() {
-    window.localStorage.setItem(tourStorageKey, "compose");
-    setTourRun(false);
+    setTourStage("compose");
   }
   const uniqueMembers = new Map<string, PostUser>();
   if (profile) {
@@ -123,17 +104,53 @@ export default function HomePage() {
   const members = [...uniqueMembers.values()];
 
   return (
-    <MobileShell scene>
+    <MobileShell>
       <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
       <TopBar groupName={currentGroup?.name ?? "グループ"} members={members} />
       <section ref={sceneRef} className="park-scene" aria-label="グループの近況">
-        <div className="park-scene__sky" />
-        <div className="park-scene__cloud park-scene__cloud--one" />
-        <div className="park-scene__cloud park-scene__cloud--two" />
-        <div className="park-scene__tree park-scene__tree--large" />
-        <div className="park-scene__tree park-scene__tree--small" />
-        <div className="park-scene__ground" />
-        <div className="park-scene__stump" />
+        <Image
+          src="/images/ui/backgrounds/home-green.png"
+          alt=""
+          fill
+          priority
+          sizes="(min-width: 768px) 100vw, 393px"
+          className="park-scene__bg"
+        />
+        <Image
+          src="/images/ui/decorations/cloud.png"
+          alt=""
+          width={57}
+          height={36}
+          className="park-scene__cloud park-scene__cloud--one"
+        />
+        <Image
+          src="/images/ui/decorations/cloud.png"
+          alt=""
+          width={43}
+          height={27}
+          className="park-scene__cloud park-scene__cloud--two"
+        />
+        <Image
+          src="/images/ui/decorations/tree.png"
+          alt=""
+          width={90}
+          height={90}
+          className="park-scene__tree park-scene__tree--large"
+        />
+        <Image
+          src="/images/ui/decorations/tree.png"
+          alt=""
+          width={63}
+          height={63}
+          className="park-scene__tree park-scene__tree--small"
+        />
+        <Image
+          src="/images/ui/decorations/tree-stump.png"
+          alt=""
+          width={78}
+          height={55}
+          className="park-scene__stump"
+        />
 
         {loading && <LoadingState label="みんなの近況を読み込み中" />}
         {!loading && error && <ErrorState message={error} retry={() => void refresh()} />}
@@ -148,7 +165,6 @@ export default function HomePage() {
               <CatDisplay
                 type={post.user.catType}
                 emotion={post.emotion}
-                pose={getCatPose(index)}
                 className="scene-post__cat"
               />
               <span className="scene-post__name">{post.user.username}</span>

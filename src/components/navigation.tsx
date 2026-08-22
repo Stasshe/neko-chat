@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ComposeIcon, GroupsIcon, HomeIcon, MenuIcon, SettingsIcon } from "@/components/icons";
+import { ComposeIcon, MenuIcon, SettingsIcon } from "@/components/icons";
 import { MemberAvatars } from "@/components/member-avatars";
+import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
 
 export function TopBar({ groupName, members }: { groupName: string; members: PostUser[] }) {
@@ -26,32 +28,39 @@ export function TopBar({ groupName, members }: { groupName: string; members: Pos
   );
 }
 
-const tabs = [
-  { href: "/home", label: "ホーム", icon: HomeIcon },
-  { href: "/compose", label: "つぶやく", icon: ComposeIcon },
-  { href: "/groups", label: "グループ", icon: GroupsIcon },
-] as const;
-
 export function BottomTabBar() {
   const pathname = usePathname();
+  const { composeOpen, openCompose } = useApp();
+  const homeActive = pathname === "/home";
+  const groupsActive = pathname === "/groups";
+
   return (
     <nav className="bottom-tabs" aria-label="メインナビゲーション">
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        const active = pathname === tab.href;
-        const classes = ["bottom-tabs__item"];
-        let current: "page" | undefined;
-        if (active) {
-          classes.push("is-active");
-          current = "page";
-        }
-        return (
-          <Link className={classes.join(" ")} href={tab.href} key={tab.href} aria-current={current}>
-            <Icon />
-            <span>{tab.label}</span>
-          </Link>
-        );
-      })}
+      <Link
+        className={homeActive ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
+        href="/home"
+        aria-current={homeActive ? "page" : undefined}
+      >
+        <Image src="/images/ui/navigation/home-button.png" alt="" width={29} height={29} />
+        <span>ホーム</span>
+      </Link>
+      <button
+        type="button"
+        className={composeOpen ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
+        onClick={openCompose}
+        aria-current={composeOpen ? "page" : undefined}
+      >
+        <ComposeIcon />
+        <span>つぶやく</span>
+      </button>
+      <Link
+        className={groupsActive ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
+        href="/groups"
+        aria-current={groupsActive ? "page" : undefined}
+      >
+        <Image src="/images/ui/navigation/group-button.png" alt="" width={29} height={29} />
+        <span>グループ</span>
+      </Link>
     </nav>
   );
 }
