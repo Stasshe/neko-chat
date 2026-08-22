@@ -1,5 +1,8 @@
 "use client";
 
+import { animate, type JSAnimation, stagger } from "animejs";
+import { useEffect, useRef } from "react";
+
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
 import { BottomTabBar, TopBar } from "@/components/navigation";
@@ -25,8 +28,54 @@ function getCatPose(index: number): "sit" | "stand" | "lie" {
   return "stand";
 }
 
+function useParkAnimation(postCount: number) {
+  const sceneRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const animations: JSAnimation[] = [];
+    const cloud = scene.querySelector(".park-scene__cloud--one");
+    if (cloud) {
+      animations.push(
+        animate(cloud, {
+          x: 12,
+          duration: 6000,
+          ease: "inOutSine",
+          alternate: true,
+          loop: true,
+        }),
+      );
+    }
+    if (postCount > 0) {
+      animations.push(
+        animate(scene.querySelectorAll(".scene-post"), {
+          y: -5,
+          duration: 2200,
+          delay: stagger(320),
+          ease: "inOutSine",
+          alternate: true,
+          loop: true,
+        }),
+      );
+    }
+
+    return () => {
+      for (const animation of animations) {
+        animation.revert();
+      }
+    };
+  }, [postCount]);
+
+  return sceneRef;
+}
+
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
+  const sceneRef = useParkAnimation(posts.length);
   const uniqueMembers = new Map<string, PostUser>();
   if (profile) {
     uniqueMembers.set(profile.id, profile);
@@ -39,7 +88,7 @@ export default function HomePage() {
   return (
     <MobileShell scene>
       <TopBar groupName={currentGroup?.name ?? "グループ"} members={members} />
-      <section className="park-scene" aria-label="グループの近況">
+      <section ref={sceneRef} className="park-scene" aria-label="グループの近況">
         <div className="park-scene__sky" />
         <div className="park-scene__cloud park-scene__cloud--one" />
         <div className="park-scene__cloud park-scene__cloud--two" />

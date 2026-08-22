@@ -1,8 +1,10 @@
-import type { ComponentPropsWithoutRef } from "react";
+"use client";
+
+import { type HTMLMotionProps, motion, useReducedMotion } from "motion/react";
 
 type ButtonVariant = "primary" | "logout";
 
-type ButtonProps = ComponentPropsWithoutRef<"button"> & {
+type ButtonProps = HTMLMotionProps<"button"> & {
   variant?: ButtonVariant;
 };
 
@@ -12,6 +14,19 @@ const variantClassName: Record<ButtonVariant, string> = {
 };
 
 export function Button({ variant = "primary", className, type = "button", ...props }: ButtonProps) {
+  const reducedMotion = useReducedMotion();
   const classes = [variantClassName[variant], className].filter(Boolean).join(" ");
-  return <button type={type} className={classes} {...props} />;
+  let tapAnimation = {};
+  if (!reducedMotion && !props.disabled) {
+    tapAnimation = { scale: 0.97 };
+  }
+  return (
+    <motion.button
+      type={type}
+      className={classes}
+      {...props}
+      whileTap={tapAnimation}
+      transition={{ duration: 0.14 }}
+    />
+  );
 }
