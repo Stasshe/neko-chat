@@ -6,6 +6,7 @@ import Image from "next/image";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { Step } from "react-joyride";
 
+import { ButtonSpinner } from "@/components/button-spinner";
 import { CatDisplay } from "@/components/cat-display";
 import { SendIcon } from "@/components/icons";
 import { OnboardingTour } from "@/components/onboarding-tour";
@@ -33,6 +34,13 @@ const composeTourSteps: Step[] = [
   },
 ];
 
+function renderSendButtonIcon(submitting: boolean) {
+  if (submitting) {
+    return <ButtonSpinner label="送信中" />;
+  }
+  return <SendIcon />;
+}
+
 const emotionLabels: Record<Emotion, string> = {
   positive: "ポジティブ",
   neutral: "ソーソー",
@@ -57,12 +65,13 @@ function ComposeDialog({
   onEmotionChange,
   onValidationError,
 }: ComposeDialogProps) {
-  const { profile, currentGroup, closeCompose, loading, error, publishPost } = useApp();
+  const { profile, currentGroup, closeCompose, error, publishPost } = useApp();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const tourStage = useTourStage(profile?.id);
   const reducedMotion = useReducedMotion();
   const [tourReady, setTourReady] = useState(false);
   const [randomEmotion, setRandomEmotion] = useState<ConcreteEmotion>("neutral");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -108,14 +117,17 @@ function ComposeDialog({
       return;
     }
     onValidationError(null);
+    setSubmitting(true);
     try {
       await publishPost(trimmed, emotion === "random" ? randomEmotion : emotion);
       onBodyChange("");
       onEmotionChange("positive");
       setRandomEmotion("neutral");
       dismiss();
+      setSubmitting(false);
     } catch {
       // The provider exposes the actionable error message.
+      setSubmitting(false);
     }
   }
 
@@ -181,10 +193,10 @@ function ComposeDialog({
             <button
               className="send-button"
               type="submit"
-              disabled={loading || !currentGroup}
+              disabled={submitting || !currentGroup}
               aria-label="つぶやく"
             >
-              <SendIcon />
+              {renderSendButtonIcon(submitting)}
             </button>
           </div>
           <CatDisplay

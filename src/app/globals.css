@@ -89,10 +89,22 @@ a {
 }
 button {
   cursor: pointer;
+  transition: transform 0.12s ease;
+}
+button:active:not(:disabled) {
+  transform: scale(0.96);
 }
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+  button:active:not(:disabled) {
+    transform: none;
+  }
 }
 a {
   color: inherit;
@@ -398,20 +410,26 @@ img {
   transform: scale(0.97);
 }
 
-.park-scene {
+.park-scene-wrap {
   position: relative;
+  display: flex;
   min-height: 0;
   flex: 1;
-  overflow: hidden;
+}
+.park-scene {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
   background: var(--grass);
 }
-.home-scene {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  background: white;
+.park-scene__page {
+  position: relative;
+  flex: 0 0 100%;
+  min-width: 100%;
+  scroll-snap-align: start;
+  overflow: hidden;
 }
 .park-scene__bg {
   z-index: 0;
@@ -449,6 +467,39 @@ img {
   left: 104px;
   width: 169px;
   height: 119px;
+}
+.park-scene__sofa {
+  position: absolute;
+  z-index: 4;
+  top: 32%;
+  right: 4%;
+}
+.park-scene__yarn {
+  position: absolute;
+  z-index: 3;
+  bottom: 22%;
+  left: 8%;
+}
+.park-scene__dots {
+  position: absolute;
+  z-index: 20;
+  top: 76px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.park-scene__dots span {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.park-scene__dots span.is-active {
+  background: var(--accent-strong);
 }
 
 .scene-post {
@@ -500,6 +551,13 @@ img {
 }
 .scene-post:active {
   cursor: grabbing;
+}
+.scene-post--pending {
+  opacity: 0.6;
+}
+.scene-post--room {
+  width: 130px;
+  height: auto;
 }
 .scene-post__float {
   position: relative;
@@ -572,6 +630,31 @@ img {
 .speech-bubble--right {
   right: 0;
   left: auto;
+}
+.scene-post--room .scene-post__float {
+  display: flex;
+  height: auto;
+  flex-direction: column;
+  align-items: center;
+}
+.scene-post--room .scene-post__cat {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: var(--scene-cat-width);
+  height: var(--scene-cat-height);
+  margin-top: -3px;
+}
+.scene-post--room .scene-post__name {
+  position: static;
+  width: auto;
+  margin-top: -10px;
+}
+.scene-post--room .speech-bubble {
+  position: relative;
+  bottom: auto;
+  min-width: 105px;
+  max-width: 158px;
 }
 
 .compose-overlay {

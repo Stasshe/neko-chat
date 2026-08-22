@@ -11,6 +11,7 @@ function JoinedContent() {
   const router = useRouter();
   const params = useSearchParams();
   const name = params.get("name") ?? "グループ";
+  const returnToGroups = params.get("returnTo") === "groups";
   return (
     <MobileShell>
       <BackLink href="/groups" label="グループ一覧へ戻る" />
@@ -24,7 +25,9 @@ function JoinedContent() {
           width={198}
           height={198}
         />
-        <Button onClick={() => router.replace("/onboarding/cat")}>つぎへ</Button>
+        <Button onClick={() => router.replace(returnToGroups ? "/groups" : "/onboarding/cat")}>
+          つぎへ
+        </Button>
       </section>
     </MobileShell>
   );

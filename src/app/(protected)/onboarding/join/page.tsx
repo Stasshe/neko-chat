@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { type FormEvent, Suspense, useState } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -9,11 +10,20 @@ import { ErrorState } from "@/components/status";
 import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
 
-export default function JoinPage() {
+function allowlistedReturnPath(value: string | null): "/groups" | null {
+  if (value === "groups") {
+    return "/groups";
+  }
+  return null;
+}
+
+function JoinContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { joinGroup, loading, error } = useApp();
   const [code, setCode] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const returnPath = allowlistedReturnPath(searchParams.get("returnTo"));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = code.trim().toUpperCase();
@@ -24,13 +34,18 @@ export default function JoinPage() {
     setValidationError(null);
     try {
       const group = await joinGroup(value);
-      router.replace(`/onboarding/joined?name=${encodeURIComponent(group.name)}`);
+      const query = new URLSearchParams({ name: group.name });
+      if (returnPath) {
+        query.set("returnTo", "groups");
+      }
+      router.replace(`/onboarding/joined?${query.toString()}`);
     } catch {
       /* provider state */
     }
   }
   return (
     <MobileShell>
+      <BackLink href={returnPath ?? "/onboarding/mode"} />
       <section className="onboarding-form onboarding-form--join">
         <h1>招待コードを入力しよう</h1>
         <div className="onboarding-join__cats" aria-hidden="true">
@@ -68,5 +83,13 @@ export default function JoinPage() {
         </form>
       </section>
     </MobileShell>
+  );
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={null}>
+      <JoinContent />
+    </Suspense>
   );
 }

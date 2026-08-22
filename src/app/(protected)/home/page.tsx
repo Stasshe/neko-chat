@@ -1,10 +1,11 @@
 "use client";
 
-import { useReducedMotion } from "motion/react";
+import { animate, type JSAnimation, stagger } from "animejs";
+import { type MotionStyle, useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import type { Step } from "react-joyride";
 
 import { CatDisplay } from "@/components/cat-display";
@@ -12,10 +13,11 @@ import { MenuIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
-import { ErrorState, LoadingState } from "@/components/status";
+import { EmptyState, ErrorState, LoadingState } from "@/components/status";
+import { formatPostBody } from "@/lib/post-body";
 import { setTourStage, useTourStage } from "@/lib/tour";
-import { useApp } from "@/state/app-provider";
-import type { Emotion, PostUser } from "@/types/app";
+import { type OptimisticPost, useApp } from "@/state/app-provider";
+import type { PostUser } from "@/types/app";
 
 const homeTourSteps: Step[] = [
   {
@@ -40,11 +42,9 @@ type ScenePostConfig = {
   pose: "sit" | "stand" | "lie";
 };
 
-type ScenePostItem = {
-  id: string;
-  body: string;
-  emotion: Emotion;
-  user: Pick<PostUser, "username" | "catType">;
+type RoomPostLayout = MotionStyle & {
+  "--scene-cat-height": string;
+  "--scene-cat-width": string;
 };
 
 const firstParkScenePostConfig: ScenePostConfig = { align: "right", pose: "sit" };
@@ -55,39 +55,109 @@ const parkScenePostConfigs: ScenePostConfig[] = [
   { align: "right", pose: "lie" },
 ];
 
-const homeHeaderMemberSlots = ["first", "second", "third"] as const;
-const mockScenePosts: ScenePostItem[] = [
+const firstRoomPostLayout: RoomPostLayout = {
+  top: "40%",
+  left: "6%",
+  width: 130,
+  "--scene-cat-width": "110px",
+  "--scene-cat-height": "82px",
+};
+
+const roomPostLayouts: RoomPostLayout[] = [
+  firstRoomPostLayout,
   {
-    id: "mock-user-3",
-    body: "早起きできた ニャー",
-    emotion: "negative",
-    user: {
-      username: "ユーザー3",
-      catType: "white",
-    },
-  },
-  {
-    id: "mock-user-1",
-    body: "いまからバイト行く ニャー",
-    emotion: "neutral",
-    user: {
-      username: "ユーザー1",
-      catType: "white",
-    },
-  },
-  {
-    id: "mock-user-2",
-    body: "がんばれ ニャー",
-    emotion: "positive",
-    user: {
-      username: "ユーザー2",
-      catType: "white",
-    },
+    right: "6%",
+    bottom: "10%",
+    width: 150,
+    "--scene-cat-width": "130px",
+    "--scene-cat-height": "95px",
   },
 ];
 
+const bubbleDurationMs = 30 * 60 * 1000;
+
+function isBubbleVisible(createdAt: string, now: number): boolean {
+  return now - new Date(createdAt).getTime() < bubbleDurationMs;
+}
+
+function getLatestPostsByUser(posts: OptimisticPost[]): OptimisticPost[] {
+  const latestByUser = new Map<string, OptimisticPost>();
+  for (const post of posts) {
+    if (!latestByUser.has(post.userId)) {
+      latestByUser.set(post.userId, post);
+    }
+  }
+  return [...latestByUser.values()].sort((a, b) => a.userId.localeCompare(b.userId));
+}
+
+function useBubbleClock(): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return now;
+}
+
+function useParkAnimation(postCount: number) {
+  const sceneRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const animations: JSAnimation[] = [];
+    const cloud = scene.querySelector(".park-scene__cloud--one");
+    if (cloud) {
+      animations.push(
+        animate(cloud, {
+          x: 12,
+          duration: 6000,
+          ease: "inOutSine",
+          alternate: true,
+          loop: true,
+        }),
+      );
+    }
+    if (postCount > 0) {
+      animations.push(
+        animate(scene.querySelectorAll(".scene-post__float"), {
+          y: -5,
+          duration: 2200,
+          delay: stagger(320),
+          ease: "inOutSine",
+          alternate: true,
+          loop: true,
+        }),
+      );
+    }
+
+    return () => {
+      for (const animation of animations) {
+        animation.revert();
+      }
+    };
+  }, [postCount]);
+
+  return sceneRef;
+}
+
+function getPostClassName(index: number, pending: boolean | undefined, room = false) {
+  const classNames = ["scene-post", room ? "scene-post--room" : `scene-post--${index + 1}`];
+  if (pending) {
+    classNames.push("scene-post--pending");
+  }
+  return classNames.join(" ");
+}
+
 function HomeHeader({ groupName, memberCount }: { groupName: string; memberCount: number }) {
-  const visibleMemberCount = Math.min(Math.max(memberCount, 1), 3);
+  const visibleMemberCount = Math.min(Math.max(memberCount, 1), 5);
+  const memberSlots = Array.from(
+    { length: visibleMemberCount },
+    (_, index) => `home-member-${index + 1}`,
+  );
 
   return (
     <header className="home-header">
@@ -95,10 +165,9 @@ function HomeHeader({ groupName, memberCount }: { groupName: string; memberCount
         <MenuIcon />
         <span>チャット</span>
       </Link>
-
       <div className="home-header__title">
-        <div className="home-header__members" aria-hidden="true">
-          {homeHeaderMemberSlots.slice(0, visibleMemberCount).map((slot) => (
+        <div className="home-header__members" aria-label={`${memberCount}人のメンバー`} role="img">
+          {memberSlots.map((slot) => (
             <Image
               key={slot}
               src="/images/ui/icons/cat-outline.png"
@@ -111,7 +180,6 @@ function HomeHeader({ groupName, memberCount }: { groupName: string; memberCount
         </div>
         <strong>{groupName}</strong>
       </div>
-
       <Link className="home-header__action" href="/settings" aria-label="設定">
         <Image
           src="/images/ui/icons/setting.png"
@@ -150,7 +218,6 @@ function HomeSceneDecorations() {
         height={174}
         className="park-scene__tree park-scene__tree--large"
       />
-
       <Image
         src="/images/ui/decorations/tree-stump.png"
         alt=""
@@ -162,23 +229,89 @@ function HomeSceneDecorations() {
   );
 }
 
+function ParkPost({ post, index, bubbleVisible, reducedMotion, pageRef }: PostProps) {
+  const config = parkScenePostConfigs[index] ?? firstParkScenePostConfig;
+  return (
+    <m.article
+      className={getPostClassName(index, post.pending)}
+      drag={!reducedMotion}
+      dragConstraints={pageRef}
+      dragMomentum={false}
+      whileDrag={{ scale: 1.04, zIndex: 12 }}
+    >
+      <div className="scene-post__float">
+        {bubbleVisible && (
+          <SpeechBubble align={config.align}>{formatPostBody(post.body)}</SpeechBubble>
+        )}
+        <CatDisplay
+          type={post.user.catType}
+          emotion={post.emotion}
+          pose={config.pose}
+          className="scene-post__cat"
+          seed={post.id}
+          priority={index === 0}
+        />
+        <span className="scene-post__name">{post.user.username}</span>
+      </div>
+    </m.article>
+  );
+}
+
+type PostProps = {
+  post: OptimisticPost;
+  index: number;
+  bubbleVisible: boolean;
+  reducedMotion: boolean | null;
+  pageRef: RefObject<HTMLDivElement | null>;
+};
+
+function RoomPost({ post, index, bubbleVisible, reducedMotion, pageRef }: PostProps) {
+  const layout = roomPostLayouts[index] ?? firstRoomPostLayout;
+  return (
+    <m.article
+      className={getPostClassName(index, post.pending, true)}
+      style={layout}
+      drag={!reducedMotion}
+      dragConstraints={pageRef}
+      dragMomentum={false}
+      whileDrag={{ scale: 1.04, zIndex: 12 }}
+    >
+      <div className="scene-post__float">
+        {bubbleVisible && (
+          <SpeechBubble align={index % 2 === 0 ? "left" : "right"}>
+            {formatPostBody(post.body)}
+          </SpeechBubble>
+        )}
+        <CatDisplay
+          type={post.user.catType}
+          emotion={post.emotion}
+          className="scene-post__cat"
+          seed={post.id}
+        />
+        <span className="scene-post__name">{post.user.username}</span>
+      </div>
+    </m.article>
+  );
+}
+
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
   const tourStage = useTourStage(profile?.id);
   const tourRun = Boolean(profile && currentGroup && (tourStage === null || tourStage === "home"));
-  const scenePostConfigs = parkScenePostConfigs;
-  const showMockScene = !loading && !error && posts.length === 0;
-  const visiblePosts: ScenePostItem[] = showMockScene
-    ? mockScenePosts
-    : posts.slice(0, scenePostConfigs.length);
-  const sceneRef = useRef<HTMLElement>(null);
+  const uniquePosts = getLatestPostsByUser(posts);
+  const sceneRef = useParkAnimation(uniquePosts.length);
+  const parkPageRef = useRef<HTMLDivElement>(null);
+  const roomPageRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
+  const bubbleClock = useBubbleClock();
+  const [activePage, setActivePage] = useState<0 | 1>(0);
 
   function finishHomeTour() {
     if (profile) {
       setTourStage(profile.id, "compose");
     }
   }
+
   const uniqueMembers = new Map<string, PostUser>();
   if (profile) {
     uniqueMembers.set(profile.id, profile);
@@ -187,56 +320,95 @@ export default function HomePage() {
     uniqueMembers.set(post.user.id, post.user);
   }
   const members = [...uniqueMembers.values()];
-  const displayGroupName = showMockScene ? "グループ名" : (currentGroup?.name ?? "グループ名");
-  const displayMemberCount = showMockScene ? 3 : (currentGroup?.memberCount ?? members.length);
+  const parkPosts = uniquePosts.slice(0, parkScenePostConfigs.length);
+  const roomPosts = uniquePosts.slice(parkScenePostConfigs.length, 5);
 
   return (
     <MobileShell>
       <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
-      <HomeHeader groupName={displayGroupName} memberCount={displayMemberCount} />
-      <section ref={sceneRef} className="park-scene home-scene" aria-label="グループの近況">
-        <Image
-          src="/images/ui/backgrounds/home-green.png"
-          alt=""
-          fill
-          priority
-          sizes="393px"
-          className="park-scene__bg"
-        />
-        <HomeSceneDecorations />
-
+      <HomeHeader
+        groupName={currentGroup?.name ?? "グループ名"}
+        memberCount={currentGroup?.memberCount ?? members.length}
+      />
+      <div className="park-scene-wrap">
+        <section
+          ref={sceneRef}
+          className="park-scene"
+          aria-label="グループの近況"
+          onScroll={(event) => {
+            const scene = event.currentTarget;
+            setActivePage(scene.scrollLeft > scene.clientWidth / 2 ? 1 : 0);
+          }}
+        >
+          <div ref={parkPageRef} className="park-scene__page">
+            <Image
+              src="/images/ui/backgrounds/home-green.png"
+              alt=""
+              fill
+              priority
+              sizes="393px"
+              className="park-scene__bg"
+            />
+            <HomeSceneDecorations />
+            {!loading &&
+              !error &&
+              parkPosts.map((post, index) => (
+                <ParkPost
+                  key={post.userId}
+                  post={post}
+                  index={index}
+                  bubbleVisible={post.pending || isBubbleVisible(post.createdAt, bubbleClock)}
+                  reducedMotion={reducedMotion}
+                  pageRef={parkPageRef}
+                />
+              ))}
+          </div>
+          <div ref={roomPageRef} className="park-scene__page park-scene__page--room">
+            <Image
+              src="/images/ui/backgrounds/home-brown.png"
+              alt=""
+              fill
+              sizes="393px"
+              className="park-scene__bg"
+            />
+            <Image
+              src="/images/ui/decorations/sofa.png"
+              alt=""
+              width={150}
+              height={110}
+              className="park-scene__sofa"
+            />
+            <Image
+              src="/images/ui/decorations/yarn-ball.png"
+              alt=""
+              width={48}
+              height={48}
+              className="park-scene__yarn"
+            />
+            {!loading &&
+              !error &&
+              roomPosts.map((post, index) => (
+                <RoomPost
+                  key={post.userId}
+                  post={post}
+                  index={index}
+                  bubbleVisible={post.pending || isBubbleVisible(post.createdAt, bubbleClock)}
+                  reducedMotion={reducedMotion}
+                  pageRef={roomPageRef}
+                />
+              ))}
+          </div>
+        </section>
+        <div className="park-scene__dots" aria-hidden="true">
+          <span className={activePage === 0 ? "is-active" : undefined} />
+          <span className={activePage === 1 ? "is-active" : undefined} />
+        </div>
         {loading && <LoadingState label="みんなの近況を読み込み中" />}
         {!loading && error && <ErrorState message={error} retry={() => void refresh()} />}
-        {!loading &&
-          !error &&
-          visiblePosts.map((post, index) => {
-            const config = scenePostConfigs[index] ?? firstParkScenePostConfig;
-
-            return (
-              <m.article
-                className={`scene-post scene-post--${index + 1}`}
-                key={post.id}
-                drag={!reducedMotion}
-                dragConstraints={sceneRef}
-                dragMomentum={false}
-                whileDrag={{ scale: 1.04, zIndex: 12 }}
-              >
-                <div className="scene-post__float">
-                  <SpeechBubble align={config.align}>{post.body}</SpeechBubble>
-                  <CatDisplay
-                    type={post.user.catType}
-                    emotion={post.emotion}
-                    pose={config.pose}
-                    className="scene-post__cat"
-                    seed={post.id}
-                    priority={index === 0}
-                  />
-                  <span className="scene-post__name">{post.user.username}</span>
-                </div>
-              </m.article>
-            );
-          })}
-      </section>
+        {!loading && !error && uniquePosts.length === 0 && (
+          <EmptyState message="まだつぶやきがありません。最初の一言を届けよう。" />
+        )}
+      </div>
     </MobileShell>
   );
 }

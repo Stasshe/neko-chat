@@ -88,3 +88,12 @@ export function CopyIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function KeyIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...defaults} {...props}>
+      <circle cx="8" cy="15" r="4" />
+      <path d="m10.85 12.15 8.15-8.15M15 4l3 3M19 4l1 1" />
+    </svg>
+  );
+}

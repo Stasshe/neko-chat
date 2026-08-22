@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { type FormEvent, Suspense, useState } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -9,11 +10,20 @@ import { ErrorState } from "@/components/status";
 import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
 
-export default function GroupPage() {
+function allowlistedReturnPath(value: string | null): "/groups" | null {
+  if (value === "groups") {
+    return "/groups";
+  }
+  return null;
+}
+
+function GroupContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { createGroup, loading, error } = useApp();
   const [name, setName] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const returnPath = allowlistedReturnPath(searchParams.get("returnTo"));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = name.trim();
@@ -31,6 +41,7 @@ export default function GroupPage() {
   }
   return (
     <MobileShell>
+      {returnPath && <BackLink href={returnPath} label="グループ一覧へ戻る" />}
       <section className="onboarding-form onboarding-form--group">
         <h1>グループを作成しよう</h1>
         <div className="onboarding-cat-group" aria-hidden="true">
@@ -55,5 +66,13 @@ export default function GroupPage() {
         </form>
       </section>
     </MobileShell>
+  );
+}
+
+export default function GroupPage() {
+  return (
+    <Suspense fallback={null}>
+      <GroupContent />
+    </Suspense>
   );
 }

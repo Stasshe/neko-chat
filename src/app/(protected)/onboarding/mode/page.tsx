@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ButtonSpinner } from "@/components/button-spinner";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
@@ -42,6 +43,7 @@ export default function ModePage() {
         <h1>どのようにはじめる？</h1>
         <div className="mode-list">
           <button type="button" onClick={() => void chooseSolo()} disabled={loading}>
+            {loading && <ButtonSpinner label="開始中" />}
             <strong>一人で始める</strong>
             <span>
               気ままに、一人で

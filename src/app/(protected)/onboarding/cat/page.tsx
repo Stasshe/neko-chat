@@ -21,18 +21,12 @@ const catLabels: Record<CatType, string> = {
 
 const catSelectionOrder: CatType[] = ["white", "black", "mike", "chatora", "sham"];
 
-function getButtonLabel(loading: boolean): string {
-  if (loading) {
-    return "保存中";
-  }
-  return "決定";
-}
-
 function CatSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profile, loading, error, saveProfile } = useApp();
+  const { profile, error, saveProfile } = useApp();
   const [selected, setSelected] = useState<CatType>("white");
+  const [submitting, setSubmitting] = useState(false);
   // Closed allowlist compare, not an open redirect: only "settings" routes anywhere.
   // react-doctor-disable-next-line react-doctor/url-prefilled-privileged-action
   const returnToSettings = searchParams.get("returnTo") === "settings";
@@ -43,6 +37,7 @@ function CatSelectionContent() {
       router.replace("/onboarding/profile");
       return;
     }
+    setSubmitting(true);
     try {
       await saveProfile(username, selected);
       if (returnToSettings) {
@@ -52,6 +47,7 @@ function CatSelectionContent() {
       router.replace("/home");
     } catch {
       // The provider exposes the actionable error message.
+      setSubmitting(false);
     }
   }
 
@@ -74,8 +70,8 @@ function CatSelectionContent() {
           ))}
         </div>
         {error && <ErrorState message={error} />}
-        <Button onClick={() => void confirm()} disabled={loading}>
-          {getButtonLabel(loading)}
+        <Button onClick={() => void confirm()} pending={submitting}>
+          決定
         </Button>
       </section>
     </MobileShell>

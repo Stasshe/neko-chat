@@ -16,3 +16,6 @@ alter table public.posts enable row level security;
 revoke all on public.posts from anon, authenticated;
 
 grant select, insert, update, delete on public.posts to service_role;
+grant select on public.posts to authenticated;
+
+alter publication supabase_realtime add table public.posts;
