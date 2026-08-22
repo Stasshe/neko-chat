@@ -1054,6 +1054,55 @@ img {
 .invite-created > .primary-button {
   width: 223px;
 }
+.invite-created--success {
+  padding-top: max(93px, env(safe-area-inset-top));
+  font-family: "YD Waosagi", serif;
+}
+.invite-created--success h1 {
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.invite-created--success .accent-lines {
+  top: 61px;
+  left: 24px;
+  width: 21px;
+  height: 18px;
+  margin: 0;
+  border: 0;
+  object-fit: contain;
+  transform: none;
+}
+.invite-created--success .paw-mark {
+  margin-top: 24px;
+  margin-bottom: 44px;
+}
+.invite-created--success h2 {
+  margin-bottom: 20px;
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.invite-created--success output {
+  min-height: 65px;
+  font-family: "YD Waosagi", serif;
+  font-weight: 700;
+}
+.invite-created--success .copy-button {
+  min-width: 186px;
+  min-height: 51px;
+  margin-top: 25px;
+  margin-bottom: 68px;
+  font-family: "YD Waosagi", serif;
+}
+.invite-created--success > .primary-button {
+  width: 245px;
+  min-height: 53px;
+  font-family: "YD Waosagi", serif;
+  font-weight: 700;
+}
 
 .onboarding-form {
   display: flex;
@@ -1111,6 +1160,71 @@ img {
 .onboarding-form--group .primary-button {
   margin-top: 60px;
   font-weight: 400;
+}
+.onboarding-form--join {
+  padding: max(120px, env(safe-area-inset-top)) 0 max(36px, env(safe-area-inset-bottom));
+  font-family: "YD Waosagi", serif;
+}
+.onboarding-form--join h1 {
+  width: 100%;
+  padding: 0 24px;
+  font-family: "YD Waosagi", serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+.onboarding-form--join form {
+  width: min(100%, 335px);
+  margin-top: 58px;
+}
+.onboarding-form--join input {
+  min-height: 59px;
+  padding: 14px 28px;
+  border-color: #c9c5c1;
+  border-radius: 20px;
+  font-size: 15px;
+  text-align: left;
+}
+.onboarding-form--join .primary-button {
+  width: 225px;
+  min-height: 49px;
+  margin-top: 52px;
+  border-radius: 20px;
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+.onboarding-join__cats {
+  position: relative;
+  width: 260px;
+  height: 170px;
+  margin-top: 52px;
+}
+.onboarding-join__cat {
+  position: absolute;
+  width: 108px;
+  height: 88px;
+}
+.onboarding-join__cat--black {
+  top: 2px;
+  left: 2px;
+}
+.onboarding-join__cat--mike {
+  top: 0;
+  right: 0;
+}
+.onboarding-join__cat--white {
+  bottom: 0;
+  left: 72px;
+}
+.onboarding-join__label {
+  margin-bottom: 18px;
+  font-family: "YD Waosagi", serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
 }
 .onboarding-form--profile {
   padding-top: max(172px, env(safe-area-inset-top));
