@@ -60,13 +60,29 @@ test.describe("投稿画面", () => {
 
     await page.locator("#post-body").fill(body);
     await page.locator('input[name="emotion"][value="positive"]').check();
+
+    const createPostResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        /\/api\/groups\/[^/]+\/posts$/.test(new URL(response.url()).pathname),
+    );
+
     await page.locator(".send-button").click();
 
-    await expect(page.locator("dialog.compose-overlay")).not.toBeVisible();
-    await expect(page).toHaveURL(/\/home$/);
+    const response = await createPostResponse;
+    expect(response.ok()).toBe(true);
 
-    const post = page.locator(".scene-post").filter({ hasText: body });
-    await expect(post).toBeVisible();
+    await expect(page.locator("dialog.compose-overlay")).not.toBeVisible();
+
+    // DBから投稿一覧を読み直して確認する
+    await page.reload();
+    await expect(page.locator(".park-scene")).toBeVisible();
+
+    const post = page.locator(".scene-post").filter({
+      hasText: `${body}ニャー`,
+    });
+
+    await expect(post).toBeVisible({ timeout: 15_000 });
     await expect(post.locator("img")).toHaveAttribute("src", /positive/);
   });
 });

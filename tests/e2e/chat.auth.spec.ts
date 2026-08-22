@@ -57,6 +57,6 @@ test.describe("チャット画面", () => {
     await sendButton.click();
 
     await expect(input).toHaveValue("");
-    await expect(page.getByText(message)).toBeVisible();
+    await expect(page.getByText(`${message}ニャー`, { exact: true })).toBeVisible();
   });
 });
