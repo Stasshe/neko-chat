@@ -9,6 +9,7 @@ import { CatDisplay } from "@/components/cat-display";
 import { SendIcon } from "@/components/icons";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { ErrorState } from "@/components/status";
+import { resolveEmotion, type ConcreteEmotion } from "@/lib/cat-assets";
 import { setTourStage, useTourStage } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import { type Emotion, emotions } from "@/types/app";
@@ -60,6 +61,7 @@ function ComposeDialog({
   const tourStage = useTourStage(profile?.id);
   const reducedMotion = useReducedMotion();
   const [tourReady, setTourReady] = useState(false);
+  const [randomEmotion, setRandomEmotion] = useState<ConcreteEmotion>("neutral");
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -106,14 +108,24 @@ function ComposeDialog({
     }
     onValidationError(null);
     try {
-      await publishPost(trimmed, emotion);
+      await publishPost(trimmed, emotion === "random" ? randomEmotion : emotion);
       onBodyChange("");
       onEmotionChange("neutral");
+      setRandomEmotion("neutral");
       dismiss();
     } catch {
       // The provider exposes the actionable error message.
     }
   }
+
+  function handleEmotionChange(nextEmotion: Emotion) {
+    if (nextEmotion === "random") {
+      setRandomEmotion(resolveEmotion(nextEmotion));
+    }
+    onEmotionChange(nextEmotion);
+  }
+
+  const previewEmotion = emotion === "random" ? randomEmotion : emotion;
 
   return (
     <dialog
@@ -155,7 +167,7 @@ function ComposeDialog({
         </button>
         <CatDisplay
           type={profile?.catType ?? "white"}
-          emotion={emotion}
+          emotion={previewEmotion}
           className="compose-sheet__cat"
         />
         <form className="compose-form" onSubmit={submit}>
@@ -189,7 +201,7 @@ function ComposeDialog({
                   name="emotion"
                   value={value}
                   checked={emotion === value}
-                  onChange={() => onEmotionChange(value)}
+                  onChange={() => handleEmotionChange(value)}
                 />
                 <span>{emotionLabels[value]}</span>
               </label>

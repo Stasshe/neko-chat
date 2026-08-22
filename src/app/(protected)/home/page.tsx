@@ -218,6 +218,7 @@ export default function HomePage() {
                   type={post.user.catType}
                   emotion={post.emotion}
                   className="scene-post__cat"
+                  seed={post.id}
                   priority={index === 0}
                 />
                 <span className="scene-post__name">{post.user.username}</span>
