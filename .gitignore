@@ -53,3 +53,8 @@ memo.txt
 .pnpm-store/
 *storybook.log
 storybook-static
+
+# Playwright
+/playwright-report/
+/test-results/
+/playwright/.auth/
