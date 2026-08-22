@@ -3,9 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { CSSProperties } from "react";
 
-import { ComposeIcon, MenuIcon, SettingsIcon } from "@/components/icons";
+import { MenuIcon, SettingsIcon } from "@/components/icons";
 import { MemberAvatars } from "@/components/member-avatars";
 import { usePrepareTabTransition } from "@/components/route-transition";
 import { useApp } from "@/state/app-provider";
@@ -41,45 +40,86 @@ export function BottomTabBar() {
 
   const homeActive = pathname === "/home" && !composeOpen;
   const groupsActive = pathname === "/groups" && !composeOpen;
-  let activeIndex = 0;
-  if (composeOpen) {
-    activeIndex = 1;
-  } else if (groupsActive) {
-    activeIndex = 2;
-  }
-  const indicatorStyle = { "--active-tab": activeIndex } as CSSProperties;
 
   return (
     <nav className="bottom-tabs" aria-label="メインナビゲーション">
-      <span className="bottom-tabs__indicator-track" aria-hidden="true">
-        <span className="bottom-tabs__indicator" style={indicatorStyle} />
-      </span>
+      <Image
+        src="/images/ui/navigation/tab_bar.png"
+        alt=""
+        width={372}
+        height={87}
+        className="bottom-tabs__background"
+      />
       <Link
-        className={homeActive ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
+        className={
+          homeActive
+            ? "bottom-tabs__item bottom-tabs__item--home is-active"
+            : "bottom-tabs__item bottom-tabs__item--home"
+        }
         href="/home"
         aria-current={homeActive ? "page" : undefined}
         onClick={() => prepareTransition("/home")}
       >
-        <Image src="/images/ui/navigation/home-button.png" alt="" width={29} height={29} />
-        <span>ホーム</span>
+        {homeActive && (
+          <Image
+            src="/images/ui/decorations/active_tab.png"
+            alt=""
+            width={21}
+            height={18}
+            className="bottom-tabs__active-mark"
+          />
+        )}
+        <Image
+          src="/images/ui/navigation/home-button.png"
+          alt=""
+          width={62}
+          height={62}
+          className="bottom-tabs__icon bottom-tabs__icon--home"
+        />
+        <span className="sr-only">ホーム</span>
       </Link>
       <button
         type="button"
-        className={composeOpen ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
+        className={composeOpen ? "bottom-tabs__compose is-active" : "bottom-tabs__compose"}
         onClick={openCompose}
         aria-pressed={composeOpen}
       >
-        <ComposeIcon />
-        <span>つぶやく</span>
+        <Image
+          src="/images/ui/decorations/tubuyaku_btn (1).png"
+          alt=""
+          width={79}
+          height={73}
+          className="bottom-tabs__compose-image"
+        />
+        <span className="sr-only">つぶやく</span>
       </button>
       <Link
-        className={groupsActive ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
+        className={
+          groupsActive
+            ? "bottom-tabs__item bottom-tabs__item--groups is-active"
+            : "bottom-tabs__item bottom-tabs__item--groups"
+        }
         href="/groups"
         aria-current={groupsActive ? "page" : undefined}
         onClick={() => prepareTransition("/groups")}
       >
-        <Image src="/images/ui/navigation/group-button.png" alt="" width={29} height={29} />
-        <span>グループ</span>
+        {groupsActive && (
+          <Image
+            src="/images/ui/decorations/active_tab.png"
+            alt=""
+            width={21}
+            height={18}
+            className="bottom-tabs__active-mark bottom-tabs__active-mark--groups"
+          />
+        )}
+        <Image
+          src="/images/ui/navigation/group-button.png"
+          alt=""
+          width={68}
+          height={68}
+          className="bottom-tabs__icon bottom-tabs__icon--groups"
+        />
+        <span className="sr-only">グループ</span>
       </Link>
     </nav>
   );

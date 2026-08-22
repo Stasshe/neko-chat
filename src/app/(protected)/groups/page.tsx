@@ -50,8 +50,8 @@ export default function GroupsPage() {
                     <Image
                       src="/images/ui/icons/cat-outline.png"
                       alt=""
-                      width={18}
-                      height={18}
+                      width={17}
+                      height={17}
                       key={`${group.id}-${slot}`}
                     />
                   ))}
