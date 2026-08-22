@@ -82,6 +82,10 @@ function normalizeError(error: unknown): Error {
   return new Error(String(error));
 }
 
+function isUnauthorized(error: Error): boolean {
+  return error instanceof AppError && error.code === "UNAUTHORIZED";
+}
+
 async function withLoading<T>(
   setLoading: (loading: boolean) => void,
   operation: () => Promise<T>,
@@ -106,6 +110,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [composeOpen, setComposeOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const redirectTargetRef = useRef<string | null>(null);
+
+  function handleAuthError(error: Error): boolean {
+    if (isUnauthorized(error)) {
+      router.replace("/");
+      return true;
+    }
+    return false;
+  }
 
   async function loadPosts(group: GroupSummary) {
     const nextPosts = await getGroupPosts(group.id);
@@ -154,7 +166,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         setInitialized(true);
       }
     });
@@ -190,7 +204,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         router.push("/home");
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
       }
     });
   }
@@ -206,7 +222,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return group;
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -223,7 +241,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return result;
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -240,7 +260,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return group;
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -254,7 +276,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setProfile(nextProfile);
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -271,7 +295,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await loadPosts(currentGroup);
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
