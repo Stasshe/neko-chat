@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { type CSSProperties, useEffect, useRef } from "react";
+import { type MotionStyle, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
+import { useEffect, useRef } from "react";
 import type { Step } from "react-joyride";
 import { animate, type JSAnimation, stagger } from "animejs";
 
@@ -33,19 +35,21 @@ const homeTourSteps: Step[] = [
   },
 ];
 
-type ScenePostLayout = CSSProperties & {
+type ScenePostLayout = MotionStyle & {
   "--scene-cat-height": string;
   "--scene-cat-width": string;
 };
 
+const firstScenePostLayout: ScenePostLayout = {
+  top: "23%",
+  right: "4%",
+  width: 130,
+  "--scene-cat-width": "110px",
+  "--scene-cat-height": "82px",
+};
+
 const scenePostLayouts: ScenePostLayout[] = [
-  {
-    top: "23%",
-    right: "4%",
-    width: 130,
-    "--scene-cat-width": "110px",
-    "--scene-cat-height": "82px",
-  },
+  firstScenePostLayout,
   {
     top: "51%",
     left: "2%",
@@ -100,7 +104,7 @@ function useParkAnimation(postCount: number) {
     }
     if (postCount > 0) {
       animations.push(
-        animate(scene.querySelectorAll(".scene-post"), {
+        animate(scene.querySelectorAll(".scene-post__float"), {
           y: -5,
           duration: 2200,
           delay: stagger(320),
@@ -126,6 +130,7 @@ export default function HomePage() {
   const tourStage = useTourStage();
   const tourRun = Boolean(currentGroup?.isSolo && (tourStage === null || tourStage === "home"));
   const sceneRef = useParkAnimation(posts.length);
+  const reducedMotion = useReducedMotion();
 
   function finishHomeTour() {
     setTourStage("compose");
@@ -196,15 +201,25 @@ export default function HomePage() {
         {!loading &&
           !error &&
           posts.slice(0, 4).map((post, index) => (
-            <article className="scene-post" style={scenePostLayouts[index]} key={post.id}>
-              <SpeechBubble align={getBubbleAlignment(index)}>{post.body}</SpeechBubble>
-              <CatDisplay
-                type={post.user.catType}
-                emotion={post.emotion}
-                className="scene-post__cat"
-              />
-              <span className="scene-post__name">{post.user.username}</span>
-            </article>
+            <m.article
+              className="scene-post"
+              style={scenePostLayouts[index] ?? firstScenePostLayout}
+              key={post.id}
+              drag={!reducedMotion}
+              dragConstraints={sceneRef}
+              dragMomentum={false}
+              whileDrag={{ scale: 1.04, zIndex: 12 }}
+            >
+              <div className="scene-post__float">
+                <SpeechBubble align={getBubbleAlignment(index)}>{post.body}</SpeechBubble>
+                <CatDisplay
+                  type={post.user.catType}
+                  emotion={post.emotion}
+                  className="scene-post__cat"
+                />
+                <span className="scene-post__name">{post.user.username}</span>
+              </div>
+            </m.article>
           ))}
       </section>
     </MobileShell>

@@ -82,6 +82,11 @@ a {
   color: inherit;
   text-decoration: none;
 }
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
 
 .sr-only {
   position: absolute;
@@ -309,8 +314,15 @@ a {
 .scene-post {
   position: absolute;
   z-index: 8;
-  display: flex;
   width: 130px;
+  cursor: grab;
+}
+.scene-post:active {
+  cursor: grabbing;
+}
+.scene-post__float {
+  display: flex;
+  width: 100%;
   flex-direction: column;
   align-items: center;
 }
@@ -606,7 +618,9 @@ a {
   border-color: var(--accent-strong);
 }
 .group-tile--add {
-  min-height: 180px;
+  height: 144px;
+  min-height: 144px;
+  margin-top: 20px;
   border: 1px solid var(--line);
   border-radius: var(--panel-radius-md);
   justify-content: center;

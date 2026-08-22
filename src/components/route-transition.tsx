@@ -1,6 +1,6 @@
 "use client";
 
-import { domAnimation, LazyMotion, useReducedMotion } from "motion/react";
+import { domMax, LazyMotion, useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -24,7 +24,7 @@ export function RouteTransition({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domMax} strict>
       <m.div
         key={pathname}
         className="route-transition"

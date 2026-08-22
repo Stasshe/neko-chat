@@ -24,6 +24,7 @@ export function CatDisplay({ type, emotion = "neutral", className }: CatDisplayP
         alt={`${type} cat`}
         width={256}
         height={256}
+        draggable={false}
         className="cat-display__img"
       />
     </span>
