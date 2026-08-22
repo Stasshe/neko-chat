@@ -4,16 +4,18 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
+import { ArrowLeftIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { TextField } from "@/components/text-field";
+import { defaultUsername } from "@/lib/profile";
 import { useApp } from "@/state/app-provider";
 
 export default function ProfileOnboardingPage() {
   const router = useRouter();
-  const { profile, loading, error, saveProfile } = useApp();
+  const { profile, loading, error, saveProfile, signOut } = useApp();
   const [username, setUsername] = useState(
-    profile?.username === "ななしの猫" ? "" : (profile?.username ?? ""),
+    profile?.username === defaultUsername ? "" : (profile?.username ?? ""),
   );
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -36,6 +38,15 @@ export default function ProfileOnboardingPage() {
 
   return (
     <MobileShell>
+      <button
+        className="page-back"
+        type="button"
+        aria-label="ログイン画面へ戻る"
+        onClick={() => void signOut()}
+      >
+        <ArrowLeftIcon />
+        <span>戻る</span>
+      </button>
       <section className="onboarding-form onboarding-form--profile">
         <CatDisplay type="white" emotion="positive" className="onboarding-profile-cat" />
         <h1>まずは名前を教えてね</h1>
