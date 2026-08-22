@@ -28,7 +28,7 @@ export default function ProfileOnboardingPage() {
     try {
       await saveProfile(value, profile?.catType ?? "white");
       window.localStorage.setItem("neko-chat.username", value);
-      router.push("/onboarding/mode");
+      router.replace("/onboarding/mode");
     } catch {
       // The provider exposes the actionable error message.
     }

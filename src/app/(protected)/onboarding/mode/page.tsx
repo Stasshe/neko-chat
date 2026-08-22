@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { BackLink } from "@/components/back-link";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
@@ -30,7 +31,7 @@ export default function ModePage() {
   async function chooseSolo() {
     try {
       await startSolo();
-      router.push("/onboarding/cat");
+      router.replace("/onboarding/cat");
     } catch {
       /* provider state */
     }
@@ -38,6 +39,7 @@ export default function ModePage() {
 
   return (
     <MobileShell>
+      <BackLink href="/onboarding/profile" />
       <section className="mode-selection">
         <h1>どのようにはじめる？</h1>
         <div className="mode-list">
@@ -50,7 +52,7 @@ export default function ModePage() {
             </span>
             <ModeCats count={1} />
           </button>
-          <button type="button" onClick={() => router.push("/onboarding/group")}>
+          <button type="button" onClick={() => router.replace("/onboarding/group")}>
             <strong>グループを作る</strong>
             <span>
               新しくグループを作って
@@ -59,7 +61,7 @@ export default function ModePage() {
             </span>
             <ModeCats count={3} />
           </button>
-          <button type="button" onClick={() => router.push("/onboarding/join")}>
+          <button type="button" onClick={() => router.replace("/onboarding/join")}>
             <strong>グループに参加する</strong>
             <span>
               招待コードを入力して
