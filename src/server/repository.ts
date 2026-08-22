@@ -1,4 +1,6 @@
 import type { User } from "@supabase/supabase-js";
+
+import { defaultUsername } from "@/lib/profile";
 import { z } from "zod";
 
 import { getAdminClient } from "@/server/admin";
@@ -64,17 +66,6 @@ function mapPost(row: PostRow, profile: ProfileRow): Post {
   };
 }
 
-function getInitialUsername(user: User): string {
-  const metadataName = user.user_metadata.name;
-  if (typeof metadataName === "string") {
-    const trimmed = metadataName.trim();
-    if (trimmed.length >= 1 && trimmed.length <= 20) {
-      return trimmed;
-    }
-  }
-  return "ななしの猫";
-}
-
 function fail(error: DataError, message: string): never {
   console.error(error);
   throw new AppError("UNKNOWN", message);
@@ -96,7 +87,7 @@ async function ensureProfile(user: User): Promise<ProfileRow> {
 
   const inserted = await admin
     .from("profiles")
-    .insert({ id: user.id, username: getInitialUsername(user), cat_type: "white" })
+    .insert({ id: user.id, username: defaultUsername, cat_type: "white" })
     .select("id, username, cat_type, created_at, updated_at")
     .single();
   if (inserted.error) {
