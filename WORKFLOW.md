@@ -23,6 +23,10 @@ git switch -c feature/issue-xx-summary
 
 `feature/issue-xx-summary` は作業内容が分かる名前にする。
 
+## ローカル開発環境
+
+`pnpm dev` はローカルSupabase(`pnpm db:start`)を使う。Google OAuth設定なしでメール/パスワードログインで動作確認できる。詳細は [README.md](./README.md#環境変数)。
+
 例:
 
 ```bash
