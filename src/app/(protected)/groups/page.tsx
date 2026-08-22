@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { BackLink } from "@/components/back-link";
 import { CatDisplay } from "@/components/cat-display";
 import { PlusIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
@@ -18,6 +19,7 @@ export default function GroupsPage() {
 
   return (
     <MobileShell>
+      <BackLink href="/home" label="ホームへ戻る" />
       <header className="page-heading">
         <h1>グループ一覧</h1>
       </header>

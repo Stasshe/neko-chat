@@ -64,7 +64,7 @@
 
 .members img {
   width: 22px;
-  height: 22px;
+  height: auto;
   margin-inline: -1px;
 }
 

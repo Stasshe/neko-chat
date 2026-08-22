@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { BackLink } from "@/components/back-link";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
@@ -38,6 +39,7 @@ export default function ModePage() {
 
   return (
     <MobileShell>
+      <BackLink href="/onboarding/profile" />
       <section className="mode-selection">
         <h1>どのようにはじめる？</h1>
         <div className="mode-list">

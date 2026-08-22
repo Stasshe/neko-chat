@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -36,6 +37,7 @@ export default function ProfileOnboardingPage() {
 
   return (
     <MobileShell>
+      <BackLink href="/" />
       <section className="onboarding-form onboarding-form--profile">
         <CatDisplay type="white" emotion="positive" className="onboarding-profile-cat" />
         <h1>まずは名前を教えてね</h1>

@@ -7,6 +7,7 @@ import type { CSSProperties } from "react";
 
 import { ComposeIcon, MenuIcon, SettingsIcon } from "@/components/icons";
 import { MemberAvatars } from "@/components/member-avatars";
+import { usePrepareTabTransition } from "@/components/route-transition";
 import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
 
@@ -32,6 +33,7 @@ export function TopBar({ groupName, members }: { groupName: string; members: Pos
 export function BottomTabBar() {
   const pathname = usePathname();
   const { composeOpen, openCompose } = useApp();
+  const prepareTransition = usePrepareTabTransition();
   const visible = pathname === "/home" || pathname === "/groups";
   if (!visible) {
     return null;
@@ -56,6 +58,7 @@ export function BottomTabBar() {
         className={homeActive ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
         href="/home"
         aria-current={homeActive ? "page" : undefined}
+        onClick={() => prepareTransition("/home")}
       >
         <Image src="/images/ui/navigation/home-button.png" alt="" width={29} height={29} />
         <span>ホーム</span>
@@ -73,6 +76,7 @@ export function BottomTabBar() {
         className={groupsActive ? "bottom-tabs__item is-active" : "bottom-tabs__item"}
         href="/groups"
         aria-current={groupsActive ? "page" : undefined}
+        onClick={() => prepareTransition("/groups")}
       >
         <Image src="/images/ui/navigation/group-button.png" alt="" width={29} height={29} />
         <span>グループ</span>

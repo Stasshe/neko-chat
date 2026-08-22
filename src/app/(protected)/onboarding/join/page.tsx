@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -31,6 +32,7 @@ export default function JoinPage() {
   }
   return (
     <MobileShell>
+      <BackLink href="/onboarding/mode" />
       <section className="onboarding-form">
         <h1>招待コードを入力しよう</h1>
         <div className="onboarding-cat-group" aria-hidden="true">

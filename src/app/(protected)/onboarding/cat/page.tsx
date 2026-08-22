@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
@@ -32,6 +33,9 @@ function CatSelectionContent() {
   const searchParams = useSearchParams();
   const { profile, loading, error, saveProfile } = useApp();
   const [selected, setSelected] = useState<CatType>("white");
+  // Closed allowlist compare, not an open redirect: only "settings" routes anywhere.
+  // react-doctor-disable-next-line react-doctor/url-prefilled-privileged-action
+  const returnToSettings = searchParams.get("returnTo") === "settings";
 
   async function confirm() {
     const username = profile?.username ?? window.localStorage.getItem("neko-chat.username") ?? "";
@@ -41,9 +45,7 @@ function CatSelectionContent() {
     }
     try {
       await saveProfile(username, selected);
-      // Closed allowlist compare, not an open redirect: only "settings" routes anywhere.
-      // react-doctor-disable-next-line react-doctor/url-prefilled-privileged-action
-      if (searchParams.get("returnTo") === "settings") {
+      if (returnToSettings) {
         router.push("/settings");
         return;
       }
@@ -55,6 +57,7 @@ function CatSelectionContent() {
 
   return (
     <MobileShell>
+      <BackLink href={returnToSettings ? "/settings" : "/home"} />
       <section className="cat-selection">
         <h1>ねこをえらんでね</h1>
         <div className="cat-grid">
