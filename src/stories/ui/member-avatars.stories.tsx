@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { MemberAvatars } from "./member-avatars";
+import { MemberAvatars } from "@/components/member-avatars";
 import type { PostUser } from "@/types/app";
 
 const members: PostUser[] = [
