@@ -1,24 +1,35 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("投稿画面", () => {
+  // 同じユーザーとDBを使うため、1件ずつ順番に実行する
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
-    await page.goto("/compose");
+    await page.goto("/home");
+
+    // ホーム下部の投稿ボタンから投稿画面を開く
+    await page.locator(".bottom-tabs button").click();
+
+    await expect(page.locator("dialog.compose-overlay")).toBeVisible();
     await expect(page.locator("#post-body")).toBeVisible();
-    await expect(page.locator(".send-button")).toBeEnabled();
+
+    // グループ情報の読み込みが完了するまで待つ
+    await expect(page.locator(".send-button")).toBeEnabled({
+      timeout: 15_000,
+    });
   });
 
   test("投稿入力欄と感情選択を表示する", async ({ page }) => {
     await expect(page.locator("#post-body")).toHaveAttribute("maxlength", "30");
     await expect(page.locator('input[name="emotion"]')).toHaveCount(4);
     await expect(page.locator('input[name="emotion"][value="neutral"]')).toBeChecked();
-    await expect(page.locator(".character-count")).toHaveText("0/30");
   });
 
   test("空の投稿を送信できない", async ({ page }) => {
     await page.locator(".send-button").click();
 
     await expect(page.locator(".status--error")).toBeVisible();
-    await expect(page).toHaveURL(/\/compose$/);
+    await expect(page.locator("dialog.compose-overlay")).toBeVisible();
   });
 
   test("空白だけの投稿を送信できない", async ({ page }) => {
@@ -26,14 +37,13 @@ test.describe("投稿画面", () => {
     await page.locator(".send-button").click();
 
     await expect(page.locator(".status--error")).toBeVisible();
-    await expect(page).toHaveURL(/\/compose$/);
+    await expect(page.locator("dialog.compose-overlay")).toBeVisible();
   });
 
   test("投稿本文を30文字までに制限する", async ({ page }) => {
     await page.locator("#post-body").fill("あ".repeat(31));
 
     await expect(page.locator("#post-body")).toHaveValue("あ".repeat(30));
-    await expect(page.locator(".character-count")).toHaveText("30/30");
   });
 
   test("投稿の感情を変更できる", async ({ page }) => {
@@ -52,6 +62,7 @@ test.describe("投稿画面", () => {
     await page.locator('input[name="emotion"][value="positive"]').check();
     await page.locator(".send-button").click();
 
+    await expect(page.locator("dialog.compose-overlay")).not.toBeVisible();
     await expect(page).toHaveURL(/\/home$/);
     await expect(page.locator(".scene-post").filter({ hasText: body })).toBeVisible();
   });

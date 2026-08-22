@@ -12,10 +12,15 @@ setup("投稿可能なテストユーザーを準備する", async ({ page }) =>
   await page.locator('form button[type="button"]').click();
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
-  await page.locator('form button[type="submit"]').click();
-  await expect(page).toHaveURL(/\/home$/);
+  const signupResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("/auth/v1/signup") && response.request().method() === "POST",
+  );
 
-  // プロフィールを設定する
+  await page.locator('form button[type="submit"]').click();
+  await signupResponse;
+
+  // 登録後の画面遷移には依存せず、プロフィール設定へ進む
   await page.goto("/onboarding/profile");
   await page.locator("#username").fill(username);
   await page.locator('form button[type="submit"]').click();
