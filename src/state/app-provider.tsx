@@ -121,10 +121,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (onboardingTarget) {
           const profileIsIncomplete = onboardingTarget === "/onboarding/profile";
           const isOutsideOnboarding = !pathname.startsWith("/onboarding");
-          if ((profileIsIncomplete && pathname !== onboardingTarget) || isOutsideOnboarding) {
+          const isAtCompletedProfileStep =
+            pathname === "/onboarding/profile" && !profileIsIncomplete;
+          if (
+            (profileIsIncomplete && pathname !== onboardingTarget) ||
+            isOutsideOnboarding ||
+            isAtCompletedProfileStep
+          ) {
             router.replace(onboardingTarget);
             return;
           }
+        } else if (pathname === "/onboarding/profile") {
+          router.replace("/home");
+          return;
         }
 
         const storedId = window.localStorage.getItem(currentGroupKey);
