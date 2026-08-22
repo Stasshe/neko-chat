@@ -1,20 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { useAuth } from "@/lib/auth/use-auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type EmailMode = "signin" | "signup";
 
 export default function Home() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [emailMode, setEmailMode] = useState<EmailMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  if (isAuthLoading) {
+    return <main className="min-h-screen bg-background text-foreground" />;
+  }
+  if (isAuthenticated) {
+    redirect("/home");
+  }
 
   async function handleGoogleLogin() {
     const client = getSupabaseClient();
@@ -56,7 +65,7 @@ export default function Home() {
         setError("メールアドレスまたはパスワードが違います。");
         return;
       }
-      router.push("/home");
+      router.replace("/home");
       return;
     }
 
@@ -73,7 +82,7 @@ export default function Home() {
       return;
     }
     if (data.session) {
-      router.push("/home");
+      router.replace("/home");
       return;
     }
     setNotice("確認メールを送信しました。メール内のリンクから認証してください。");

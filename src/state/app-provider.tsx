@@ -21,6 +21,7 @@ import {
   startSoloMode,
   updateMyProfile,
 } from "@/lib/api";
+import { defaultUsername } from "@/lib/profile";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   AppError,
@@ -32,7 +33,6 @@ import {
 } from "@/types/app";
 
 const currentGroupKey = "neko-chat.current-group";
-
 type AppContextValue = {
   profile: Profile | null;
   groups: GroupSummary[];
@@ -40,6 +40,9 @@ type AppContextValue = {
   posts: Post[];
   loading: boolean;
   error: string | null;
+  composeOpen: boolean;
+  openCompose: () => void;
+  closeCompose: () => void;
   refresh: () => Promise<void>;
   selectGroup: (group: GroupSummary) => Promise<void>;
   startSolo: () => Promise<GroupSummary>;
@@ -50,6 +53,16 @@ type AppContextValue = {
   signOut: () => Promise<void>;
   clearError: () => void;
 };
+
+function resolveOnboardingRedirect(profile: Profile, groups: GroupSummary[]): string | null {
+  if (profile.username === defaultUsername) {
+    return "/onboarding/profile";
+  }
+  if (groups.length === 0) {
+    return "/onboarding/mode";
+  }
+  return null;
+}
 
 const AppContext = createContext<AppContextValue | null>(null);
 
@@ -89,6 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [composeOpen, setComposeOpen] = useState(false);
 
   async function loadPosts(group: GroupSummary) {
     const nextPosts = await getGroupPosts(group.id);
@@ -102,6 +116,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const [nextProfile, nextGroups] = await Promise.all([getMyProfile(), getMyGroups()]);
         setProfile(nextProfile);
         setGroups(nextGroups);
+
+        const onboardingTarget = resolveOnboardingRedirect(nextProfile, nextGroups);
+        if (!pathname.startsWith("/onboarding") && onboardingTarget) {
+          router.replace(onboardingTarget);
+          return;
+        }
 
         const storedId = window.localStorage.getItem(currentGroupKey);
         const storedGroup = nextGroups.find((group) => group.id === storedId);
@@ -230,6 +250,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function openCompose() {
+    setComposeOpen(true);
+  }
+
+  function closeCompose() {
+    setComposeOpen(false);
+  }
+
   async function signOut() {
     const client = getSupabaseClient();
     if (!client) {
@@ -242,7 +270,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
     window.localStorage.removeItem(currentGroupKey);
-    router.replace("/");
   }
 
   const value = {
@@ -252,6 +279,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     posts,
     loading,
     error,
+    composeOpen,
+    openCompose,
+    closeCompose,
     refresh,
     selectGroup,
     startSolo,

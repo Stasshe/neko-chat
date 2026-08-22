@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
+import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { TextField } from "@/components/text-field";
@@ -23,19 +25,20 @@ export default function JoinPage() {
     setValidationError(null);
     try {
       const group = await joinGroup(value);
-      router.push(`/onboarding/joined?name=${encodeURIComponent(group.name)}`);
+      router.replace(`/onboarding/joined?name=${encodeURIComponent(group.name)}`);
     } catch {
       /* provider state */
     }
   }
   return (
     <MobileShell>
+      <BackLink href="/onboarding/mode" />
       <section className="onboarding-form">
         <h1>招待コードを入力しよう</h1>
-        <div className="onboarding-cats" aria-hidden="true">
-          ◡　◡
-          <br />
-          　◡
+        <div className="onboarding-cat-group" aria-hidden="true">
+          <CatDisplay type="black" emotion="neutral" />
+          <CatDisplay type="mike" emotion="neutral" />
+          <CatDisplay type="white" emotion="neutral" />
         </div>
         <form onSubmit={submit}>
           <TextField

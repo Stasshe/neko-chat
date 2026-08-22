@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { MobileShell } from "@/components/mobile-shell";
 
@@ -11,12 +13,18 @@ function JoinedContent() {
   const name = params.get("name") ?? "グループ";
   return (
     <MobileShell>
+      <BackLink href="/groups" label="グループ一覧へ戻る" />
       <section className="invite-created joined">
+        <span className="accent-lines" aria-hidden="true" />
         <h1>{name} に参加しました</h1>
-        <div className="paw-mark" aria-hidden="true">
-          ●
-        </div>
-        <Button onClick={() => router.push("/onboarding/cat")}>つぎへ</Button>
+        <Image
+          className="paw-mark"
+          src="/images/ui/icons/paw-print.png"
+          alt=""
+          width={198}
+          height={198}
+        />
+        <Button onClick={() => router.replace("/onboarding/cat")}>つぎへ</Button>
       </section>
     </MobileShell>
   );

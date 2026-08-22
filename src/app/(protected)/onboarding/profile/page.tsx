@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { Button } from "@/components/button";
+import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState } from "@/components/status";
 import { TextField } from "@/components/text-field";
@@ -27,7 +28,7 @@ export default function ProfileOnboardingPage() {
     try {
       await saveProfile(value, profile?.catType ?? "white");
       window.localStorage.setItem("neko-chat.username", value);
-      router.push("/onboarding/mode");
+      router.replace("/onboarding/mode");
     } catch {
       // The provider exposes the actionable error message.
     }
@@ -36,9 +37,7 @@ export default function ProfileOnboardingPage() {
   return (
     <MobileShell>
       <section className="onboarding-form onboarding-form--profile">
-        <div className="onboarding-cat-mark" aria-hidden="true">
-          ∿
-        </div>
+        <CatDisplay type="white" emotion="positive" className="onboarding-profile-cat" />
         <h1>まずは名前を教えてね</h1>
         <form onSubmit={submit}>
           <TextField

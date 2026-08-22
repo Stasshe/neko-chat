@@ -1,22 +1,25 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
+import { BackLink } from "@/components/back-link";
 import { CatDisplay } from "@/components/cat-display";
 import { PlusIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
-import { BottomTabBar } from "@/components/navigation";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
 import type { CatType } from "@/types/app";
 
 const previewCats: CatType[] = ["white", "mike", "black"];
+const previewMemberSlots = ["first", "second", "third", "fourth", "fifth"] as const;
 
 export default function GroupsPage() {
   const { groups, currentGroup, loading, error, refresh, selectGroup } = useApp();
 
   return (
     <MobileShell>
+      <BackLink href="/home" label="ホームへ戻る" />
       <header className="page-heading">
         <h1>グループ一覧</h1>
       </header>
@@ -38,13 +41,34 @@ export default function GroupsPage() {
                 key={group.id}
                 aria-current={active}
               >
+                <span
+                  className="group-tile__members"
+                  role="img"
+                  aria-label={`${group.memberCount}人`}
+                >
+                  {previewMemberSlots.slice(0, group.memberCount).map((slot) => (
+                    <Image
+                      src="/images/ui/icons/cat-outline.png"
+                      alt=""
+                      width={18}
+                      height={18}
+                      key={`${group.id}-${slot}`}
+                    />
+                  ))}
+                </span>
                 <span className="group-tile__scene">
+                  <Image
+                    className="group-tile__stump"
+                    src="/images/ui/decorations/tree-stump.png"
+                    alt=""
+                    width={78}
+                    height={58}
+                  />
                   {previewCats.slice(0, Math.min(group.memberCount, 3)).map((cat) => (
-                    <CatDisplay key={`${group.id}-${cat}`} type={cat} pose="lie" />
+                    <CatDisplay key={`${group.id}-${cat}`} type={cat} />
                   ))}
                 </span>
                 <strong>{group.name}</strong>
-                <span>{group.memberCount}人</span>
               </button>
             );
           })}
@@ -53,7 +77,6 @@ export default function GroupsPage() {
           <span>新規グループを作成</span>
         </Link>
       </section>
-      <BottomTabBar />
     </MobileShell>
   );
 }
