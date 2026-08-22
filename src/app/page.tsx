@@ -1,7 +1,7 @@
 "use client";
 
-import { redirect, useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { useAuth } from "@/lib/auth/use-auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -18,11 +18,14 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  if (isAuthLoading) {
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      router.replace("/home");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
+
+  if (isAuthLoading || isAuthenticated) {
     return <main className="min-h-screen bg-background text-foreground" />;
-  }
-  if (isAuthenticated) {
-    redirect("/home");
   }
 
   async function handleGoogleLogin() {
