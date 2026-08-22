@@ -119,8 +119,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setGroups(nextGroups);
 
         const onboardingTarget = resolveOnboardingRedirect(nextProfile, nextGroups);
-        if (!pathname.startsWith("/onboarding") && onboardingTarget) {
-          router.replace(onboardingTarget);
+        if (onboardingTarget) {
+          const profileIsIncomplete = onboardingTarget === "/onboarding/profile";
+          const isOutsideOnboarding = !pathname.startsWith("/onboarding");
+          const isAtCompletedProfileStep =
+            pathname === "/onboarding/profile" && !profileIsIncomplete;
+          if (
+            (profileIsIncomplete && pathname !== onboardingTarget) ||
+            isOutsideOnboarding ||
+            isAtCompletedProfileStep
+          ) {
+            router.replace(onboardingTarget);
+            return;
+          }
+        } else if (pathname === "/onboarding/profile") {
+          router.replace("/home");
           return;
         }
 
@@ -145,14 +158,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (hasLoadedRef.current || pathname.startsWith("/onboarding")) {
+    if (hasLoadedRef.current) {
       return;
     }
     hasLoadedRef.current = true;
     // Effect Event kicks off the initial load; loading flag flip is intentional, not derivable.
     // react-doctor-disable-next-line react-hooks-js/set-state-in-effect
     void refreshAfterNavigation();
-  }, [pathname]);
+  }, []);
 
   async function selectGroup(group: GroupSummary) {
     setError(null);

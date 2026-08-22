@@ -58,7 +58,7 @@ function ComposeDialog({
 }: ComposeDialogProps) {
   const { profile, currentGroup, closeCompose, loading, error, publishPost } = useApp();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const tourStage = useTourStage();
+  const tourStage = useTourStage(profile?.id);
   const reducedMotion = useReducedMotion();
   const [tourReady, setTourReady] = useState(false);
   const [randomEmotion, setRandomEmotion] = useState<ConcreteEmotion>("neutral");
@@ -84,7 +84,9 @@ function ComposeDialog({
   }, []);
 
   function finishComposeTour() {
-    setTourStage("done");
+    if (profile) {
+      setTourStage(profile.id, "done");
+    }
   }
 
   function dismiss() {
