@@ -2,19 +2,26 @@
 
 import { useSyncExternalStore } from "react";
 
-export const tourStorageKey = "neko-chat.tour-stage";
+const tourStorageKeyPrefix = "neko-chat.tour-stage";
 
 export type TourStage = "home" | "compose" | "done";
 
 const tourStageListeners = new Set<() => void>();
 
-function readTourStage() {
-  return window.localStorage.getItem(tourStorageKey);
+function getTourStorageKey(userId: string) {
+  return `${tourStorageKeyPrefix}.${userId}`;
 }
 
-function subscribeToTourStage(listener: () => void) {
+function readTourStage(userId?: string | null) {
+  if (!userId) {
+    return null;
+  }
+  return window.localStorage.getItem(getTourStorageKey(userId));
+}
+
+function subscribeToTourStage(userId: string | null | undefined, listener: () => void) {
   function handleStorage(event: StorageEvent) {
-    if (event.key === tourStorageKey) {
+    if (userId && event.key === getTourStorageKey(userId)) {
       listener();
     }
   }
@@ -28,12 +35,16 @@ function subscribeToTourStage(listener: () => void) {
   };
 }
 
-export function useTourStage() {
-  return useSyncExternalStore(subscribeToTourStage, readTourStage, () => undefined);
+export function useTourStage(userId?: string | null) {
+  return useSyncExternalStore(
+    (listener) => subscribeToTourStage(userId, listener),
+    () => readTourStage(userId),
+    () => null,
+  );
 }
 
-export function setTourStage(stage: TourStage) {
-  window.localStorage.setItem(tourStorageKey, stage);
+export function setTourStage(userId: string, stage: TourStage) {
+  window.localStorage.setItem(getTourStorageKey(userId), stage);
   for (const listener of tourStageListeners) {
     listener();
   }
