@@ -10,13 +10,20 @@ import { ErrorState } from "@/components/status";
 import { TextField } from "@/components/text-field";
 import { useApp } from "@/state/app-provider";
 
+function allowlistedReturnPath(value: string | null): "/groups" | null {
+  if (value === "groups") {
+    return "/groups";
+  }
+  return null;
+}
+
 function GroupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { createGroup, loading, error } = useApp();
   const [name, setName] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const returnToGroups = searchParams.get("returnTo") === "groups";
+  const returnPath = allowlistedReturnPath(searchParams.get("returnTo"));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = name.trim();
@@ -34,7 +41,7 @@ function GroupContent() {
   }
   return (
     <MobileShell>
-      {returnToGroups && <BackLink href="/groups" label="グループ一覧へ戻る" />}
+      {returnPath && <BackLink href={returnPath} label="グループ一覧へ戻る" />}
       <section className="onboarding-form">
         <h1>グループを作成しよう</h1>
         <div className="onboarding-cat-group" aria-hidden="true">
