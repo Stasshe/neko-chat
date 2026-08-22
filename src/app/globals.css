@@ -517,7 +517,7 @@ img {
 .scene-post__name {
   position: absolute;
   z-index: 3;
-  top: var(--scene-name-top);
+  top: calc(var(--scene-name-top) + 8px);
   left: var(--scene-name-left);
   width: var(--scene-name-width);
   font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
