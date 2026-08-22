@@ -31,7 +31,7 @@ export default function ModePage() {
   async function chooseSolo() {
     try {
       await startSolo();
-      router.push("/onboarding/cat");
+      router.replace("/onboarding/cat");
     } catch {
       /* provider state */
     }
@@ -52,7 +52,7 @@ export default function ModePage() {
             </span>
             <ModeCats count={1} />
           </button>
-          <button type="button" onClick={() => router.push("/onboarding/group")}>
+          <button type="button" onClick={() => router.replace("/onboarding/group")}>
             <strong>グループを作る</strong>
             <span>
               新しくグループを作って
@@ -61,7 +61,7 @@ export default function ModePage() {
             </span>
             <ModeCats count={3} />
           </button>
-          <button type="button" onClick={() => router.push("/onboarding/join")}>
+          <button type="button" onClick={() => router.replace("/onboarding/join")}>
             <strong>グループに参加する</strong>
             <span>
               招待コードを入力して

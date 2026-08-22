@@ -25,7 +25,7 @@ export default function JoinPage() {
     setValidationError(null);
     try {
       const group = await joinGroup(value);
-      router.push(`/onboarding/joined?name=${encodeURIComponent(group.name)}`);
+      router.replace(`/onboarding/joined?name=${encodeURIComponent(group.name)}`);
     } catch {
       /* provider state */
     }

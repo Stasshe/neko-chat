@@ -25,7 +25,7 @@ export default function GroupPage() {
     setValidationError(null);
     try {
       const result = await createGroup(value);
-      router.push(`/onboarding/invite?code=${result.inviteCode}`);
+      router.replace(`/onboarding/invite?code=${result.inviteCode}`);
     } catch {
       /* provider state */
     }

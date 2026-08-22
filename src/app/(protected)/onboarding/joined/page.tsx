@@ -24,7 +24,7 @@ function JoinedContent() {
           width={198}
           height={198}
         />
-        <Button onClick={() => router.push("/onboarding/cat")}>つぎへ</Button>
+        <Button onClick={() => router.replace("/onboarding/cat")}>つぎへ</Button>
       </section>
     </MobileShell>
   );

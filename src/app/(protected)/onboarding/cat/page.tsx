@@ -40,16 +40,16 @@ function CatSelectionContent() {
   async function confirm() {
     const username = profile?.username ?? window.localStorage.getItem("neko-chat.username") ?? "";
     if (!username) {
-      router.push("/onboarding/profile");
+      router.replace("/onboarding/profile");
       return;
     }
     try {
       await saveProfile(username, selected);
       if (returnToSettings) {
-        router.push("/settings");
+        router.replace("/settings");
         return;
       }
-      router.push("/home");
+      router.replace("/home");
     } catch {
       // The provider exposes the actionable error message.
     }

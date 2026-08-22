@@ -54,7 +54,7 @@ export function InviteCreatedContent({ code }: { code: string }) {
           {getCopyLabel(copied)}
         </button>
         {copyError && <p className="form-error">{copyError}</p>}
-        <Button onClick={() => router.push("/onboarding/cat")}>つぎへ</Button>
+        <Button onClick={() => router.replace("/onboarding/cat")}>つぎへ</Button>
       </section>
     </MobileShell>
   );
