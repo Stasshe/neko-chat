@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
 import type { Step } from "react-joyride";
 import { animate, type JSAnimation, stagger } from "animejs";
 
 import { CatDisplay } from "@/components/cat-display";
 import { MobileShell } from "@/components/mobile-shell";
-import { BottomTabBar, TopBar } from "@/components/navigation";
+import { TopBar } from "@/components/navigation";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
@@ -30,6 +30,42 @@ const homeTourSteps: Step[] = [
     target: ".bottom-tabs__item:nth-child(2)",
     content: "ここから気持ちをつぶやいてみよう。",
     placement: "top",
+  },
+];
+
+type ScenePostLayout = CSSProperties & {
+  "--scene-cat-height": string;
+  "--scene-cat-width": string;
+};
+
+const scenePostLayouts: ScenePostLayout[] = [
+  {
+    top: "23%",
+    right: "4%",
+    width: 130,
+    "--scene-cat-width": "110px",
+    "--scene-cat-height": "82px",
+  },
+  {
+    top: "51%",
+    left: "2%",
+    width: 130,
+    "--scene-cat-width": "110px",
+    "--scene-cat-height": "82px",
+  },
+  {
+    right: "1%",
+    bottom: "13%",
+    width: 175,
+    "--scene-cat-width": "155px",
+    "--scene-cat-height": "100px",
+  },
+  {
+    bottom: "7%",
+    left: "3%",
+    width: 130,
+    "--scene-cat-width": "110px",
+    "--scene-cat-height": "82px",
   },
 ];
 
@@ -160,7 +196,7 @@ export default function HomePage() {
         {!loading &&
           !error &&
           posts.slice(0, 4).map((post, index) => (
-            <article className={`scene-post scene-post--${index + 1}`} key={post.id}>
+            <article className="scene-post" style={scenePostLayouts[index]} key={post.id}>
               <SpeechBubble align={getBubbleAlignment(index)}>{post.body}</SpeechBubble>
               <CatDisplay
                 type={post.user.catType}
@@ -171,7 +207,6 @@ export default function HomePage() {
             </article>
           ))}
       </section>
-      <BottomTabBar />
     </MobileShell>
   );
 }

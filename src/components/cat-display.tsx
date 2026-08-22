@@ -22,8 +22,8 @@ export function CatDisplay({ type, emotion = "neutral", className }: CatDisplayP
       <Image
         src={`/images/cats/${type}/${emotionAsset[emotion]}.png`}
         alt={`${type} cat`}
-        fill
-        sizes="200px"
+        width={256}
+        height={256}
         className="cat-display__img"
       />
     </span>

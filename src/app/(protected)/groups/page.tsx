@@ -6,7 +6,6 @@ import Link from "next/link";
 import { CatDisplay } from "@/components/cat-display";
 import { PlusIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
-import { BottomTabBar } from "@/components/navigation";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
 import type { CatType } from "@/types/app";
@@ -76,7 +75,6 @@ export default function GroupsPage() {
           <span>新規グループを作成</span>
         </Link>
       </section>
-      <BottomTabBar />
     </MobileShell>
   );
 }

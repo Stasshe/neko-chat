@@ -123,18 +123,12 @@ function ComposeDialog({
         event.preventDefault();
         dismiss();
       }}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          dismiss();
+        }
+      }}
     >
-      <m.button
-        type="button"
-        className="compose-overlay__backdrop"
-        aria-label="閉じる"
-        tabIndex={-1}
-        onClick={dismiss}
-        initial={reducedMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: reducedMotion ? 0 : 0.18 }}
-      />
       <m.section
         className="compose-sheet"
         initial={reducedMotion ? false : { opacity: 0, y: 24, scale: 0.98 }}
