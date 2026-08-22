@@ -104,6 +104,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const redirectTargetRef = useRef<string | null>(null);
 
   async function loadPosts(group: GroupSummary) {
     const nextPosts = await getGroupPosts(group.id);
@@ -129,14 +131,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
             isOutsideOnboarding ||
             isAtCompletedProfileStep
           ) {
+            redirectTargetRef.current = onboardingTarget;
             router.replace(onboardingTarget);
             return;
           }
         } else if (pathname === "/onboarding/profile") {
+          redirectTargetRef.current = "/home";
           router.replace("/home");
           return;
         }
 
+        setInitialized(true);
         const storedId = window.localStorage.getItem(currentGroupKey);
         const storedGroup = nextGroups.find((group) => group.id === storedId);
         const nextGroup = storedGroup ?? nextGroups[0] ?? null;
@@ -150,6 +155,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } catch (requestError) {
         const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
+        setInitialized(true);
       }
     });
   }
@@ -166,6 +172,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // react-doctor-disable-next-line react-hooks-js/set-state-in-effect
     void refreshAfterNavigation();
   }, []);
+
+  useEffect(() => {
+    if (redirectTargetRef.current && pathname === redirectTargetRef.current) {
+      redirectTargetRef.current = null;
+      setInitialized(true);
+    }
+  }, [pathname]);
 
   async function selectGroup(group: GroupSummary) {
     setError(null);
@@ -306,6 +319,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     signOut,
     clearError: () => setError(null),
   };
+
+  if (!initialized) {
+    return <main className="min-h-screen bg-background text-foreground" />;
+  }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
