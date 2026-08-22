@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { BottomTabBar, TopBar } from "./navigation";
+import { BottomTabBar, TopBar } from "@/components/navigation";
 import type { PostUser } from "@/types/app";
 
 const members: PostUser[] = [

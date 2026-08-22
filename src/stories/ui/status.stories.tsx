@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { EmptyState, ErrorState, LoadingState } from "./status";
+import { EmptyState, ErrorState, LoadingState } from "@/components/status";
 
 const meta: Meta = {
   title: "Components/Status",
