@@ -15,7 +15,7 @@
   backdrop-filter: blur(5px);
 }
 
-.park-scene > .status {
+.park-scene-wrap > .status {
   position: absolute;
   top: 42%;
   right: 24px;

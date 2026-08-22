@@ -129,6 +129,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPosts(nextPosts);
   }
 
+  const loadPostsEvent = useEffectEvent(loadPosts);
+
+  useEffect(() => {
+    if (!currentGroup) {
+      return;
+    }
+    const client = getSupabaseClient();
+    if (!client) {
+      return;
+    }
+    const channel = client
+      .channel(`posts-${currentGroup.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "posts",
+          filter: `group_id=eq.${currentGroup.id}`,
+        },
+        () => {
+          void loadPostsEvent(currentGroup);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void client.removeChannel(channel);
+    };
+  }, [currentGroup]);
+
   async function refresh() {
     setError(null);
     await withLoading(setLoading, async () => {
