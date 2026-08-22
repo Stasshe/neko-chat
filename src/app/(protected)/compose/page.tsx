@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { Button } from "@/components/button";
 import { CatDisplay } from "@/components/cat-display";
 import { ArrowLeftIcon, SendIcon, SettingsIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
-import { ErrorState } from "@/components/status";
+import { EmptyState, ErrorState } from "@/components/status";
 import { useApp } from "@/state/app-provider";
 import { type Emotion, emotions } from "@/types/app";
 
@@ -60,48 +61,61 @@ export default function ComposePage() {
           <span>設定</span>
         </button>
       </header>
-      <form className="compose-form" onSubmit={submit}>
-        <div className="compose-preview">
-          <CatDisplay
-            type={profile?.catType ?? "white"}
-            emotion={emotion}
-            className="compose-preview__cat"
+      {!loading && !currentGroup ? (
+        <section className="compose-form">
+          {error ? (
+            <ErrorState message={error} />
+          ) : (
+            <EmptyState message="投稿先のグループがありません。初期設定を完了してください。" />
+          )}
+          <Button className="mx-auto mt-4" onClick={() => router.replace("/onboarding/profile")}>
+            初期設定を始める
+          </Button>
+        </section>
+      ) : (
+        <form className="compose-form" onSubmit={submit}>
+          <div className="compose-preview">
+            <CatDisplay
+              type={profile?.catType ?? "white"}
+              emotion={emotion}
+              className="compose-preview__cat"
+            />
+            <span>{profile?.username ?? "あなた"}</span>
+          </div>
+          <label className="sr-only" htmlFor="post-body">
+            つぶやき
+          </label>
+          <textarea
+            id="post-body"
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            maxLength={30}
+            placeholder="いまなにしてる？"
           />
-          <span>{profile?.username ?? "あなた"}</span>
-        </div>
-        <label className="sr-only" htmlFor="post-body">
-          つぶやき
-        </label>
-        <textarea
-          id="post-body"
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          maxLength={30}
-          placeholder="いまなにしてる？"
-        />
-        <span className="character-count">{body.length}/30</span>
-        <fieldset className="emotion-picker">
-          <legend>ねこの表情</legend>
-          {emotions.map((value) => (
-            <label key={value} data-selected={emotion === value}>
-              <input
-                type="radio"
-                name="emotion"
-                value={value}
-                checked={emotion === value}
-                onChange={() => setEmotion(value)}
-              />
-              <CatDisplay type={profile?.catType ?? "white"} emotion={value} />
-              <span>{emotionLabels[value]}</span>
-            </label>
-          ))}
-        </fieldset>
-        {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
-        <button className="send-button" type="submit" disabled={loading || !currentGroup}>
-          <SendIcon />
-          {getButtonLabel(loading)}
-        </button>
-      </form>
+          <span className="character-count">{body.length}/30</span>
+          <fieldset className="emotion-picker">
+            <legend>ねこの表情</legend>
+            {emotions.map((value) => (
+              <label key={value} data-selected={emotion === value}>
+                <input
+                  type="radio"
+                  name="emotion"
+                  value={value}
+                  checked={emotion === value}
+                  onChange={() => setEmotion(value)}
+                />
+                <CatDisplay type={profile?.catType ?? "white"} emotion={value} />
+                <span>{emotionLabels[value]}</span>
+              </label>
+            ))}
+          </fieldset>
+          {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
+          <button className="send-button" type="submit" disabled={loading || !currentGroup}>
+            <SendIcon />
+            {getButtonLabel(loading)}
+          </button>
+        </form>
+      )}
     </MobileShell>
   );
 }

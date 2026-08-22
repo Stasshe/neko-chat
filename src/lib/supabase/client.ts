@@ -11,7 +11,12 @@ export function getSupabaseClient(): SupabaseClient | null {
   }
 
   if (!client) {
-    client = createClient(env.supabaseUrl, env.supabasePublishableKey);
+    client = createClient(env.supabaseUrl, env.supabasePublishableKey, {
+      auth: {
+        flowType: "pkce",
+        detectSessionInUrl: false,
+      },
+    });
   }
 
   return client;

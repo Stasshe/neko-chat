@@ -37,6 +37,7 @@ type AppContextValue = {
   groups: GroupSummary[];
   currentGroup: GroupSummary | null;
   posts: Post[];
+  isInitialized: boolean;
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
@@ -86,6 +87,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [currentGroup, setCurrentGroup] = useState<GroupSummary | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,6 +117,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } catch (requestError) {
         const normalized = normalizeError(requestError);
         setError(getErrorMessage(normalized));
+      } finally {
+        setIsInitialized(true);
       }
     });
   }
@@ -247,6 +251,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     groups,
     currentGroup,
     posts,
+    isInitialized,
     loading,
     error,
     refresh,
