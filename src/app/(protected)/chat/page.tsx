@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
+import { ButtonSpinner } from "@/components/button-spinner";
 import { ArrowLeftIcon, SendIcon, SettingsIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { useApp } from "@/state/app-provider";
@@ -12,9 +13,28 @@ import styles from "./page.module.css";
 
 const memberSlots = [0, 1, 2, 3, 4];
 
+function renderSendButtonIcon(submitting: boolean) {
+  if (submitting) {
+    return <ButtonSpinner label="送信中" />;
+  }
+  return <SendIcon />;
+}
+
+function getMessageClassName(pending: boolean | undefined, ownMessage: boolean) {
+  const classNames = [styles.message];
+  if (ownMessage) {
+    classNames.push(styles.ownMessage);
+  }
+  if (pending) {
+    classNames.push(styles.pending);
+  }
+  return classNames.join(" ");
+}
+
 export default function ChatPage() {
   const { profile, currentGroup, posts, loading, error, publishPost } = useApp();
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const orderedPosts = [...posts].reverse();
   const latestPostId = posts[0]?.id;
@@ -30,15 +50,19 @@ export default function ChatPage() {
   async function submitMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const body = message.trim();
-    if (!body || loading || !currentGroup) {
+    if (!body || submitting || !currentGroup) {
       return;
     }
 
+    setMessage("");
+    setSubmitting(true);
     try {
       await publishPost(body, "neutral");
-      setMessage("");
+      setSubmitting(false);
     } catch {
       // AppProvider exposes request failures through its error state.
+      setMessage(body);
+      setSubmitting(false);
     }
   }
 
@@ -77,10 +101,7 @@ export default function ChatPage() {
           {orderedPosts.map((post) => {
             const ownMessage = post.userId === profile?.id;
             return (
-              <article
-                className={`${styles.message} ${ownMessage ? styles.ownMessage : ""}`}
-                key={post.id}
-              >
+              <article className={getMessageClassName(post.pending, ownMessage)} key={post.id}>
                 <span className={styles.author}>{post.user.username}</span>
                 <p className={styles.bubble}>{post.body}</p>
               </article>
@@ -105,9 +126,9 @@ export default function ChatPage() {
           <button
             type="submit"
             aria-label="メッセージを送信"
-            disabled={!message.trim() || loading || !currentGroup}
+            disabled={!message.trim() || submitting || !currentGroup}
           >
-            <SendIcon />
+            {renderSendButtonIcon(submitting)}
           </button>
         </form>
         {error && (

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
+import { ButtonSpinner } from "@/components/button-spinner";
 import { ArrowLeftIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState, LoadingState } from "@/components/status";
@@ -19,11 +20,19 @@ const catLabels: Record<CatType, string> = {
   chatora: "茶トラ",
 };
 
+function getSaveButtonContent(submitting: boolean) {
+  if (submitting) {
+    return <ButtonSpinner label="保存中" />;
+  }
+  return "保存";
+}
+
 export default function SettingsPage() {
   const { profile, loading, error, saveProfile, signOut } = useApp();
   const [editedUsername, setEditedUsername] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const username = editedUsername ?? profile?.username ?? "";
 
   function startEditingUsername() {
@@ -41,12 +50,15 @@ export default function SettingsPage() {
     }
     setValidationError(null);
     setSaved(false);
+    setSubmitting(true);
     try {
       await saveProfile(trimmed, profile.catType);
       setEditedUsername(null);
       setSaved(true);
+      setSubmitting(false);
     } catch {
       // The provider exposes the actionable error message.
+      setSubmitting(false);
     }
   }
 
@@ -92,10 +104,10 @@ export default function SettingsPage() {
                   }}
                   maxLength={20}
                 />
-                <button type="submit" disabled={loading || !profile}>
-                  保存
+                <button type="submit" disabled={submitting || !profile}>
+                  {getSaveButtonContent(submitting)}
                 </button>
-                <button type="button" onClick={() => setEditedUsername(null)}>
+                <button type="button" disabled={submitting} onClick={() => setEditedUsername(null)}>
                   キャンセル
                 </button>
               </form>

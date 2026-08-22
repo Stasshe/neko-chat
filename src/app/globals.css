@@ -73,10 +73,22 @@ a {
 }
 button {
   cursor: pointer;
+  transition: transform 0.12s ease;
+}
+button:active:not(:disabled) {
+  transform: scale(0.96);
 }
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+  button:active:not(:disabled) {
+    transform: none;
+  }
 }
 a {
   color: inherit;
@@ -343,6 +355,9 @@ img {
 }
 .scene-post:active {
   cursor: grabbing;
+}
+.scene-post--pending {
+  opacity: 0.6;
 }
 .scene-post__float {
   display: flex;

@@ -73,6 +73,13 @@ const scenePostLayouts: ScenePostLayout[] = [
   },
 ];
 
+function getScenePostClassName(pending: boolean | undefined) {
+  if (pending) {
+    return "scene-post scene-post--pending";
+  }
+  return "scene-post";
+}
+
 function getBubbleAlignment(index: number): "left" | "right" {
   if (index % 2 === 0) {
     return "left";
@@ -204,7 +211,7 @@ export default function HomePage() {
           !error &&
           posts.slice(0, 4).map((post, index) => (
             <m.article
-              className="scene-post"
+              className={getScenePostClassName(post.pending)}
               style={scenePostLayouts[index] ?? firstScenePostLayout}
               key={post.id}
               drag={!reducedMotion}
