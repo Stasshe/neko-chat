@@ -1,14 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
+import type { Step } from "react-joyride";
 
 import { CatDisplay } from "@/components/cat-display";
 import { ArrowLeftIcon, SendIcon, SettingsIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
+import { OnboardingTour } from "@/components/onboarding-tour";
 import { ErrorState } from "@/components/status";
+import { tourStorageKey } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import { type Emotion, emotions } from "@/types/app";
+
+const composeTourSteps: Step[] = [
+  {
+    target: "#post-body",
+    content: "今の気持ちを30文字以内で書いてみよう。",
+    placement: "bottom",
+  },
+  {
+    target: ".emotion-picker",
+    content: "ねこの表情を選んで気分を伝えよう。",
+    placement: "top",
+  },
+  {
+    target: ".send-button",
+    content: "つぶやくボタンで投稿完了！",
+    placement: "top",
+  },
+];
 
 const emotionLabels: Record<Emotion, string> = {
   positive: "うれしい",
@@ -30,6 +51,21 @@ export default function ComposePage() {
   const [body, setBody] = useState("");
   const [emotion, setEmotion] = useState<Emotion>("neutral");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [tourRun, setTourRun] = useState(false);
+
+  useEffect(() => {
+    if (!currentGroup?.isSolo) {
+      return;
+    }
+    if (window.localStorage.getItem(tourStorageKey) === "compose") {
+      setTourRun(true);
+    }
+  }, [currentGroup]);
+
+  function finishComposeTour() {
+    window.localStorage.setItem(tourStorageKey, "done");
+    setTourRun(false);
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,6 +85,7 @@ export default function ComposePage() {
 
   return (
     <MobileShell>
+      <OnboardingTour steps={composeTourSteps} run={tourRun} onFinish={finishComposeTour} />
       <header className="compose-header">
         <button type="button" onClick={() => router.push("/home")} aria-label="ホームへ戻る">
           <ArrowLeftIcon />
