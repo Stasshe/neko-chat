@@ -13,6 +13,7 @@ import { TopBar } from "@/components/navigation";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
+import { formatPostBody } from "@/lib/post-body";
 import { setTourStage, useTourStage } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
@@ -220,7 +221,9 @@ export default function HomePage() {
               whileDrag={{ scale: 1.04, zIndex: 12 }}
             >
               <div className="scene-post__float">
-                <SpeechBubble align={getBubbleAlignment(index)}>{post.body}</SpeechBubble>
+                <SpeechBubble align={getBubbleAlignment(index)}>
+                  {formatPostBody(post.body)}
+                </SpeechBubble>
                 <CatDisplay
                   type={post.user.catType}
                   emotion={post.emotion}

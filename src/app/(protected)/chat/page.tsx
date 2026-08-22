@@ -7,6 +7,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ButtonSpinner } from "@/components/button-spinner";
 import { ArrowLeftIcon, SendIcon, SettingsIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
+import { formatPostBody } from "@/lib/post-body";
 import { useApp } from "@/state/app-provider";
 
 import styles from "./page.module.css";
@@ -103,7 +104,7 @@ export default function ChatPage() {
             return (
               <article className={getMessageClassName(post.pending, ownMessage)} key={post.id}>
                 <span className={styles.author}>{post.user.username}</span>
-                <p className={styles.bubble}>{post.body}</p>
+                <p className={styles.bubble}>{formatPostBody(post.body)}</p>
               </article>
             );
           })}
