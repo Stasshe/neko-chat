@@ -72,7 +72,7 @@ export default function GroupsPage() {
               </button>
             );
           })}
-        <Link className="group-tile group-tile--add" href="/onboarding/mode">
+        <Link className="group-tile group-tile--add" href="/onboarding/group?returnTo=groups">
           <PlusIcon />
           <span>新規グループを作成</span>
         </Link>
