@@ -21,6 +21,7 @@ import {
   startSoloMode,
   updateMyProfile,
 } from "@/lib/api";
+import { resolveEmotion } from "@/lib/cat-assets";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   AppError,
@@ -241,7 +242,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setError(null);
     await withLoading(setLoading, async () => {
       try {
-        await createPostRequest(currentGroup.id, body, emotion);
+        await createPostRequest(currentGroup.id, body, resolveEmotion(emotion));
         await loadPosts(currentGroup);
       } catch (requestError) {
         const normalized = normalizeError(requestError);

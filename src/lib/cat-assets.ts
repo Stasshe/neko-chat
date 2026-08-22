@@ -36,24 +36,33 @@ const catImagePaths: Record<
 };
 
 type CatPose = "sit" | "stand" | "lie";
+export type ConcreteEmotion = Exclude<Emotion, "random">;
 
-const randomEmotionFallbacks = ["positive", "neutral", "negative"] as const;
+const concreteEmotions = ["positive", "neutral", "negative"] as const;
 
-function pickEmotionFromSeed(seed: string): "positive" | "neutral" | "negative" {
+function pickEmotionFromSeed(seed: string): ConcreteEmotion {
   let hash = 0;
 
   for (const char of seed) {
     hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   }
 
-  return randomEmotionFallbacks[hash % randomEmotionFallbacks.length] ?? "neutral";
+  return concreteEmotions[hash % concreteEmotions.length] ?? "neutral";
+}
+
+export function resolveEmotion(emotion: Emotion, randomValue = Math.random()): ConcreteEmotion {
+  if (emotion !== "random") {
+    return emotion;
+  }
+
+  return concreteEmotions[Math.floor(randomValue * concreteEmotions.length)] ?? "neutral";
 }
 
 function normalizeEmotion(
   emotion: Emotion | undefined,
   pose: CatPose,
   seed?: string,
-): "positive" | "neutral" | "negative" {
+): ConcreteEmotion {
   if (!emotion) {
     if (pose === "lie") {
       return "positive";
