@@ -82,6 +82,10 @@ function normalizeError(error: unknown): Error {
   return new Error(String(error));
 }
 
+function isUnauthorized(error: Error): boolean {
+  return error instanceof AppError && error.code === "UNAUTHORIZED";
+}
+
 async function withLoading<T>(
   setLoading: (loading: boolean) => void,
   operation: () => Promise<T>,
@@ -104,6 +108,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const redirectTargetRef = useRef<string | null>(null);
+
+  function handleAuthError(error: Error): boolean {
+    if (isUnauthorized(error)) {
+      router.replace("/");
+      return true;
+    }
+    return false;
+  }
 
   async function loadPosts(group: GroupSummary) {
     const nextPosts = await getGroupPosts(group.id);
@@ -129,14 +143,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
             isOutsideOnboarding ||
             isAtCompletedProfileStep
           ) {
+            redirectTargetRef.current = onboardingTarget;
             router.replace(onboardingTarget);
             return;
           }
         } else if (pathname === "/onboarding/profile") {
+          redirectTargetRef.current = "/home";
           router.replace("/home");
           return;
         }
 
+        setInitialized(true);
         const storedId = window.localStorage.getItem(currentGroupKey);
         const storedGroup = nextGroups.find((group) => group.id === storedId);
         const nextGroup = storedGroup ?? nextGroups[0] ?? null;
@@ -149,7 +166,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
+        setInitialized(true);
       }
     });
   }
@@ -167,6 +187,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void refreshAfterNavigation();
   }, []);
 
+  useEffect(() => {
+    if (redirectTargetRef.current && pathname === redirectTargetRef.current) {
+      redirectTargetRef.current = null;
+      setInitialized(true);
+    }
+  }, [pathname]);
+
   async function selectGroup(group: GroupSummary) {
     setError(null);
     await withLoading(setLoading, async () => {
@@ -177,7 +204,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         router.push("/home");
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
       }
     });
   }
@@ -193,7 +222,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return group;
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -210,7 +241,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return result;
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -227,7 +260,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return group;
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -241,7 +276,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setProfile(nextProfile);
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -258,7 +295,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await loadPosts(currentGroup);
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        setError(getErrorMessage(normalized));
+        if (!handleAuthError(normalized)) {
+          setError(getErrorMessage(normalized));
+        }
         throw normalized;
       }
     });
@@ -306,6 +345,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     signOut,
     clearError: () => setError(null),
   };
+
+  if (!initialized) {
+    return <main className="min-h-screen bg-background text-foreground" />;
+  }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

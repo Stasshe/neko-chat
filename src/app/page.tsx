@@ -19,10 +19,14 @@ export default function Home() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (!isAuthLoading && isAuthenticated) {
+    if (isAuthenticated) {
+      // isAuthenticated flips via Supabase's onAuthStateChange subscription (no click/submit
+      // equivalent), and this app has no server-side session (no @supabase/ssr), so redirect()
+      // in a Server Component/layout is not possible here.
+      // react-doctor-disable-next-line react-doctor/nextjs-no-client-side-redirect
       router.replace("/home");
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthenticated, router]);
 
   if (isAuthLoading || isAuthenticated) {
     return <main className="min-h-screen bg-background text-foreground" />;
@@ -68,7 +72,6 @@ export default function Home() {
         setError("メールアドレスまたはパスワードが違います。");
         return;
       }
-      router.replace("/home");
       return;
     }
 
@@ -85,7 +88,6 @@ export default function Home() {
       return;
     }
     if (data.session) {
-      router.replace("/home");
       return;
     }
     setNotice("確認メールを送信しました。メール内のリンクから認証してください。");
