@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { Step } from "react-joyride";
 import { animate, type JSAnimation, stagger } from "animejs";
 
@@ -11,7 +11,7 @@ import { BottomTabBar, TopBar } from "@/components/navigation";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
-import { tourStorageKey } from "@/lib/tour";
+import { setTourStage, useTourStage } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import type { PostUser } from "@/types/app";
 
@@ -87,22 +87,12 @@ function useParkAnimation(postCount: number) {
 
 export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
-  const [tourRun, setTourRun] = useState(false);
+  const tourStage = useTourStage();
+  const tourRun = Boolean(currentGroup?.isSolo && (tourStage === null || tourStage === "home"));
   const sceneRef = useParkAnimation(posts.length);
 
-  useEffect(() => {
-    if (!currentGroup?.isSolo) {
-      return;
-    }
-    const stage = window.localStorage.getItem(tourStorageKey);
-    if (stage === null || stage === "home") {
-      setTourRun(true);
-    }
-  }, [currentGroup]);
-
   function finishHomeTour() {
-    window.localStorage.setItem(tourStorageKey, "compose");
-    setTourRun(false);
+    setTourStage("compose");
   }
   const uniqueMembers = new Map<string, PostUser>();
   if (profile) {

@@ -1,13 +1,13 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { Step } from "react-joyride";
 
 import { CatDisplay } from "@/components/cat-display";
 import { SendIcon } from "@/components/icons";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { ErrorState } from "@/components/status";
-import { tourStorageKey } from "@/lib/tour";
+import { setTourStage, useTourStage } from "@/lib/tour";
 import { useApp } from "@/state/app-provider";
 import { type Emotion, emotions } from "@/types/app";
 
@@ -42,20 +42,24 @@ export function ComposeSheet() {
   const [body, setBody] = useState("");
   const [emotion, setEmotion] = useState<Emotion>("neutral");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [tourRun, setTourRun] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const tourStage = useTourStage();
+  const tourRun = composeOpen && tourStage === "compose";
 
   useEffect(() => {
-    if (!composeOpen) {
-      return;
-    }
-    if (window.localStorage.getItem(tourStorageKey) === "compose") {
-      setTourRun(true);
+    const dialog = dialogRef.current;
+    if (composeOpen && dialog && !dialog.open) {
+      dialog.showModal();
     }
   }, [composeOpen]);
 
   function finishComposeTour() {
-    window.localStorage.setItem(tourStorageKey, "done");
-    setTourRun(false);
+    setTourStage("done");
+  }
+
+  function dismiss() {
+    dialogRef.current?.close();
+    closeCompose();
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -81,24 +85,27 @@ export function ComposeSheet() {
   }
 
   return (
-    <div className="compose-overlay">
+    <dialog
+      ref={dialogRef}
+      className="compose-overlay"
+      aria-label="つぶやきを作成"
+      onCancel={(event) => {
+        event.preventDefault();
+        dismiss();
+      }}
+    >
       <button
         type="button"
         className="compose-overlay__backdrop"
         aria-label="閉じる"
-        onClick={closeCompose}
+        onClick={dismiss}
       />
-      <section
-        className="compose-sheet"
-        aria-label="つぶやきを作成"
-        role="dialog"
-        aria-modal="true"
-      >
+      <section className="compose-sheet">
         <OnboardingTour steps={composeTourSteps} run={tourRun} onFinish={finishComposeTour} />
         <button
           type="button"
           className="compose-sheet__close"
-          onClick={closeCompose}
+          onClick={dismiss}
           aria-label="閉じる"
         >
           ×
@@ -115,6 +122,7 @@ export function ComposeSheet() {
             </label>
             <input
               id="post-body"
+              autoFocus
               value={body}
               onChange={(event) => setBody(event.target.value)}
               maxLength={30}
@@ -148,6 +156,6 @@ export function ComposeSheet() {
           {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
         </form>
       </section>
-    </div>
+    </dialog>
   );
 }

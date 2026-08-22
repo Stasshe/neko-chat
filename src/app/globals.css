@@ -336,15 +336,28 @@ a {
   position: fixed;
   inset: 0;
   z-index: 40;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.compose-overlay[open] {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+.compose-overlay::backdrop {
+  background: rgb(36 32 31 / 45%);
 }
 .compose-overlay__backdrop {
   position: absolute;
   inset: 0;
   border: 0;
-  background: rgb(36 32 31 / 45%);
+  background: transparent;
 }
 .compose-sheet {
   position: relative;
