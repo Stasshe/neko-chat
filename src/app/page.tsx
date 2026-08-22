@@ -1,7 +1,7 @@
 "use client";
 
-import { redirect, useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { useAuth } from "@/lib/auth/use-auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -18,11 +18,18 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  if (isAuthLoading) {
+  useEffect(() => {
+    if (isAuthenticated) {
+      // isAuthenticated flips via Supabase's onAuthStateChange subscription (no click/submit
+      // equivalent), and this app has no server-side session (no @supabase/ssr), so redirect()
+      // in a Server Component/layout is not possible here.
+      // react-doctor-disable-next-line react-doctor/nextjs-no-client-side-redirect
+      router.replace("/home");
+    }
+  }, [isAuthenticated, router]);
+
+  if (isAuthLoading || isAuthenticated) {
     return <main className="min-h-screen bg-background text-foreground" />;
-  }
-  if (isAuthenticated) {
-    redirect("/home");
   }
 
   async function handleGoogleLogin() {
@@ -65,7 +72,6 @@ export default function Home() {
         setError("メールアドレスまたはパスワードが違います。");
         return;
       }
-      router.replace("/home");
       return;
     }
 
@@ -82,7 +88,6 @@ export default function Home() {
       return;
     }
     if (data.session) {
-      router.replace("/home");
       return;
     }
     setNotice("確認メールを送信しました。メール内のリンクから認証してください。");
