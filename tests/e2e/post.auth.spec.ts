@@ -55,7 +55,7 @@ test.describe("投稿画面", () => {
     await expect(page.locator('input[name="emotion"][value="neutral"]')).not.toBeChecked();
   });
 
-  test("入力した内容を投稿してホームに表示できる", async ({ page }) => {
+  test("入力した内容と選択した表情を投稿してホームに表示できる", async ({ page }) => {
     const body = `E2E投稿${Date.now()}`.slice(0, 30);
 
     await page.locator("#post-body").fill(body);
@@ -64,6 +64,9 @@ test.describe("投稿画面", () => {
 
     await expect(page.locator("dialog.compose-overlay")).not.toBeVisible();
     await expect(page).toHaveURL(/\/home$/);
-    await expect(page.locator(".scene-post").filter({ hasText: body })).toBeVisible();
+
+    const post = page.locator(".scene-post").filter({ hasText: body });
+    await expect(post).toBeVisible();
+    await expect(post.locator("img")).toHaveAttribute("src", /positive/);
   });
 });
