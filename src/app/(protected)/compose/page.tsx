@@ -66,6 +66,7 @@ export default function ComposePage() {
             type={profile?.catType ?? "white"}
             emotion={emotion}
             className="compose-preview__cat"
+            seed={profile?.id ?? "compose-preview"}
           />
           <span>{profile?.username ?? "あなた"}</span>
         </div>
@@ -91,7 +92,11 @@ export default function ComposePage() {
                 checked={emotion === value}
                 onChange={() => setEmotion(value)}
               />
-              <CatDisplay type={profile?.catType ?? "white"} emotion={value} />
+              <CatDisplay
+                type={profile?.catType ?? "white"}
+                emotion={value}
+                seed={profile?.id ? `${profile.id}-${value}` : `compose-option-${value}`}
+              />
               <span>{emotionLabels[value]}</span>
             </label>
           ))}
