@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/button";
-import { CopyIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 
 function getCopyLabel(copied: boolean): string {
@@ -39,13 +39,16 @@ export function InviteCreatedContent({ code }: { code: string }) {
       <section className="invite-created">
         <span className="accent-lines" aria-hidden="true" />
         <h1>グループが作成されました</h1>
-        <div className="paw-mark" aria-hidden="true">
-          ●
-        </div>
+        <Image
+          className="paw-mark"
+          src="/images/ui/icons/paw-print.png"
+          alt=""
+          width={198}
+          height={198}
+        />
         <h2>招待コード</h2>
         <output>{code || "------"}</output>
         <button className="copy-button" type="button" onClick={() => void copy()} disabled={!code}>
-          <CopyIcon />
           {getCopyLabel(copied)}
         </button>
         {copyError && <p className="form-error">{copyError}</p>}

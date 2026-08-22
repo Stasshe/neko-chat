@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { Step } from "react-joyride";
 import { animate, type JSAnimation, stagger } from "animejs";
@@ -37,16 +38,6 @@ function getBubbleAlignment(index: number): "left" | "right" {
     return "left";
   }
   return "right";
-}
-
-function getCatPose(index: number): "sit" | "stand" | "lie" {
-  if (index === 2) {
-    return "lie";
-  }
-  if (index === 1) {
-    return "sit";
-  }
-  return "stand";
 }
 
 function useParkAnimation(postCount: number) {
@@ -127,13 +118,48 @@ export default function HomePage() {
       <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
       <TopBar groupName={currentGroup?.name ?? "グループ"} members={members} />
       <section ref={sceneRef} className="park-scene" aria-label="グループの近況">
-        <div className="park-scene__sky" />
-        <div className="park-scene__cloud park-scene__cloud--one" />
-        <div className="park-scene__cloud park-scene__cloud--two" />
-        <div className="park-scene__tree park-scene__tree--large" />
-        <div className="park-scene__tree park-scene__tree--small" />
-        <div className="park-scene__ground" />
-        <div className="park-scene__stump" />
+        <Image
+          src="/images/ui/backgrounds/home-green.png"
+          alt=""
+          fill
+          priority
+          className="park-scene__bg"
+        />
+        <Image
+          src="/images/ui/decorations/cloud.png"
+          alt=""
+          width={57}
+          height={36}
+          className="park-scene__cloud park-scene__cloud--one"
+        />
+        <Image
+          src="/images/ui/decorations/cloud.png"
+          alt=""
+          width={43}
+          height={27}
+          className="park-scene__cloud park-scene__cloud--two"
+        />
+        <Image
+          src="/images/ui/decorations/tree.png"
+          alt=""
+          width={90}
+          height={90}
+          className="park-scene__tree park-scene__tree--large"
+        />
+        <Image
+          src="/images/ui/decorations/tree.png"
+          alt=""
+          width={63}
+          height={63}
+          className="park-scene__tree park-scene__tree--small"
+        />
+        <Image
+          src="/images/ui/decorations/tree-stump.png"
+          alt=""
+          width={78}
+          height={55}
+          className="park-scene__stump"
+        />
 
         {loading && <LoadingState label="みんなの近況を読み込み中" />}
         {!loading && error && <ErrorState message={error} retry={() => void refresh()} />}
@@ -148,7 +174,6 @@ export default function HomePage() {
               <CatDisplay
                 type={post.user.catType}
                 emotion={post.emotion}
-                pose={getCatPose(index)}
                 className="scene-post__cat"
               />
               <span className="scene-post__name">{post.user.username}</span>
