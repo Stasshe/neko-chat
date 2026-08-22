@@ -11,6 +11,8 @@ import {
   useState,
 } from "react";
 
+import { MobileShell } from "@/components/mobile-shell";
+import { LoadingState } from "@/components/status";
 import {
   createGroupWithInvite,
   createPost as createPostRequest,
@@ -34,11 +36,14 @@ import {
 } from "@/types/app";
 
 const currentGroupKey = "neko-chat.current-group";
+
+export type OptimisticPost = Post & { pending?: boolean };
+
 type AppContextValue = {
   profile: Profile | null;
   groups: GroupSummary[];
   currentGroup: GroupSummary | null;
-  posts: Post[];
+  posts: OptimisticPost[];
   loading: boolean;
   error: string | null;
   composeOpen: boolean;
@@ -104,7 +109,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [currentGroup, setCurrentGroup] = useState<GroupSummary | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<OptimisticPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
@@ -270,37 +275,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   async function saveProfile(username: string, catType: CatType) {
     setError(null);
-    await withLoading(setLoading, async () => {
-      try {
-        const nextProfile = await updateMyProfile(username, catType);
-        setProfile(nextProfile);
-      } catch (requestError) {
-        const normalized = normalizeError(requestError);
-        if (!handleAuthError(normalized)) {
-          setError(getErrorMessage(normalized));
-        }
-        throw normalized;
+    const previousProfile = profile;
+    if (previousProfile) {
+      setProfile({ ...previousProfile, username, catType });
+    }
+    try {
+      const nextProfile = await updateMyProfile(username, catType);
+      setProfile(nextProfile);
+    } catch (requestError) {
+      if (previousProfile) {
+        setProfile(previousProfile);
       }
-    });
+      const normalized = normalizeError(requestError);
+      if (!handleAuthError(normalized)) {
+        setError(getErrorMessage(normalized));
+      }
+      throw normalized;
+    }
   }
 
   async function publishPost(body: string, emotion: Emotion) {
     if (!currentGroup) {
       throw new AppError("NOT_FOUND", "投稿先のグループがありません。");
     }
+    if (!profile) {
+      throw new AppError("NOT_FOUND", "プロフィールが見つかりません。");
+    }
     setError(null);
-    await withLoading(setLoading, async () => {
-      try {
-        await createPostRequest(currentGroup.id, body, resolveEmotion(emotion));
-        await loadPosts(currentGroup);
-      } catch (requestError) {
-        const normalized = normalizeError(requestError);
-        if (!handleAuthError(normalized)) {
-          setError(getErrorMessage(normalized));
-        }
-        throw normalized;
+    const concreteEmotion = resolveEmotion(emotion);
+    const optimisticPost: OptimisticPost = {
+      id: `optimistic-${crypto.randomUUID()}`,
+      groupId: currentGroup.id,
+      userId: profile.id,
+      body,
+      emotion: concreteEmotion,
+      createdAt: new Date().toISOString(),
+      user: { id: profile.id, username: profile.username, catType: profile.catType },
+      pending: true,
+    };
+    setPosts((current) => [optimisticPost, ...current]);
+    try {
+      const created = await createPostRequest(currentGroup.id, body, concreteEmotion);
+      setPosts((current) =>
+        current.map((post) => (post.id === optimisticPost.id ? created : post)),
+      );
+    } catch (requestError) {
+      setPosts((current) => current.filter((post) => post.id !== optimisticPost.id));
+      const normalized = normalizeError(requestError);
+      if (!handleAuthError(normalized)) {
+        setError(getErrorMessage(normalized));
       }
-    });
+      throw normalized;
+    }
   }
 
   function openCompose() {
@@ -347,7 +373,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   if (!initialized) {
-    return <main className="min-h-screen bg-background text-foreground" />;
+    return (
+      <MobileShell>
+        <LoadingState />
+      </MobileShell>
+    );
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

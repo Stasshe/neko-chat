@@ -11,13 +11,19 @@ import { TextField } from "@/components/text-field";
 import { defaultUsername } from "@/lib/profile";
 import { useApp } from "@/state/app-provider";
 
+function getInitialUsername(username: string) {
+  if (username === defaultUsername) {
+    return "";
+  }
+  return username;
+}
+
 export default function ProfileOnboardingPage() {
   const router = useRouter();
-  const { profile, loading, error, saveProfile, signOut } = useApp();
-  const [username, setUsername] = useState(
-    profile?.username === defaultUsername ? "" : (profile?.username ?? ""),
-  );
+  const { profile, error, saveProfile, signOut } = useApp();
+  const [username, setUsername] = useState(() => getInitialUsername(profile?.username ?? ""));
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,12 +33,14 @@ export default function ProfileOnboardingPage() {
       return;
     }
     setValidationError(null);
+    setSubmitting(true);
     try {
       await saveProfile(value, profile?.catType ?? "white");
       window.localStorage.setItem("neko-chat.username", value);
       router.replace("/onboarding/mode");
     } catch {
       // The provider exposes the actionable error message.
+      setSubmitting(false);
     }
   }
 
@@ -61,8 +69,8 @@ export default function ProfileOnboardingPage() {
             placeholder="ユーザー名を入力してください"
           />
           {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
-          <Button type="submit" disabled={loading}>
-            {loading ? "保存中" : "つぎへ"}
+          <Button type="submit" pending={submitting}>
+            つぎへ
           </Button>
         </form>
       </section>

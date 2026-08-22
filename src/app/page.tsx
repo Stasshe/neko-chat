@@ -3,10 +3,29 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 
+import { ButtonSpinner } from "@/components/button-spinner";
+import { LoadingState } from "@/components/status";
 import { useAuth } from "@/lib/auth/use-auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type EmailMode = "signin" | "signup";
+
+function getGoogleButtonContent(isSigningIn: boolean) {
+  if (isSigningIn) {
+    return <ButtonSpinner label="ログイン中" />;
+  }
+  return "Googleでログイン";
+}
+
+function getEmailButtonContent(isSigningIn: boolean, emailMode: EmailMode) {
+  if (isSigningIn) {
+    return <ButtonSpinner label="送信中" />;
+  }
+  if (emailMode === "signin") {
+    return "メールでログイン";
+  }
+  return "メールで登録";
+}
 
 export default function Home() {
   const router = useRouter();
@@ -29,7 +48,11 @@ export default function Home() {
   }, [isAuthenticated, router]);
 
   if (isAuthLoading || isAuthenticated) {
-    return <main className="min-h-screen bg-background text-foreground" />;
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <LoadingState />
+      </main>
+    );
   }
 
   async function handleGoogleLogin() {
@@ -111,7 +134,7 @@ export default function Home() {
             disabled={isSigningIn}
             className="w-full rounded-xl bg-primary px-5 py-3 text-primary-foreground disabled:opacity-60"
           >
-            Googleでログイン
+            {getGoogleButtonContent(isSigningIn)}
           </button>
         </div>
 
@@ -152,7 +175,7 @@ export default function Home() {
             disabled={isSigningIn}
             className="w-full rounded-xl border border-input px-5 py-3 text-sm font-medium disabled:opacity-60"
           >
-            {emailMode === "signin" ? "メールでログイン" : "メールで登録"}
+            {getEmailButtonContent(isSigningIn, emailMode)}
           </button>
           <button
             type="button"
