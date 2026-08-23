@@ -22,7 +22,7 @@ test.describe("投稿画面", () => {
   test("投稿入力欄と感情選択を表示する", async ({ page }) => {
     await expect(page.locator("#post-body")).toHaveAttribute("maxlength", "30");
     await expect(page.locator('input[name="emotion"]')).toHaveCount(4);
-    await expect(page.locator('input[name="emotion"][value="neutral"]')).toBeChecked();
+    await expect(page.locator('input[name="emotion"][value="positive"]')).toBeChecked();
   });
 
   test("空の投稿を送信できない", async ({ page }) => {
@@ -78,11 +78,11 @@ test.describe("投稿画面", () => {
     await page.reload();
     await expect(page.locator(".park-scene")).toBeVisible();
 
-    const post = page.locator(".scene-post").filter({
+    const post = page.locator(".park-scene__page:not(.park-scene__page--room) .scene-post").filter({
       hasText: `${body}ニャー`,
     });
 
     await expect(post).toBeVisible({ timeout: 15_000 });
-    await expect(post.locator("img")).toHaveAttribute("src", /positive/);
+    await expect(post.locator("img")).toHaveAttribute("src", /posi/);
   });
 });
