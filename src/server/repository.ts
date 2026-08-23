@@ -9,6 +9,7 @@ import {
   groupReferenceRowSchema,
   groupRowSchema,
   idRowSchema,
+  inviteCodeRowSchema,
   membershipRowSchema,
   type PostRow,
   type ProfileRow,
@@ -192,6 +193,42 @@ export async function updateProfile(
   return mapProfile(
     parseData(profileRowSchema, result.data, "プロフィールを更新できませんでした。"),
   );
+}
+
+export async function getGroupInviteCode(user: User, groupId: string): Promise<string> {
+  await requireMembership(groupId, user.id);
+  const groupResult = await getAdminClient()
+    .from("groups")
+    .select("is_solo")
+    .eq("id", groupId)
+    .maybeSingle();
+  if (groupResult.error) {
+    fail(groupResult.error, "グループを取得できませんでした。");
+  }
+  if (!groupResult.data) {
+    throw new AppError("NOT_FOUND", "グループが見つかりません。");
+  }
+  if (
+    parseData(
+      z.object({ is_solo: z.boolean() }),
+      groupResult.data,
+      "グループを取得できませんでした。",
+    ).is_solo
+  ) {
+    throw new AppError("NOT_FOUND", "このグループに招待コードはありません。");
+  }
+  const existing = await getAdminClient()
+    .from("invite_codes")
+    .select("code")
+    .eq("group_id", groupId)
+    .maybeSingle();
+  if (existing.error) {
+    fail(existing.error, "招待コードを取得できませんでした。");
+  }
+  if (existing.data) {
+    return parseData(inviteCodeRowSchema, existing.data, "招待コードを取得できませんでした。").code;
+  }
+  return addInviteCode(groupId);
 }
 
 export async function getGroups(user: User): Promise<GroupSummary[]> {
