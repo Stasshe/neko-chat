@@ -1,44 +1,19 @@
 import type { CatType, Emotion } from "@/types/app";
 
-const catImagePaths: Record<
-  CatType,
-  {
-    positive: string;
-    neutral: string;
-    negative: string;
-  }
-> = {
-  white: {
-    positive: "/images/cats/white/positive.png",
-    neutral: "/images/cats/white/neutral.png",
-    negative: "/images/cats/white/negative.png",
-  },
-  black: {
-    positive: "/images/cats/black/positive.png",
-    neutral: "/images/cats/black/neutral.png",
-    negative: "/images/cats/black/negative.png",
-  },
-  mike: {
-    positive: "/images/cats/mike/positive.png",
-    neutral: "/images/cats/mike/neutral.png",
-    negative: "/images/cats/mike/negative.png",
-  },
-  sham: {
-    positive: "/images/cats/sham/positive.png",
-    neutral: "/images/cats/sham/neutral.png",
-    negative: "/images/cats/sham/negative.png",
-  },
-  chatora: {
-    positive: "/images/cats/chatora/positive.png",
-    neutral: "/images/cats/chatora/neutral.png",
-    negative: "/images/cats/chatora/negative.png",
-  },
-};
-
 type CatPose = "sit" | "stand" | "lie";
 export type ConcreteEmotion = Exclude<Emotion, "random">;
 
 const concreteEmotions = ["positive", "neutral", "negative"] as const;
+const poseFileNames: Record<CatPose, string> = {
+  sit: "shit",
+  stand: "normal",
+  lie: "ne",
+};
+const emotionFileNames: Record<ConcreteEmotion, string> = {
+  positive: "posi",
+  neutral: "soso",
+  negative: "nega",
+};
 
 function pickEmotionFromSeed(seed: string): ConcreteEmotion {
   let hash = 0;
@@ -93,5 +68,5 @@ export function getCatImageSrc(
   seed?: string,
 ): string {
   const normalizedEmotion = normalizeEmotion(emotion, pose, seed ?? `${type}:${pose}`);
-  return catImagePaths[type][normalizedEmotion];
+  return `/images/cats/${type}/${type}_${poseFileNames[pose]}_${emotionFileNames[normalizedEmotion]}.png`;
 }

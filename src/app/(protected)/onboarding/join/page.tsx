@@ -51,18 +51,21 @@ function JoinContent() {
         <div className="onboarding-join__cats" aria-hidden="true">
           <CatDisplay
             type="black"
-            emotion="negative"
+            pose="sit"
+            emotion="positive"
             priority
             className="onboarding-join__cat onboarding-join__cat--black"
           />
           <CatDisplay
             type="mike"
-            emotion="negative"
+            pose="sit"
+            emotion="positive"
             className="onboarding-join__cat onboarding-join__cat--mike"
           />
           <CatDisplay
             type="white"
-            emotion="negative"
+            pose="sit"
+            emotion="positive"
             className="onboarding-join__cat onboarding-join__cat--white"
           />
         </div>

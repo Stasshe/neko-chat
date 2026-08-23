@@ -64,7 +64,7 @@ function CatSelectionContent() {
               key={catType}
               aria-pressed={selected === catType}
             >
-              <CatDisplay type={catType} />
+              <CatDisplay type={catType} pose="stand" emotion="positive" />
               <strong>{catLabels[catType]}</strong>
             </button>
           ))}
