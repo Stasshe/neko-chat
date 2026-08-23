@@ -549,6 +549,34 @@ img {
   --scene-name-left: 0;
   --scene-name-width: 80px;
 }
+.scene-post--4 {
+  top: 130px;
+  left: 250px;
+  width: 150px;
+  height: 130px;
+  --scene-bubble-width: 150px;
+  --scene-cat-top: 10px;
+  --scene-cat-left: 0;
+  --scene-cat-width: 160px;
+  --scene-cat-height: 107px;
+  --scene-name-top: 100px;
+  --scene-name-left: 10px;
+  --scene-name-width: 120px;
+}
+.scene-post--5 {
+  top: 660px;
+  left: 40px;
+  width: 140px;
+  height: 120px;
+  --scene-bubble-width: 140px;
+  --scene-cat-top: 10px;
+  --scene-cat-left: -10px;
+  --scene-cat-width: 150px;
+  --scene-cat-height: 100px;
+  --scene-name-top: 95px;
+  --scene-name-left: 5px;
+  --scene-name-width: 110px;
+}
 .scene-post:active {
   cursor: grabbing;
 }
@@ -1723,6 +1751,36 @@ textarea:focus-visible,
     --scene-name-top: 96px;
     --scene-name-left: 0;
     --scene-name-width: 78px;
+  }
+  .scene-post--4 {
+    top: 100px;
+    right: 8px;
+    left: auto;
+    width: 120px;
+    height: 106px;
+    --scene-bubble-width: 120px;
+    --scene-cat-top: 8px;
+    --scene-cat-left: 0;
+    --scene-cat-width: 128px;
+    --scene-cat-height: 86px;
+    --scene-name-top: 82px;
+    --scene-name-left: 8px;
+    --scene-name-width: 96px;
+  }
+  .scene-post--5 {
+    top: auto;
+    bottom: 8px;
+    left: 12px;
+    width: 112px;
+    height: 96px;
+    --scene-bubble-width: 112px;
+    --scene-cat-top: 8px;
+    --scene-cat-left: -8px;
+    --scene-cat-width: 120px;
+    --scene-cat-height: 80px;
+    --scene-name-top: 78px;
+    --scene-name-left: 4px;
+    --scene-name-width: 88px;
   }
 }
 @media (min-width: 394px) {

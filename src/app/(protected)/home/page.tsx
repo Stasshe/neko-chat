@@ -53,6 +53,8 @@ const parkScenePostConfigs: ScenePostConfig[] = [
   firstParkScenePostConfig,
   { align: "left", pose: "stand" },
   { align: "right", pose: "lie" },
+  { align: "left", pose: "sit" },
+  { align: "right", pose: "stand" },
 ];
 
 const firstRoomPostLayout: RoomPostLayout = {
@@ -72,7 +74,41 @@ const roomPostLayouts: RoomPostLayout[] = [
     "--scene-cat-width": "130px",
     "--scene-cat-height": "95px",
   },
+  {
+    top: "18%",
+    right: "6%",
+    width: 120,
+    "--scene-cat-width": "100px",
+    "--scene-cat-height": "75px",
+  },
+  {
+    top: "5%",
+    left: "35%",
+    width: 110,
+    "--scene-cat-width": "90px",
+    "--scene-cat-height": "68px",
+  },
+  {
+    bottom: "30%",
+    left: "38%",
+    width: 110,
+    "--scene-cat-width": "90px",
+    "--scene-cat-height": "68px",
+  },
 ];
+
+const homeBackgroundStorageKey = "neko-chat.home-background";
+
+function readStoredHomeBackground(): 0 | 1 {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+  return window.localStorage.getItem(homeBackgroundStorageKey) === "1" ? 1 : 0;
+}
+
+function storeHomeBackground(page: 0 | 1) {
+  window.localStorage.setItem(homeBackgroundStorageKey, String(page));
+}
 
 const bubbleDurationMs = 30 * 60 * 1000;
 
@@ -306,6 +342,16 @@ export default function HomePage() {
   const bubbleClock = useBubbleClock();
   const [activePage, setActivePage] = useState<0 | 1>(0);
 
+  useEffect(() => {
+    const scene = sceneRef.current;
+    const storedPage = readStoredHomeBackground();
+    if (!scene || storedPage === 0) {
+      return;
+    }
+    scene.scrollLeft = scene.clientWidth;
+    setActivePage(storedPage);
+  }, [sceneRef]);
+
   function finishHomeTour() {
     if (profile) {
       setTourStage(profile.id, "compose");
@@ -320,12 +366,10 @@ export default function HomePage() {
     uniqueMembers.set(post.user.id, post.user);
   }
   const members = [...uniqueMembers.values()];
-  const parkPosts = uniquePosts
-    .filter((_, index) => index % 2 === 0)
-    .slice(0, parkScenePostConfigs.length);
-  const roomPosts = uniquePosts
-    .filter((_, index) => index % 2 === 1)
-    .slice(0, roomPostLayouts.length);
+  const scenePosts = uniquePosts.slice(
+    0,
+    Math.max(parkScenePostConfigs.length, roomPostLayouts.length),
+  );
 
   return (
     <MobileShell>
@@ -341,7 +385,9 @@ export default function HomePage() {
           aria-label="グループの近況"
           onScroll={(event) => {
             const scene = event.currentTarget;
-            setActivePage(scene.scrollLeft > scene.clientWidth / 2 ? 1 : 0);
+            const page = scene.scrollLeft > scene.clientWidth / 2 ? 1 : 0;
+            setActivePage(page);
+            storeHomeBackground(page);
           }}
         >
           <div ref={parkPageRef} className="park-scene__page">
@@ -356,7 +402,7 @@ export default function HomePage() {
             <HomeSceneDecorations />
             {!loading &&
               !error &&
-              parkPosts.map((post, index) => (
+              scenePosts.map((post, index) => (
                 <ParkPost
                   key={post.userId}
                   post={post}
@@ -391,7 +437,7 @@ export default function HomePage() {
             />
             {!loading &&
               !error &&
-              roomPosts.map((post, index) => (
+              scenePosts.map((post, index) => (
                 <RoomPost
                   key={post.userId}
                   post={post}
