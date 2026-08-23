@@ -753,6 +753,18 @@ img {
   margin-left: -7px;
   align-items: center;
 }
+.compose-form__counter {
+  position: absolute;
+  z-index: 2;
+  right: 62px;
+  bottom: 6px;
+  color: var(--muted);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 10px;
+}
+.compose-form__counter[data-over="true"] {
+  color: var(--danger);
+}
 .compose-form__textbox {
   position: absolute;
   z-index: 0;

@@ -186,7 +186,6 @@ function ComposeDialog({
               id="post-body"
               value={body}
               onChange={(event) => onBodyChange(event.target.value)}
-              maxLength={30}
               placeholder="いまなにしてる？"
               autoComplete="off"
             />
@@ -198,6 +197,9 @@ function ComposeDialog({
             >
               {renderSendButtonIcon(submitting)}
             </button>
+            <span className="compose-form__counter" data-over={body.length > 30}>
+              {body.length}/30
+            </span>
           </div>
           <CatDisplay
             type={profile?.catType ?? "white"}
