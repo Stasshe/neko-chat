@@ -76,7 +76,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPosts(nextPosts);
   }
 
-  console.log("[AppProvider] render, currentGroup:", currentGroup);
   useRealtimePosts(currentGroup, loadPosts);
 
   async function refresh() {
