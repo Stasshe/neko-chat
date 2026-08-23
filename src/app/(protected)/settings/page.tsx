@@ -190,19 +190,24 @@ export default function SettingsPage() {
               招待コード
             </h2>
             <div className="settings-list">
-              <div className="settings-row">
+              <div className="settings-row settings-row--invite">
                 <span className="settings-row__label">
                   <span>{currentGroup.name}</span>
                 </span>
                 {inviteCode ? (
-                  <>
+                  <span className="settings-row__value">
                     <strong>{inviteCode}</strong>
-                    <button type="button" onClick={() => void copyInviteCode()}>
+                    <button
+                      className="settings-row__action"
+                      type="button"
+                      onClick={() => void copyInviteCode()}
+                    >
                       {getCopyLabel(copied)}
                     </button>
-                  </>
+                  </span>
                 ) : (
                   <button
+                    className="settings-row__action"
                     type="button"
                     disabled={inviteLoading}
                     onClick={() => void showInviteCode()}

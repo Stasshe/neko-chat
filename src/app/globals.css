@@ -1103,6 +1103,22 @@ img {
 .settings-row--logout {
   grid-template-columns: 1fr 12px;
 }
+.settings-row--invite {
+  grid-template-columns: 1fr auto;
+}
+.settings-row__value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings-row__action {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: white;
+  font-size: 12px;
+  white-space: nowrap;
+}
 .settings-editor {
   display: grid;
   padding: 9px;
