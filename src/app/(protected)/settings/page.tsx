@@ -9,8 +9,9 @@ import { LongArrowLeftIcon, LogoutIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState, LoadingState } from "@/components/status";
 import { TextField } from "@/components/text-field";
+import { getGroupInviteCode } from "@/lib/api";
 import { useApp } from "@/state/app-provider";
-import type { CatType } from "@/types/app";
+import { AppError, type CatType } from "@/types/app";
 
 const catLabels: Record<CatType, string> = {
   white: "白猫",
@@ -27,13 +28,64 @@ function getSaveButtonContent(submitting: boolean) {
   return "保存";
 }
 
+function getInviteCodeButtonContent(inviteLoading: boolean) {
+  if (inviteLoading) {
+    return <ButtonSpinner label="読み込み中" />;
+  }
+  return "招待コードを表示";
+}
+
+function getCopyLabel(copied: boolean) {
+  if (copied) {
+    return "コピーしました";
+  }
+  return "コピー";
+}
+
 export default function SettingsPage() {
-  const { profile, loading, error, saveProfile, signOut } = useApp();
+  const { profile, currentGroup, loading, error, saveProfile, signOut } = useApp();
   const [editedUsername, setEditedUsername] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const username = editedUsername ?? profile?.username ?? "";
+
+  async function showInviteCode() {
+    if (!currentGroup || inviteCode) {
+      return;
+    }
+    setInviteLoading(true);
+    setInviteError(null);
+    try {
+      const code = await getGroupInviteCode(currentGroup.id);
+      setInviteCode(code);
+      setInviteLoading(false);
+    } catch (requestError) {
+      setInviteError(
+        requestError instanceof AppError
+          ? requestError.message
+          : "招待コードを取得できませんでした。",
+      );
+      setInviteLoading(false);
+    }
+  }
+
+  async function copyInviteCode() {
+    if (!inviteCode) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopied(true);
+    } catch (clipboardError) {
+      console.error(clipboardError);
+      setInviteError("コピーできませんでした。コードを長押ししてコピーしてください。");
+    }
+  }
 
   function startEditingUsername() {
     setEditedUsername(profile?.username ?? "");
@@ -131,6 +183,43 @@ export default function SettingsPage() {
             </Link>
           </div>
         </section>
+        {currentGroup && !currentGroup.isSolo && (
+          <section className="settings-section">
+            <h2>
+              <Image src="/images/ui/icons/paw-print.png" alt="" width={13} height={13} />
+              招待コード
+            </h2>
+            <div className="settings-list">
+              <div className="settings-row settings-row--invite">
+                <span className="settings-row__label">
+                  <span>{currentGroup.name}</span>
+                </span>
+                {inviteCode ? (
+                  <span className="settings-row__value">
+                    <strong>{inviteCode}</strong>
+                    <button
+                      className="settings-row__action"
+                      type="button"
+                      onClick={() => void copyInviteCode()}
+                    >
+                      {getCopyLabel(copied)}
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    className="settings-row__action"
+                    type="button"
+                    disabled={inviteLoading}
+                    onClick={() => void showInviteCode()}
+                  >
+                    {getInviteCodeButtonContent(inviteLoading)}
+                  </button>
+                )}
+              </div>
+            </div>
+            {inviteError && <ErrorState message={inviteError} />}
+          </section>
+        )}
         <section className="settings-section">
           <h2>
             <Image src="/images/ui/icons/paw-print.png" alt="" width={13} height={13} />

@@ -4,6 +4,7 @@ import {
   AppError,
   catTypeSchema,
   emotionSchema,
+  inviteCodeSchema,
   resourceIdSchema,
   timestampSchema,
 } from "@/types/app";
@@ -44,6 +45,10 @@ export const idRowSchema = z.object({
 
 export const slotRowSchema = z.object({
   slot: z.number().int().min(1).max(5),
+});
+
+export const inviteCodeRowSchema = z.object({
+  code: inviteCodeSchema,
 });
 
 export const postRowSchema = z.object({
