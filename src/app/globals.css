@@ -1678,6 +1678,53 @@ textarea:focus-visible,
     height: 78px;
   }
 }
+@media (max-width: 380px), (max-height: 760px) {
+  .scene-post--1 {
+    top: 205px;
+    right: 8px;
+    left: auto;
+    width: 154px;
+    height: 132px;
+    --scene-bubble-width: 154px;
+    --scene-cat-top: 22px;
+    --scene-cat-left: 4px;
+    --scene-cat-width: 164px;
+    --scene-cat-height: 109px;
+    --scene-name-top: 112px;
+    --scene-name-left: 12px;
+    --scene-name-width: 98px;
+  }
+  .scene-post--2 {
+    top: 375px;
+    left: 12px;
+    width: 150px;
+    height: 118px;
+    --scene-bubble-width: 150px;
+    --scene-cat-top: 17px;
+    --scene-cat-left: -8px;
+    --scene-cat-width: 151px;
+    --scene-cat-height: 100px;
+    --scene-name-top: 99px;
+    --scene-name-left: 0;
+    --scene-name-width: 92px;
+  }
+  .scene-post--3 {
+    top: auto;
+    right: 8px;
+    bottom: 112px;
+    left: auto;
+    width: 125px;
+    height: 112px;
+    --scene-bubble-width: 125px;
+    --scene-cat-top: 12px;
+    --scene-cat-left: -31px;
+    --scene-cat-width: 180px;
+    --scene-cat-height: 116px;
+    --scene-name-top: 96px;
+    --scene-name-left: 0;
+    --scene-name-width: 78px;
+  }
+}
 @media (min-width: 394px) {
   .mobile-shell {
     box-shadow: 0 0 28px rgb(40 35 30 / 10%);

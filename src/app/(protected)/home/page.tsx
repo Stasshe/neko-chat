@@ -320,8 +320,12 @@ export default function HomePage() {
     uniqueMembers.set(post.user.id, post.user);
   }
   const members = [...uniqueMembers.values()];
-  const parkPosts = uniquePosts.slice(0, parkScenePostConfigs.length);
-  const roomPosts = uniquePosts.slice(parkScenePostConfigs.length, 5);
+  const parkPosts = uniquePosts
+    .filter((_, index) => index % 2 === 0)
+    .slice(0, parkScenePostConfigs.length);
+  const roomPosts = uniquePosts
+    .filter((_, index) => index % 2 === 1)
+    .slice(0, roomPostLayouts.length);
 
   return (
     <MobileShell>
