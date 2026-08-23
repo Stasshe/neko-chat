@@ -27,9 +27,11 @@ export function useRealtimePosts(
           event: "INSERT",
           schema: "public",
           table: "posts",
-          filter: `group_id=eq.${currentGroup.id}`,
         },
-        () => {
+        (payload) => {
+          if (payload.new.group_id !== currentGroup.id) {
+            return;
+          }
           void loadPostsEvent(currentGroup);
         },
       )
