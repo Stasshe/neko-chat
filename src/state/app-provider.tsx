@@ -13,31 +13,25 @@ import {
 
 import { MobileShell } from "@/components/mobile-shell";
 import { LoadingState } from "@/components/status";
-import {
-  createGroupWithInvite,
-  createPost as createPostRequest,
-  getGroupPosts,
-  getMyGroups,
-  getMyProfile,
-  joinGroupByInviteCode,
-  startSoloMode,
-  updateMyProfile,
-} from "@/lib/api";
-import { resolveEmotion } from "@/lib/cat-assets";
-import { defaultUsername } from "@/lib/profile";
+import { getGroupPosts, getMyGroups, getMyProfile } from "@/lib/api";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import type { CatType, Emotion, GroupSummary, Profile } from "@/types/app";
+
 import {
-  AppError,
-  type CatType,
-  type Emotion,
-  type GroupSummary,
-  type Post,
-  type Profile,
-} from "@/types/app";
+  currentGroupKey,
+  getErrorMessage,
+  normalizeError,
+  type OptimisticPost,
+  resolveOnboardingRedirect,
+  withLoading,
+} from "./app-provider-shared";
+import { createAuthErrorHandler } from "./create-auth-error-handler";
+import { createGroupActions } from "./create-group-actions";
+import { createPostActions } from "./create-post-actions";
+import { createProfileActions } from "./create-profile-actions";
+import { useRealtimePosts } from "./use-realtime-posts";
 
-const currentGroupKey = "neko-chat.current-group";
-
-export type OptimisticPost = Post & { pending?: boolean };
+export type { OptimisticPost } from "./app-provider-shared";
 
 type AppContextValue = {
   profile: Profile | null;
@@ -60,48 +54,7 @@ type AppContextValue = {
   clearError: () => void;
 };
 
-function resolveOnboardingRedirect(profile: Profile, groups: GroupSummary[]): string | null {
-  if (profile.username === defaultUsername) {
-    return "/onboarding/profile";
-  }
-  if (groups.length === 0) {
-    return "/onboarding/mode";
-  }
-  return null;
-}
-
 const AppContext = createContext<AppContextValue | null>(null);
-
-function getErrorMessage(error: Error): string {
-  if (error instanceof AppError) {
-    return error.message;
-  }
-  console.error(error);
-  return "読み込みに失敗しました。時間をおいてもう一度お試しください。";
-}
-
-function normalizeError(error: unknown): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-  return new Error(String(error));
-}
-
-function isUnauthorized(error: Error): boolean {
-  return error instanceof AppError && error.code === "UNAUTHORIZED";
-}
-
-async function withLoading<T>(
-  setLoading: (loading: boolean) => void,
-  operation: () => Promise<T>,
-): Promise<T> {
-  setLoading(true);
-  try {
-    return await operation();
-  } finally {
-    setLoading(false);
-  }
-}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -116,49 +69,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const redirectTargetRef = useRef<string | null>(null);
 
-  function handleAuthError(error: Error): boolean {
-    if (isUnauthorized(error)) {
-      router.replace("/");
-      return true;
-    }
-    return false;
-  }
+  const handleAuthError = createAuthErrorHandler(router);
 
   async function loadPosts(group: GroupSummary) {
     const nextPosts = await getGroupPosts(group.id);
     setPosts(nextPosts);
   }
 
-  const loadPostsEvent = useEffectEvent(loadPosts);
-
-  useEffect(() => {
-    if (!currentGroup) {
-      return;
-    }
-    const client = getSupabaseClient();
-    if (!client) {
-      return;
-    }
-    const channel = client
-      .channel(`posts-${currentGroup.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "posts",
-          filter: `group_id=eq.${currentGroup.id}`,
-        },
-        () => {
-          void loadPostsEvent(currentGroup);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void client.removeChannel(channel);
-    };
-  }, [currentGroup]);
+  useRealtimePosts(currentGroup, loadPosts);
 
   async function refresh() {
     setError(null);
@@ -202,7 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       } catch (requestError) {
         const normalized = normalizeError(requestError);
-        if (!handleAuthError(normalized)) {
+        if (!(await handleAuthError(normalized))) {
           setError(getErrorMessage(normalized));
         }
         setInitialized(true);
@@ -230,136 +148,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [pathname]);
 
-  async function selectGroup(group: GroupSummary) {
-    setError(null);
-    await withLoading(setLoading, async () => {
-      try {
-        await loadPosts(group);
-        setCurrentGroup(group);
-        window.localStorage.setItem(currentGroupKey, group.id);
-        router.push("/home");
-      } catch (requestError) {
-        const normalized = normalizeError(requestError);
-        if (!handleAuthError(normalized)) {
-          setError(getErrorMessage(normalized));
-        }
-      }
-    });
-  }
+  const { selectGroup, startSolo, createGroup, joinGroup } = createGroupActions({
+    router,
+    setError,
+    setLoading,
+    setCurrentGroup,
+    setGroups,
+    loadPosts,
+    handleAuthError,
+  });
 
-  async function startSolo() {
-    setError(null);
-    return withLoading(setLoading, async () => {
-      try {
-        const group = await startSoloMode();
-        setCurrentGroup(group);
-        setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
-        window.localStorage.setItem(currentGroupKey, group.id);
-        return group;
-      } catch (requestError) {
-        const normalized = normalizeError(requestError);
-        if (!handleAuthError(normalized)) {
-          setError(getErrorMessage(normalized));
-        }
-        throw normalized;
-      }
-    });
-  }
+  const { saveProfile } = createProfileActions({ profile, setProfile, setError, handleAuthError });
 
-  async function createGroup(name: string) {
-    setError(null);
-    return withLoading(setLoading, async () => {
-      try {
-        const result = await createGroupWithInvite(name);
-        setCurrentGroup(result.group);
-        setGroups((current) => [result.group, ...current]);
-        window.localStorage.setItem(currentGroupKey, result.group.id);
-        return result;
-      } catch (requestError) {
-        const normalized = normalizeError(requestError);
-        if (!handleAuthError(normalized)) {
-          setError(getErrorMessage(normalized));
-        }
-        throw normalized;
-      }
-    });
-  }
-
-  async function joinGroup(code: string) {
-    setError(null);
-    return withLoading(setLoading, async () => {
-      try {
-        const group = await joinGroupByInviteCode(code);
-        await loadPosts(group);
-        setCurrentGroup(group);
-        setGroups((current) => [group, ...current.filter((item) => item.id !== group.id)]);
-        window.localStorage.setItem(currentGroupKey, group.id);
-        return group;
-      } catch (requestError) {
-        const normalized = normalizeError(requestError);
-        if (!handleAuthError(normalized)) {
-          setError(getErrorMessage(normalized));
-        }
-        throw normalized;
-      }
-    });
-  }
-
-  async function saveProfile(username: string, catType: CatType) {
-    setError(null);
-    const previousProfile = profile;
-    if (previousProfile) {
-      setProfile({ ...previousProfile, username, catType });
-    }
-    try {
-      const nextProfile = await updateMyProfile(username, catType);
-      setProfile(nextProfile);
-    } catch (requestError) {
-      if (previousProfile) {
-        setProfile(previousProfile);
-      }
-      const normalized = normalizeError(requestError);
-      if (!handleAuthError(normalized)) {
-        setError(getErrorMessage(normalized));
-      }
-      throw normalized;
-    }
-  }
-
-  async function publishPost(body: string, emotion: Emotion) {
-    if (!currentGroup) {
-      throw new AppError("NOT_FOUND", "投稿先のグループがありません。");
-    }
-    if (!profile) {
-      throw new AppError("NOT_FOUND", "プロフィールが見つかりません。");
-    }
-    setError(null);
-    const concreteEmotion = resolveEmotion(emotion);
-    const optimisticPost: OptimisticPost = {
-      id: `optimistic-${crypto.randomUUID()}`,
-      groupId: currentGroup.id,
-      userId: profile.id,
-      body,
-      emotion: concreteEmotion,
-      createdAt: new Date().toISOString(),
-      user: { id: profile.id, username: profile.username, catType: profile.catType },
-      pending: true,
-    };
-    setPosts((current) => [optimisticPost, ...current]);
-    try {
-      const created = await createPostRequest(currentGroup.id, body, concreteEmotion);
-      setPosts((current) =>
-        current.map((post) => (post.id === optimisticPost.id ? created : post)),
-      );
-    } catch (requestError) {
-      setPosts((current) => current.filter((post) => post.id !== optimisticPost.id));
-      const normalized = normalizeError(requestError);
-      if (!handleAuthError(normalized)) {
-        setError(getErrorMessage(normalized));
-      }
-      throw normalized;
-    }
-  }
+  const { publishPost } = createPostActions({
+    currentGroup,
+    profile,
+    setPosts,
+    setError,
+    handleAuthError,
+  });
 
   function openCompose() {
     setComposeOpen(true);

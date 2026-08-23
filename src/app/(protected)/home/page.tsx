@@ -373,7 +373,12 @@ export default function HomePage() {
 
   return (
     <MobileShell>
-      <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
+      <OnboardingTour
+        steps={homeTourSteps}
+        run={tourRun}
+        onFinish={finishHomeTour}
+        portalElement=".mobile-shell"
+      />
       <HomeHeader
         groupName={currentGroup?.name ?? "グループ名"}
         memberCount={currentGroup?.memberCount ?? members.length}

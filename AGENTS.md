@@ -18,3 +18,6 @@ react-doctorはたまに誤検知するから、すべてを信じるな。
 
 ユーザーフローはfigma-img/flow/
 assetsはpublic/images/にある。
+
+pnpm devのローカルチェックでは、メールアドレス認証を使え。
+任意のメルアドで新規登録して行え

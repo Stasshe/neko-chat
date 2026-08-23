@@ -59,10 +59,17 @@ async function readResponse<T>(response: Response, dataSchema: z.ZodType<T>): Pr
   return parsed.data.data;
 }
 
-async function getAccessToken(): Promise<string> {
+async function getAccessToken(forceRefresh: boolean): Promise<string> {
   const client = getSupabaseClient();
   if (!client) {
     throw new AppError("CONFIGURATION_ERROR", "Supabase Authの接続情報が設定されていません。");
+  }
+  if (forceRefresh) {
+    const { data, error } = await client.auth.refreshSession();
+    if (error || !data.session) {
+      throw new AppError("UNAUTHORIZED", "ログイン状態を確認してください。");
+    }
+    return data.session.access_token;
   }
   const { data, error } = await client.auth.getSession();
   if (error || !data.session) {
@@ -71,22 +78,33 @@ async function getAccessToken(): Promise<string> {
   return data.session.access_token;
 }
 
-async function request<T>(path: string, dataSchema: z.ZodType<T>, init?: RequestInit): Promise<T> {
-  const accessToken = await getAccessToken();
+async function fetchWithToken(
+  path: string,
+  init: RequestInit | undefined,
+  forceRefresh: boolean,
+): Promise<Response> {
+  const accessToken = await getAccessToken(forceRefresh);
   const headers = new Headers(init?.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
   if (init?.body) {
     headers.set("Content-Type", "application/json");
   }
-
-  let response: Response;
   try {
-    response = await fetch(path, { ...init, headers });
+    return await fetch(path, { ...init, headers });
   } catch (error) {
     console.error(error);
     throw new AppError("UNKNOWN", "サーバーへ接続できませんでした。");
   }
+}
 
+async function request<T>(path: string, dataSchema: z.ZodType<T>, init?: RequestInit): Promise<T> {
+  let response = await fetchWithToken(path, init, false);
+  if (response.status === 401) {
+    // Access token may have expired without the client noticing yet; refresh and retry once
+    // before treating it as a real sign-out. Without this, a stale-but-recoverable token bounces
+    // the user between "/" and "/home" forever since the session never gets a chance to renew.
+    response = await fetchWithToken(path, init, true);
+  }
   return readResponse(response, dataSchema);
 }
 
@@ -135,6 +153,14 @@ export async function joinGroupByInviteCode(code: string): Promise<GroupSummary>
     body: JSON.stringify({ code }),
   });
   return data.group;
+}
+
+export async function getGroupInviteCode(groupId: string): Promise<string> {
+  const data = await request(
+    `/api/groups/${groupId}/invite`,
+    z.object({ inviteCode: inviteCodeSchema }),
+  );
+  return data.inviteCode;
 }
 
 export async function getGroupPosts(groupId: string): Promise<Post[]> {
