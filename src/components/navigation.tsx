@@ -33,7 +33,7 @@ export function BottomTabBar() {
   const pathname = usePathname();
   const { composeOpen, openCompose } = useApp();
   const prepareTransition = usePrepareTabTransition();
-  const visible = pathname === "/home" || pathname === "/groups" || pathname === "/settings";
+  const visible = pathname === "/home" || pathname === "/groups";
   if (!visible) {
     return null;
   }
