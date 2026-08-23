@@ -621,7 +621,7 @@ img {
   display: flex;
   width: fit-content;
   min-width: var(--scene-bubble-width);
-  max-width: min(calc(15em + 22px), calc(100vw - 24px));
+  max-width: min(calc(20em + 22px), calc(100vw - 24px));
   min-height: 29px;
   padding: 4px 10px;
   border: 1px solid #e3ddd7;
@@ -769,14 +769,15 @@ img {
   width: 309px;
   min-width: 0;
   height: 64px;
-  padding: 0 58px 0 28px;
+  padding: 0 56px 0 22px;
   border: 0;
   border-radius: 32px;
   outline: none;
   background: transparent;
   font-family: "YD Waosagi", serif;
-  font-size: 18px;
-  letter-spacing: 0.12em;
+  font-size: 15px;
+  line-height: 64px;
+  letter-spacing: 0.02em;
   box-shadow: none;
 }
 .compose-form__row input:focus {
