@@ -43,6 +43,16 @@ describe("cat assets", () => {
     );
   });
 
+  it("猫種と姿勢を保ったまま表情画像だけを切り替える", () => {
+    const sources = concreteEmotions.map((emotion) => getCatImageSrc("mike", emotion, "stand"));
+
+    expect(sources).toEqual([
+      "/images/cats/mike/mike_normal_posi.png",
+      "/images/cats/mike/mike_normal_soso.png",
+      "/images/cats/mike/mike_normal_nega.png",
+    ]);
+  });
+
   it("全猫種の姿勢・表情画像が揃っている", () => {
     for (const type of catTypes) {
       for (const pose of poses) {

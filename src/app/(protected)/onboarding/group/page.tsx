@@ -45,9 +45,9 @@ function GroupContent() {
       <section className="onboarding-form onboarding-form--group">
         <h1>グループを作成しよう</h1>
         <div className="onboarding-cat-group" aria-hidden="true">
-          <CatDisplay type="black" emotion="negative" priority />
-          <CatDisplay type="mike" emotion="negative" />
-          <CatDisplay type="white" emotion="negative" />
+          <CatDisplay type="black" pose="sit" emotion="positive" priority />
+          <CatDisplay type="mike" pose="sit" emotion="positive" />
+          <CatDisplay type="white" pose="sit" emotion="positive" />
         </div>
         <form onSubmit={submit}>
           <TextField
