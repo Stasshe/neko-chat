@@ -1,15 +1,16 @@
 "use client";
 
-import Image from "next/image";
+import { animate, type JSAnimation, stagger } from "animejs";
 import { type MotionStyle, useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
-import { type RefObject, type UIEvent, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import type { Step } from "react-joyride";
-import { animate, type JSAnimation, stagger } from "animejs";
 
 import { CatDisplay } from "@/components/cat-display";
+import { MenuIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
-import { TopBar } from "@/components/navigation";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { EmptyState, ErrorState, LoadingState } from "@/components/status";
@@ -20,7 +21,7 @@ import type { PostUser } from "@/types/app";
 
 const homeTourSteps: Step[] = [
   {
-    target: ".top-bar__title",
+    target: ".home-header__title",
     content: "ここに今いる場所が表示されるよ。",
     placement: "bottom",
   },
@@ -30,44 +31,31 @@ const homeTourSteps: Step[] = [
     placement: "center",
   },
   {
-    target: ".bottom-tabs__item:nth-child(2)",
+    target: ".bottom-tabs__compose",
     content: "ここから気持ちをつぶやいてみよう。",
     placement: "top",
   },
 ];
 
-type ScenePostLayout = MotionStyle & {
+type ScenePostConfig = {
+  align: "left" | "right";
+  pose: "sit" | "stand" | "lie";
+};
+
+type RoomPostLayout = MotionStyle & {
   "--scene-cat-height": string;
   "--scene-cat-width": string;
 };
 
-const firstScenePostLayout: ScenePostLayout = {
-  top: "23%",
-  right: "4%",
-  width: 130,
-  "--scene-cat-width": "110px",
-  "--scene-cat-height": "82px",
-};
+const firstParkScenePostConfig: ScenePostConfig = { align: "right", pose: "sit" };
 
-const parkPostLayouts: ScenePostLayout[] = [
-  firstScenePostLayout,
-  {
-    top: "51%",
-    left: "2%",
-    width: 130,
-    "--scene-cat-width": "110px",
-    "--scene-cat-height": "82px",
-  },
-  {
-    right: "1%",
-    bottom: "13%",
-    width: 175,
-    "--scene-cat-width": "155px",
-    "--scene-cat-height": "100px",
-  },
+const parkScenePostConfigs: ScenePostConfig[] = [
+  firstParkScenePostConfig,
+  { align: "left", pose: "stand" },
+  { align: "right", pose: "lie" },
 ];
 
-const firstRoomPostLayout: ScenePostLayout = {
+const firstRoomPostLayout: RoomPostLayout = {
   top: "40%",
   left: "6%",
   width: 130,
@@ -75,11 +63,11 @@ const firstRoomPostLayout: ScenePostLayout = {
   "--scene-cat-height": "82px",
 };
 
-const roomPostLayouts: ScenePostLayout[] = [
+const roomPostLayouts: RoomPostLayout[] = [
   firstRoomPostLayout,
   {
-    bottom: "10%",
     right: "6%",
+    bottom: "10%",
     width: 150,
     "--scene-cat-width": "130px",
     "--scene-cat-height": "95px",
@@ -109,20 +97,6 @@ function useBubbleClock(): number {
     return () => window.clearInterval(id);
   }, []);
   return now;
-}
-
-function getScenePostClassName(pending: boolean | undefined) {
-  if (pending) {
-    return "scene-post scene-post--pending";
-  }
-  return "scene-post";
-}
-
-function getBubbleAlignment(index: number): "left" | "right" {
-  if (index % 2 === 0) {
-    return "left";
-  }
-  return "right";
 }
 
 function useParkAnimation(postCount: number) {
@@ -170,24 +144,132 @@ function useParkAnimation(postCount: number) {
   return sceneRef;
 }
 
-function ScenePost({
-  post,
-  index,
-  layout,
-  bubbleVisible,
-  reducedMotion,
-  pageRef,
-}: {
+function getPostClassName(index: number, pending: boolean | undefined, room = false) {
+  const classNames = ["scene-post", room ? "scene-post--room" : `scene-post--${index + 1}`];
+  if (pending) {
+    classNames.push("scene-post--pending");
+  }
+  return classNames.join(" ");
+}
+
+function HomeHeader({ groupName, memberCount }: { groupName: string; memberCount: number }) {
+  const visibleMemberCount = Math.min(Math.max(memberCount, 1), 5);
+  const memberSlots = Array.from(
+    { length: visibleMemberCount },
+    (_, index) => `home-member-${index + 1}`,
+  );
+
+  return (
+    <header className="home-header">
+      <Link className="home-header__action" href="/chat" aria-label="チャット">
+        <MenuIcon />
+        <span>チャット</span>
+      </Link>
+      <div className="home-header__title">
+        <div className="home-header__members" aria-label={`${memberCount}人のメンバー`} role="img">
+          {memberSlots.map((slot) => (
+            <Image
+              key={slot}
+              src="/images/ui/icons/cat-outline.png"
+              alt=""
+              width={45}
+              height={45}
+              className="home-header__member-icon"
+            />
+          ))}
+        </div>
+        <strong>{groupName}</strong>
+      </div>
+      <Link className="home-header__action" href="/settings" aria-label="設定">
+        <Image
+          src="/images/ui/icons/setting.png"
+          alt=""
+          width={30}
+          height={30}
+          className="home-header__settings-icon"
+        />
+        <span>設定</span>
+      </Link>
+    </header>
+  );
+}
+
+function HomeSceneDecorations() {
+  return (
+    <>
+      <Image
+        src="/images/ui/decorations/cloud.png"
+        alt=""
+        width={109}
+        height={69}
+        className="park-scene__cloud park-scene__cloud--one"
+      />
+      <Image
+        src="/images/ui/decorations/cloud.png"
+        alt=""
+        width={109}
+        height={69}
+        className="park-scene__cloud park-scene__cloud--two"
+      />
+      <Image
+        src="/images/ui/decorations/tree.png"
+        alt=""
+        width={174}
+        height={174}
+        className="park-scene__tree park-scene__tree--large"
+      />
+      <Image
+        src="/images/ui/decorations/tree-stump.png"
+        alt=""
+        width={169}
+        height={119}
+        className="park-scene__stump"
+      />
+    </>
+  );
+}
+
+function ParkPost({ post, index, bubbleVisible, reducedMotion, pageRef }: PostProps) {
+  const config = parkScenePostConfigs[index] ?? firstParkScenePostConfig;
+  return (
+    <m.article
+      className={getPostClassName(index, post.pending)}
+      drag={!reducedMotion}
+      dragConstraints={pageRef}
+      dragMomentum={false}
+      whileDrag={{ scale: 1.04, zIndex: 12 }}
+    >
+      <div className="scene-post__float">
+        {bubbleVisible && (
+          <SpeechBubble align={config.align}>{formatPostBody(post.body)}</SpeechBubble>
+        )}
+        <CatDisplay
+          type={post.user.catType}
+          emotion={post.emotion}
+          pose={config.pose}
+          className="scene-post__cat"
+          seed={post.id}
+          priority={index === 0}
+        />
+        <span className="scene-post__name">{post.user.username}</span>
+      </div>
+    </m.article>
+  );
+}
+
+type PostProps = {
   post: OptimisticPost;
   index: number;
-  layout: ScenePostLayout;
   bubbleVisible: boolean;
   reducedMotion: boolean | null;
   pageRef: RefObject<HTMLDivElement | null>;
-}) {
+};
+
+function RoomPost({ post, index, bubbleVisible, reducedMotion, pageRef }: PostProps) {
+  const layout = roomPostLayouts[index] ?? firstRoomPostLayout;
   return (
     <m.article
-      className={getScenePostClassName(post.pending)}
+      className={getPostClassName(index, post.pending, true)}
       style={layout}
       drag={!reducedMotion}
       dragConstraints={pageRef}
@@ -196,14 +278,15 @@ function ScenePost({
     >
       <div className="scene-post__float">
         {bubbleVisible && (
-          <SpeechBubble align={getBubbleAlignment(index)}>{formatPostBody(post.body)}</SpeechBubble>
+          <SpeechBubble align={index % 2 === 0 ? "left" : "right"}>
+            {formatPostBody(post.body)}
+          </SpeechBubble>
         )}
         <CatDisplay
           type={post.user.catType}
           emotion={post.emotion}
           className="scene-post__cat"
           seed={post.id}
-          priority={index === 0}
         />
         <span className="scene-post__name">{post.user.username}</span>
       </div>
@@ -215,23 +298,20 @@ export default function HomePage() {
   const { profile, currentGroup, posts, loading, error, refresh } = useApp();
   const tourStage = useTourStage(profile?.id);
   const tourRun = Boolean(profile && currentGroup && (tourStage === null || tourStage === "home"));
-  const sceneRef = useParkAnimation(posts.length);
+  const uniquePosts = getLatestPostsByUser(posts);
+  const sceneRef = useParkAnimation(uniquePosts.length);
   const parkPageRef = useRef<HTMLDivElement>(null);
   const roomPageRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const bubbleClock = useBubbleClock();
   const [activePage, setActivePage] = useState<0 | 1>(0);
 
-  function handleSceneScroll(event: UIEvent<HTMLElement>) {
-    const scene = event.currentTarget;
-    setActivePage(scene.scrollLeft > scene.clientWidth / 2 ? 1 : 0);
-  }
-
   function finishHomeTour() {
     if (profile) {
       setTourStage(profile.id, "compose");
     }
   }
+
   const uniqueMembers = new Map<string, PostUser>();
   if (profile) {
     uniqueMembers.set(profile.id, profile);
@@ -240,11 +320,9 @@ export default function HomePage() {
     uniqueMembers.set(post.user.id, post.user);
   }
   const members = [...uniqueMembers.values()];
-
-  const uniquePosts = getLatestPostsByUser(posts);
   const parkPosts = uniquePosts
     .filter((_, index) => index % 2 === 0)
-    .slice(0, parkPostLayouts.length);
+    .slice(0, parkScenePostConfigs.length);
   const roomPosts = uniquePosts
     .filter((_, index) => index % 2 === 1)
     .slice(0, roomPostLayouts.length);
@@ -252,13 +330,19 @@ export default function HomePage() {
   return (
     <MobileShell>
       <OnboardingTour steps={homeTourSteps} run={tourRun} onFinish={finishHomeTour} />
-      <TopBar groupName={currentGroup?.name ?? "グループ"} members={members} />
+      <HomeHeader
+        groupName={currentGroup?.name ?? "グループ名"}
+        memberCount={currentGroup?.memberCount ?? members.length}
+      />
       <div className="park-scene-wrap">
         <section
           ref={sceneRef}
           className="park-scene"
           aria-label="グループの近況"
-          onScroll={handleSceneScroll}
+          onScroll={(event) => {
+            const scene = event.currentTarget;
+            setActivePage(scene.scrollLeft > scene.clientWidth / 2 ? 1 : 0);
+          }}
         >
           <div ref={parkPageRef} className="park-scene__page">
             <Image
@@ -266,64 +350,29 @@ export default function HomePage() {
               alt=""
               fill
               priority
-              sizes="(min-width: 768px) 100vw, 393px"
+              sizes="393px"
               className="park-scene__bg"
             />
-            <Image
-              src="/images/ui/decorations/cloud.png"
-              alt=""
-              width={57}
-              height={36}
-              className="park-scene__cloud park-scene__cloud--one"
-            />
-            <Image
-              src="/images/ui/decorations/cloud.png"
-              alt=""
-              width={43}
-              height={27}
-              className="park-scene__cloud park-scene__cloud--two"
-            />
-            <Image
-              src="/images/ui/decorations/tree.png"
-              alt=""
-              width={90}
-              height={90}
-              className="park-scene__tree park-scene__tree--large"
-            />
-            <Image
-              src="/images/ui/decorations/tree.png"
-              alt=""
-              width={63}
-              height={63}
-              className="park-scene__tree park-scene__tree--small"
-            />
-            <Image
-              src="/images/ui/decorations/tree-stump.png"
-              alt=""
-              width={78}
-              height={55}
-              className="park-scene__stump"
-            />
+            <HomeSceneDecorations />
             {!loading &&
               !error &&
               parkPosts.map((post, index) => (
-                <ScenePost
+                <ParkPost
                   key={post.userId}
                   post={post}
                   index={index}
-                  layout={parkPostLayouts[index] ?? firstScenePostLayout}
-                  bubbleVisible={isBubbleVisible(post.createdAt, bubbleClock)}
+                  bubbleVisible={post.pending || isBubbleVisible(post.createdAt, bubbleClock)}
                   reducedMotion={reducedMotion}
                   pageRef={parkPageRef}
                 />
               ))}
           </div>
-          <div ref={roomPageRef} className="park-scene__page">
+          <div ref={roomPageRef} className="park-scene__page park-scene__page--room">
             <Image
               src="/images/ui/backgrounds/home-brown.png"
               alt=""
               fill
-              sizes="(min-width: 768px) 100vw, 393px"
+              sizes="393px"
               className="park-scene__bg"
             />
             <Image
@@ -343,12 +392,11 @@ export default function HomePage() {
             {!loading &&
               !error &&
               roomPosts.map((post, index) => (
-                <ScenePost
+                <RoomPost
                   key={post.userId}
                   post={post}
                   index={index}
-                  layout={roomPostLayouts[index] ?? firstRoomPostLayout}
-                  bubbleVisible={isBubbleVisible(post.createdAt, bubbleClock)}
+                  bubbleVisible={post.pending || isBubbleVisible(post.createdAt, bubbleClock)}
                   reducedMotion={reducedMotion}
                   pageRef={roomPageRef}
                 />
@@ -359,7 +407,6 @@ export default function HomePage() {
           <span className={activePage === 0 ? "is-active" : undefined} />
           <span className={activePage === 1 ? "is-active" : undefined} />
         </div>
-
         {loading && <LoadingState label="みんなの近況を読み込み中" />}
         {!loading && error && <ErrorState message={error} retry={() => void refresh()} />}
         {!loading && !error && uniquePosts.length === 0 && (

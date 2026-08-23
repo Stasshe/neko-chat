@@ -53,6 +53,24 @@ export function ArrowLeftIcon(props: IconProps) {
   );
 }
 
+export function LongArrowLeftIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...defaults} {...props}>
+      <path d="M19 12H5" />
+      <path d="m11 18-6-6 6-6" />
+    </svg>
+  );
+}
+
+export function LogoutIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...defaults} {...props}>
+      <path d="M10 17v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M15 8l4 4-4 4M19 12H7" />
+    </svg>
+  );
+}
+
 export function SendIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...defaults} {...props}>

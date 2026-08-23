@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/button";
 import { MobileShell } from "@/components/mobile-shell";
 
@@ -37,9 +36,14 @@ export function InviteCreatedContent({ code }: { code: string }) {
 
   return (
     <MobileShell>
-      <BackLink href="/groups" label="グループ一覧へ戻る" />
-      <section className="invite-created">
-        <span className="accent-lines" aria-hidden="true" />
+      <section className="invite-created invite-created--success">
+        <Image
+          className="accent-lines"
+          src="/images/ui/decorations/active_tab.png"
+          alt=""
+          width={21}
+          height={18}
+        />
         <h1>グループが作成されました</h1>
         <Image
           className="paw-mark"

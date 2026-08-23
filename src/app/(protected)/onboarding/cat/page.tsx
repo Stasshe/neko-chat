@@ -53,7 +53,7 @@ function CatSelectionContent() {
 
   return (
     <MobileShell>
-      <BackLink href={returnToSettings ? "/settings" : "/home"} />
+      <BackLink href={returnToSettings ? "/settings" : "/home"} className="cat-selection__back" />
       <section className="cat-selection">
         <h1>ねこをえらんでね</h1>
         <div className="cat-grid">

@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "YD Waosagi";
+  src: url("/fonts/YDWaosagi.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Monomaniac One";
+  src: url("/fonts/MonomaniacOne-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 @theme {
   --color-border: var(--line);
   --color-input: var(--line);
@@ -207,6 +223,76 @@ img {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.home-header {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  display: grid;
+  width: 100%;
+  height: 70px;
+  padding: 19px 20px 0;
+  background: transparent;
+  grid-template-columns: 64px 1fr 64px;
+  align-items: start;
+}
+.home-header__action {
+  display: flex;
+  width: 44px;
+  align-items: center;
+  gap: 0;
+  flex-direction: column;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+.home-header__action svg {
+  width: 30px;
+  height: 30px;
+  margin-top: -3px;
+  stroke-width: 1.6;
+}
+.home-header__action:last-child {
+  justify-self: end;
+}
+.home-header__settings-icon {
+  width: 30px;
+  height: 30px;
+  margin-top: 0;
+  margin-bottom: 1px;
+}
+.home-header__title {
+  display: flex;
+  min-width: 0;
+  margin-top: -13px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.home-header__members {
+  display: flex;
+  height: 45px;
+  align-items: center;
+}
+.home-header__member-icon {
+  width: 45px;
+  height: 45px;
+  margin-left: -14px;
+}
+.home-header__member-icon:first-child {
+  margin-left: 0;
+}
+.home-header__title strong {
+  max-width: 100%;
+  overflow: hidden;
+  margin-top: -6px;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .member-avatars {
   display: flex;
   height: 17px;
@@ -234,74 +320,94 @@ img {
 }
 
 .bottom-tabs {
-  --tabs-inline-padding: clamp(8px, 5.6vw, 22px);
-
   position: fixed;
   z-index: 30;
-  bottom: max(10px, env(safe-area-inset-bottom));
+  bottom: max(30px, env(safe-area-inset-bottom));
   left: 50%;
-  display: grid;
-  width: min(calc(100% - 24px), 369px);
-  min-height: 64px;
-  padding: 5px var(--tabs-inline-padding);
-  border-radius: 25px;
-  background: rgb(255 255 255 / 94%);
-  box-shadow: var(--shadow-float);
-  grid-template-columns: repeat(3, 1fr);
-  backdrop-filter: blur(8px);
+  display: block;
+  width: 372px;
+  height: 87px;
+  padding: 0;
+  background: transparent;
   transform: translateX(-50%);
 }
-.bottom-tabs__indicator-track {
+.bottom-tabs__background {
   position: absolute;
-  inset: 5px var(--tabs-inline-padding);
-  pointer-events: none;
-}
-.bottom-tabs__indicator {
-  display: block;
-  width: calc(100% / 3);
-  height: 58px;
-  transform: translateX(calc(var(--active-tab) * 100%));
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.bottom-tabs__indicator::before {
-  display: block;
-  width: 58px;
-  height: 58px;
-  margin: -4px auto 0;
-  border-radius: 50%;
-  background: var(--accent-strong);
-  content: "";
+  inset: 0;
+  width: 372px;
+  height: 87px;
 }
 .bottom-tabs__item {
-  position: relative;
+  position: absolute;
   z-index: 1;
   display: flex;
-  min-width: 0;
-  height: 54px;
-  border-radius: 50%;
-  flex-direction: column;
+  top: 8px;
+  width: 78px;
+  height: 70px;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  font-size: 8px;
-  font-weight: 700;
-}
-.bottom-tabs__item {
   border: none;
+  border-radius: 18px;
   background: none;
   cursor: pointer;
 }
-.bottom-tabs__item svg,
-.bottom-tabs__item img {
-  width: 29px;
-  height: 29px;
-  stroke-width: 2.5;
+.bottom-tabs__item--home {
+  left: 54px;
 }
-.bottom-tabs__item.is-active {
-  color: white;
+.bottom-tabs__item--groups {
+  right: 54px;
 }
-.bottom-tabs__item.is-active img {
-  filter: brightness(0) invert(1);
+.bottom-tabs__icon {
+  display: block;
+  position: absolute;
+}
+.bottom-tabs__icon--home {
+  top: 3px;
+  left: 8px;
+  width: 62px;
+  height: 62px;
+}
+.bottom-tabs__icon--groups {
+  top: 7px;
+  left: 5px;
+  width: 68px;
+  height: 68px;
+}
+.bottom-tabs__active-mark {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  left: -1px;
+  width: 21px;
+  height: 18px;
+}
+.bottom-tabs__active-mark--groups {
+  right: -1px;
+  left: auto;
+  transform: scaleX(-1);
+}
+.bottom-tabs__compose {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  left: 147px;
+  display: block;
+  width: 79px;
+  height: 73px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition: transform 180ms ease;
+}
+.bottom-tabs__compose-image {
+  display: block;
+  width: 79px;
+  height: 73px;
+}
+.bottom-tabs__compose.is-active {
+  transform: scale(0.97);
 }
 
 .park-scene-wrap {
@@ -327,38 +433,40 @@ img {
 }
 .park-scene__bg {
   z-index: 0;
-  object-fit: cover;
+  object-fit: fill;
 }
 .park-scene__cloud {
   position: absolute;
   z-index: 2;
+  width: auto;
   height: auto;
 }
 .park-scene__cloud--one {
-  top: 42px;
-  right: 40px;
+  top: 92px;
+  left: 130px;
 }
 .park-scene__cloud--two {
-  top: 78px;
-  right: -9px;
+  top: 119px;
+  left: 265px;
 }
 .park-scene__tree {
   position: absolute;
   z-index: 4;
+  height: auto;
 }
 .park-scene__tree--large {
-  top: 102px;
-  left: 43px;
-}
-.park-scene__tree--small {
-  top: 139px;
-  left: 136px;
+  top: 83px;
+  left: 1px;
+  width: 174px;
+  height: 174px;
 }
 .park-scene__stump {
   position: absolute;
   z-index: 3;
-  top: 51%;
-  left: 42%;
+  top: 388px;
+  left: 104px;
+  width: 169px;
+  height: 119px;
 }
 .park-scene__sofa {
   position: absolute;
@@ -375,7 +483,7 @@ img {
 .park-scene__dots {
   position: absolute;
   z-index: 20;
-  top: 10px;
+  top: 76px;
   left: 12px;
   display: flex;
   align-items: center;
@@ -397,8 +505,49 @@ img {
 .scene-post {
   position: absolute;
   z-index: 8;
-  width: 130px;
   cursor: grab;
+}
+.scene-post--1 {
+  top: 248px;
+  left: 194px;
+  width: 185px;
+  height: 164px;
+  --scene-bubble-width: 185px;
+  --scene-cat-top: 24px;
+  --scene-cat-left: 3px;
+  --scene-cat-width: 212px;
+  --scene-cat-height: 141px;
+  --scene-name-top: 147px;
+  --scene-name-left: 18px;
+  --scene-name-width: 110px;
+}
+.scene-post--2 {
+  top: 472px;
+  left: 19px;
+  width: 185px;
+  height: 137px;
+  --scene-bubble-width: 185px;
+  --scene-cat-top: 15px;
+  --scene-cat-left: -14px;
+  --scene-cat-width: 196px;
+  --scene-cat-height: 130px;
+  --scene-name-top: 120px;
+  --scene-name-left: 2px;
+  --scene-name-width: 100px;
+}
+.scene-post--3 {
+  top: 574px;
+  left: 174px;
+  width: 128px;
+  height: 137px;
+  --scene-bubble-width: 128px;
+  --scene-cat-top: 7px;
+  --scene-cat-left: -30px;
+  --scene-cat-width: 249px;
+  --scene-cat-height: 161px;
+  --scene-name-top: 120px;
+  --scene-name-left: 0;
+  --scene-name-width: 80px;
 }
 .scene-post:active {
   cursor: grabbing;
@@ -406,49 +555,106 @@ img {
 .scene-post--pending {
   opacity: 0.6;
 }
+.scene-post--room {
+  width: 130px;
+  height: auto;
+}
 .scene-post__float {
-  display: flex;
+  position: relative;
   width: 100%;
-  flex-direction: column;
-  align-items: center;
+  height: 100%;
 }
 .scene-post__cat {
+  position: absolute;
+  z-index: 1;
+  top: var(--scene-cat-top);
+  left: var(--scene-cat-left);
   width: var(--scene-cat-width);
   height: var(--scene-cat-height);
-  margin-top: -3px;
 }
 .scene-post__name {
-  margin-top: -10px;
-  font-size: 9px;
-  font-weight: 700;
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--scene-name-top) + 8px);
+  left: var(--scene-name-left);
+  width: var(--scene-name-width);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
 }
 .speech-bubble {
-  position: relative;
-  min-width: 105px;
-  max-width: 158px;
-  padding: 7px 15px;
-  border: 1px solid #ddd9d5;
+  position: absolute;
+  z-index: 2;
+  top: auto;
+  bottom: calc(100% - 29px);
+  left: 0;
+  display: flex;
+  width: fit-content;
+  min-width: var(--scene-bubble-width);
+  max-width: min(calc(15em + 22px), calc(100vw - 24px));
+  min-height: 29px;
+  padding: 4px 10px;
+  border: 1px solid #e3ddd7;
   border-radius: 18px;
+  align-items: center;
+  justify-content: center;
   background: white;
-  box-shadow: 0 2px 3px rgb(0 0 0 / 12%);
-  font-size: 9px;
+  box-shadow: 0 3px 8px rgb(44 34 24 / 16%);
+  font-family: "YD Waosagi", serif;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
   text-align: center;
+  white-space: normal;
 }
 .speech-bubble::after {
   position: absolute;
-  bottom: -6px;
-  left: 25px;
-  width: 12px;
-  height: 12px;
-  border-right: 1px solid #ddd9d5;
-  border-bottom: 1px solid #ddd9d5;
+  bottom: -9px;
+  left: 34px;
+  width: 14px;
+  height: 14px;
+  border-right: 1px solid #e3ddd7;
+  border-bottom: 1px solid #e3ddd7;
   background: white;
   content: "";
   transform: rotate(45deg);
 }
 .speech-bubble--right::after {
-  right: 25px;
+  right: 34px;
   left: auto;
+}
+.speech-bubble--right {
+  right: 0;
+  left: auto;
+}
+.scene-post--room .scene-post__float {
+  display: flex;
+  height: auto;
+  flex-direction: column;
+  align-items: center;
+}
+.scene-post--room .scene-post__cat {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: var(--scene-cat-width);
+  height: var(--scene-cat-height);
+  margin-top: -3px;
+}
+.scene-post--room .scene-post__name {
+  position: static;
+  width: auto;
+  margin-top: -10px;
+}
+.scene-post--room .speech-bubble {
+  position: relative;
+  bottom: auto;
+  min-width: 105px;
+  max-width: 158px;
 }
 
 .compose-overlay {
@@ -472,100 +678,122 @@ img {
   justify-content: center;
 }
 .compose-overlay::backdrop {
-  background: rgb(36 32 31 / 52%);
+  background: rgb(36 32 31 / 10%);
 }
 .compose-sheet {
   position: relative;
   z-index: 1;
   width: min(100%, 353px);
-  min-height: min(540px, calc(100dvh - 32px));
+  height: min(492px, calc(100dvh - 32px));
+  min-height: 0;
   max-height: calc(100dvh - 32px);
-  padding: 28px 24px max(28px, env(safe-area-inset-bottom));
+  margin-top: -12px;
+  padding: 42px 29px 16px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border-radius: 28px;
+  border-radius: 36px;
   background: var(--paper);
   box-shadow: var(--shadow-float);
-}
-.compose-sheet__close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--ink);
-  font-size: 16px;
-  line-height: 1;
+  font-family: "YD Waosagi", serif;
 }
 .compose-sheet__cat {
   position: relative;
   display: block;
-  width: 144px;
-  height: 96px;
-  margin: 18px auto 20px;
+  width: 240px;
+  height: 145px;
+  margin: -29px auto 0;
+}
+.compose-sheet__username {
+  display: block;
+  margin-top: 0;
+  padding-left: 33px;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  line-height: 18px;
 }
 .compose-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
 }
 .compose-form__row {
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 10px;
+  width: 309px;
+  height: 108px;
+  margin-left: -7px;
   align-items: center;
 }
-.compose-form__row input {
-  flex: 1;
-  min-width: 0;
-  height: 48px;
-  padding: 0 18px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  outline: none;
-  font-size: 15px;
+.compose-form__textbox {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 309px;
+  height: 108px;
 }
-.compose-form__row input:focus,
+.compose-form__row input {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 309px;
+  min-width: 0;
+  height: 64px;
+  padding: 0 58px 0 28px;
+  border: 0;
+  border-radius: 32px;
+  outline: none;
+  background: transparent;
+  font-family: "YD Waosagi", serif;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  box-shadow: none;
+}
+.compose-form__row input:focus {
+  box-shadow: none;
+}
 .settings-editor input:focus {
   border-color: var(--accent-strong);
   box-shadow: 0 0 0 3px rgb(224 179 105 / 20%);
 }
 .emotion-picker {
   display: flex;
-  margin: 0;
+  width: 210px;
+  margin: 5px 0 0 72px;
   padding: 0;
   border: 0;
   flex-direction: column;
-  gap: 9px;
-}
-.emotion-picker legend {
-  margin-bottom: 4px;
-  font-family: serif;
-  font-size: 13px;
-  font-weight: 700;
 }
 .emotion-picker label {
   display: flex;
+  min-height: 48px;
   align-items: center;
-  gap: 10px;
-  padding: 8px 4px;
-  font-size: 13px;
+  gap: 34px;
+  padding: 0;
+  font-family: "Monomaniac One", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
 }
 .emotion-picker label[data-selected="true"] {
-  color: var(--accent-strong);
-  font-weight: 700;
+  color: var(--ink);
+  font-weight: 400;
 }
 .emotion-picker input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent-strong);
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ink);
 }
 .send-button {
+  position: absolute;
+  z-index: 2;
+  top: 11px;
+  right: 14px;
   display: flex;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   padding: 0;
   border: 0;
@@ -575,7 +803,7 @@ img {
   background: var(--accent);
 }
 .send-button svg {
-  width: 19px;
+  width: 21px;
 }
 .primary-button {
   display: inline-flex;
@@ -639,7 +867,7 @@ img {
 }
 .group-tile__members img {
   width: 17px;
-  height: auto;
+  height: 17px;
 }
 .group-tile__scene {
   position: relative;
@@ -725,9 +953,10 @@ img {
 
 .settings-header {
   display: grid;
-  padding: max(18px, env(safe-area-inset-top)) 28px 10px;
+  height: 70px;
+  padding: max(28px, env(safe-area-inset-top)) 28px 10px;
   grid-template-columns: 32px 1fr 32px;
-  align-items: center;
+  align-items: start;
   text-align: center;
 }
 .settings-back {
@@ -735,68 +964,111 @@ img {
   width: 28px;
   flex-direction: column;
   align-items: center;
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1;
 }
 .settings-back svg {
-  width: 21px;
-  height: 21px;
+  width: 30px;
+  height: 24px;
+  stroke-width: 1.8;
+}
+.settings-header h1 {
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
 }
 .settings-content {
   display: flex;
   min-height: 0;
-  padding: 100px 42px 104px;
+  padding: 107px 40px 104px;
   flex: 1;
   flex-direction: column;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 .settings-section + .settings-section {
-  margin-top: 40px;
+  margin-top: 48px;
 }
 .settings-section h2 {
   display: flex;
   margin: 0 0 8px;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   color: #514b48;
-  font-family: serif;
-  font-size: 10px;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
 }
 .settings-section h2 img {
-  width: 13px;
-  height: 13px;
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) saturate(100%) invert(64%) sepia(48%) saturate(730%) hue-rotate(333deg)
+    brightness(96%) contrast(91%);
 }
 .settings-list {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 8px;
   background: white;
 }
 .settings-row {
+  position: relative;
   display: grid;
   width: 100%;
-  min-height: 62px;
-  padding: 0 12px;
+  min-height: 65px;
+  padding: 0 14px;
   border: 0;
   align-items: center;
   background: white;
   column-gap: 8px;
   grid-template-columns: 1fr auto 12px;
-  font-size: 11px;
+  font-size: 14px;
   text-align: left;
 }
 .settings-row + .settings-row,
 .settings-editor + .settings-row {
-  border-top: 1px solid var(--line);
+  border-top: 0;
+}
+.settings-row + .settings-row::before,
+.settings-editor + .settings-row::before {
+  position: absolute;
+  top: 0;
+  right: 14px;
+  left: 14px;
+  height: 1px;
+  background: var(--line);
+  content: "";
 }
 .settings-row strong {
   font-family: inherit;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 400;
 }
+.settings-row__label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+.settings-row__label img {
+  width: 38px;
+  height: 28px;
+  object-fit: contain;
+}
+.settings-row__label .settings-row__cat-icon {
+  width: 44px;
+  height: 38px;
+  margin-inline: -3px;
+}
+.settings-row__label svg {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  stroke-width: 1.2;
+}
 .settings-row > span:last-child {
-  font-size: 20px;
+  font-size: 28px;
   line-height: 1;
   text-align: right;
 }
@@ -848,15 +1120,23 @@ img {
   overscroll-behavior: contain;
 }
 .cat-grid {
+  --cat-card-size: calc((min(100vw, 393px) - 84px) / 2);
+
   display: grid;
   width: 100%;
   margin-top: 33px;
   gap: 28px 26px;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: var(--cat-card-size);
+  align-items: start;
 }
 .cat-grid button {
   display: flex;
-  min-height: 188px;
+  position: relative;
+  width: 100%;
+  height: var(--cat-card-size);
+  min-height: 0;
+  align-self: start;
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: var(--panel-radius-md);
@@ -871,12 +1151,36 @@ img {
   background: var(--accent-soft);
 }
 .cat-grid .cat-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 125px;
   height: 112px;
+  transform: translate(-50%, -50%);
+}
+.cat-grid .cat-display__img {
+  object-position: center;
 }
 .cat-grid strong {
-  font-family: serif;
+  position: absolute;
+  right: 8px;
+  bottom: 20px;
+  left: 8px;
+  font-family: "YD Waosagi", serif;
   font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+.cat-selection,
+.cat-selection h1,
+.cat-selection > .primary-button,
+.cat-selection__back {
+  font-family: "YD Waosagi", serif;
+}
+.cat-selection h1,
+.cat-selection > .primary-button,
+.cat-selection__back {
+  font-weight: 700;
 }
 .cat-selection > .primary-button {
   width: 176px;
@@ -943,6 +1247,55 @@ img {
 .invite-created > .primary-button {
   width: 223px;
 }
+.invite-created--success {
+  padding-top: max(93px, env(safe-area-inset-top));
+  font-family: "YD Waosagi", serif;
+}
+.invite-created--success h1 {
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.invite-created--success .accent-lines {
+  top: 61px;
+  left: 24px;
+  width: 21px;
+  height: 18px;
+  margin: 0;
+  border: 0;
+  object-fit: contain;
+  transform: none;
+}
+.invite-created--success .paw-mark {
+  margin-top: 24px;
+  margin-bottom: 44px;
+}
+.invite-created--success h2 {
+  margin-bottom: 20px;
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.invite-created--success output {
+  min-height: 65px;
+  font-family: "YD Waosagi", serif;
+  font-weight: 700;
+}
+.invite-created--success .copy-button {
+  min-width: 186px;
+  min-height: 51px;
+  margin-top: 25px;
+  margin-bottom: 68px;
+  font-family: "YD Waosagi", serif;
+}
+.invite-created--success > .primary-button {
+  width: 245px;
+  min-height: 53px;
+  font-family: "YD Waosagi", serif;
+  font-weight: 700;
+}
 
 .onboarding-form {
   display: flex;
@@ -954,8 +1307,7 @@ img {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.onboarding-form h1,
-.mode-selection h1 {
+.onboarding-form h1 {
   margin: 0;
   font-family: serif;
   font-size: 20px;
@@ -987,6 +1339,98 @@ img {
   width: 176px;
   margin-top: 28px;
 }
+.onboarding-form--group {
+  padding-top: max(128px, env(safe-area-inset-top));
+}
+.onboarding-form--group h1 {
+  font-family: "YD Waosagi", serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.onboarding-form--group form {
+  margin-top: 46px;
+}
+.onboarding-form--group .primary-button {
+  margin-top: 60px;
+  font-family: "YD Waosagi", serif;
+  font-weight: 400;
+}
+.onboarding-form--join {
+  padding: max(120px, env(safe-area-inset-top)) 0 max(36px, env(safe-area-inset-bottom));
+  font-family: "YD Waosagi", serif;
+}
+.onboarding-form--join h1 {
+  width: 100%;
+  padding: 0 24px;
+  font-family: "YD Waosagi", serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+.onboarding-form--join form {
+  width: min(100%, 335px);
+  margin-top: 44px;
+}
+.onboarding-form--join input {
+  min-height: 59px;
+  padding: 14px 28px;
+  border-color: #c9c5c1;
+  border-radius: 20px;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  text-align: left;
+}
+.onboarding-form--join input::placeholder {
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-weight: 400;
+}
+.onboarding-form--join .primary-button {
+  width: 225px;
+  min-height: 49px;
+  margin-top: 52px;
+  border-radius: 20px;
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+.onboarding-join__cats {
+  position: relative;
+  width: 300px;
+  height: 214px;
+  margin-top: 42px;
+}
+.onboarding-join__cats .cat-display {
+  position: absolute;
+  width: 132px;
+  height: 106px;
+  overflow: visible;
+}
+.onboarding-join__cats .cat-display__img {
+  transform: scale(1.22);
+  transform-origin: center bottom;
+}
+.onboarding-join__cat--black {
+  top: 0;
+  left: 4px;
+}
+.onboarding-join__cat--mike {
+  top: 0;
+  right: 4px;
+}
+.onboarding-join__cat--white {
+  bottom: 0;
+  left: 84px;
+}
+.onboarding-form--join label.onboarding-join__label {
+  margin-bottom: 18px;
+  font-family: "YD Waosagi", serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
 .onboarding-form--profile {
   padding-top: max(172px, env(safe-area-inset-top));
 }
@@ -1000,26 +1444,26 @@ img {
 }
 .onboarding-cat-group {
   position: relative;
-  width: 270px;
-  height: 150px;
+  width: 340px;
+  height: 170px;
   margin-top: 68px;
 }
 .onboarding-cat-group .cat-display {
   position: absolute;
-  width: 135px;
-  height: 100px;
+  width: 180px;
+  height: 110px;
 }
 .onboarding-cat-group .cat-display:nth-child(1) {
   top: 0;
   left: 0;
 }
 .onboarding-cat-group .cat-display:nth-child(2) {
-  top: 2px;
-  right: -2px;
+  top: 0;
+  right: 0;
 }
 .onboarding-cat-group .cat-display:nth-child(3) {
-  right: 58px;
-  bottom: -2px;
+  right: 70px;
+  bottom: 0;
 }
 .field-label {
   width: 100%;
@@ -1032,77 +1476,115 @@ img {
   display: flex;
   flex: 1;
   min-height: 0;
-  padding: max(74px, env(safe-area-inset-top)) 40px 30px;
+  padding: max(80px, env(safe-area-inset-top)) 41px 30px;
   flex-direction: column;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+.mode-selection h1 {
+  margin: 0;
+  margin-top: 4px;
+  font-family: "YD Waosagi", serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
 .mode-list {
   display: grid;
-  margin-top: 6px;
-  gap: 6px;
+  margin-top: 34px;
+  gap: 43px;
 }
 .mode-list button {
   position: relative;
-  display: grid;
-  min-height: 188px;
-  padding: 26px 28px;
-  border: 1px solid #bdb9b5;
-  border-radius: 20px;
+  min-height: 154px;
+  padding: 24px 28px 20px;
+  border: 1px solid #c8c3be;
+  border-radius: 23px;
   background: white;
-  grid-template-columns: 1fr 92px;
-  grid-template-rows: auto 1fr;
   text-align: left;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 70%) inset;
 }
 .mode-list strong {
-  font-family: serif;
+  display: block;
+  font-family: "YD Waosagi", serif;
   font-size: 20px;
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 .mode-list span {
+  display: block;
+  margin-top: 13px;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: "YD Waosagi", serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.42;
+  letter-spacing: 0.01em;
+}
+.mode-list button > span:not(.mode-cats) {
+  white-space: nowrap;
 }
 .mode-list .mode-cats {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  display: block;
   width: 92px;
-  height: 88px;
+  height: 92px;
+  margin: 0;
+  transform: translateY(-50%);
   color: var(--ink);
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
 }
 .mode-cats img {
   position: absolute;
-  width: 52px;
+  width: 54px;
   height: auto;
 }
 .mode-cats--1 img {
-  top: 18px;
-  left: 20px;
+  top: 12px;
+  left: -13px;
+  width: 96px;
 }
 .mode-cats--join img {
-  left: 3px;
+  width: 54px;
 }
 .mode-cats--3 img:nth-child(1) {
-  top: 4px;
-  left: 21px;
+  top: 17px;
+  left: 19px;
 }
 .mode-cats--3 img:nth-child(2) {
-  bottom: 2px;
-  left: 1px;
+  top: 52px;
+  left: -1px;
 }
 .mode-cats--3 img:nth-child(3) {
-  right: 0;
-  bottom: 2px;
+  top: 52px;
+  right: -1px;
+}
+.mode-cats--join.mode-cats--2 img:nth-child(1) {
+  top: 24px;
+  left: 19px;
+}
+.mode-cats--join.mode-cats--2 img:nth-child(2) {
+  top: 59px;
+  left: -1px;
 }
 .mode-list .mode-cats__plus {
   position: absolute;
-  right: 4px;
-  bottom: 12px;
-  font-family: serif;
-  font-size: 30px;
-  font-weight: 300;
+  right: -1px;
+  bottom: -10px;
+  display: block;
+  width: 54px;
+  margin: 0;
+  font-family: "YD Waosagi", serif;
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  color: #9e9893;
 }
 .mode-selection > .status {
   margin-top: 16px;
@@ -1174,6 +1656,10 @@ textarea:focus-visible,
   outline: 3px solid var(--accent-strong);
   outline-offset: 3px;
 }
+.compose-form__row input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
 
 @media (max-height: 700px) {
   .cat-selection,
@@ -1190,6 +1676,53 @@ textarea:focus-visible,
   .cat-grid .cat-display {
     width: 88px;
     height: 78px;
+  }
+}
+@media (max-width: 380px), (max-height: 760px) {
+  .scene-post--1 {
+    top: 205px;
+    right: 8px;
+    left: auto;
+    width: 154px;
+    height: 132px;
+    --scene-bubble-width: 154px;
+    --scene-cat-top: 22px;
+    --scene-cat-left: 4px;
+    --scene-cat-width: 164px;
+    --scene-cat-height: 109px;
+    --scene-name-top: 112px;
+    --scene-name-left: 12px;
+    --scene-name-width: 98px;
+  }
+  .scene-post--2 {
+    top: 375px;
+    left: 12px;
+    width: 150px;
+    height: 118px;
+    --scene-bubble-width: 150px;
+    --scene-cat-top: 17px;
+    --scene-cat-left: -8px;
+    --scene-cat-width: 151px;
+    --scene-cat-height: 100px;
+    --scene-name-top: 99px;
+    --scene-name-left: 0;
+    --scene-name-width: 92px;
+  }
+  .scene-post--3 {
+    top: auto;
+    right: 8px;
+    bottom: 112px;
+    left: auto;
+    width: 125px;
+    height: 112px;
+    --scene-bubble-width: 125px;
+    --scene-cat-top: 12px;
+    --scene-cat-left: -31px;
+    --scene-cat-width: 180px;
+    --scene-cat-height: 116px;
+    --scene-name-top: 96px;
+    --scene-name-left: 0;
+    --scene-name-width: 78px;
   }
 }
 @media (min-width: 394px) {

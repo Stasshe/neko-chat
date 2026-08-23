@@ -2,6 +2,7 @@
 
 import { AnimatePresence, domAnimation, LazyMotion, useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
+import Image from "next/image";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { Step } from "react-joyride";
 
@@ -41,10 +42,10 @@ function renderSendButtonIcon(submitting: boolean) {
 }
 
 const emotionLabels: Record<Emotion, string> = {
-  positive: "うれしい",
-  neutral: "いつもの",
-  negative: "しょんぼり",
-  random: "おまかせ",
+  positive: "ポジティブ",
+  neutral: "ソーソー",
+  negative: "ネガティブ",
+  random: "ランダム",
 };
 
 type ComposeDialogProps = {
@@ -120,7 +121,7 @@ function ComposeDialog({
     try {
       await publishPost(trimmed, emotion === "random" ? randomEmotion : emotion);
       onBodyChange("");
-      onEmotionChange("neutral");
+      onEmotionChange("positive");
       setRandomEmotion("neutral");
       dismiss();
       setSubmitting(false);
@@ -169,21 +170,15 @@ function ComposeDialog({
           onFinish={finishComposeTour}
           portalElement=".compose-tour-portal"
         />
-        <button
-          type="button"
-          className="compose-sheet__close"
-          onClick={dismiss}
-          aria-label="閉じる"
-        >
-          ×
-        </button>
-        <CatDisplay
-          type={profile?.catType ?? "white"}
-          emotion={previewEmotion}
-          className="compose-sheet__cat"
-        />
         <form className="compose-form" onSubmit={submit}>
           <div className="compose-form__row">
+            <Image
+              className="compose-form__textbox"
+              src="/images/ui/decorations/textBox.png"
+              alt=""
+              width={309}
+              height={108}
+            />
             <label className="sr-only" htmlFor="post-body">
               つぶやき
             </label>
@@ -204,8 +199,14 @@ function ComposeDialog({
               {renderSendButtonIcon(submitting)}
             </button>
           </div>
+          <CatDisplay
+            type={profile?.catType ?? "white"}
+            emotion={previewEmotion}
+            className="compose-sheet__cat"
+          />
+          <span className="compose-sheet__username">{profile?.username ?? "ユーザー1"}</span>
           <fieldset className="emotion-picker">
-            <legend>ねこの気分</legend>
+            <legend className="sr-only">ねこの気分</legend>
             {emotions.map((value) => (
               <label key={value} data-selected={emotion === value}>
                 <input
@@ -230,7 +231,7 @@ function ComposeDialog({
 export function ComposeSheet() {
   const { composeOpen } = useApp();
   const [body, setBody] = useState("");
-  const [emotion, setEmotion] = useState<Emotion>("neutral");
+  const [emotion, setEmotion] = useState<Emotion>("positive");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   return (

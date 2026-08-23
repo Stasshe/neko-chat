@@ -46,24 +46,38 @@ function JoinContent() {
   return (
     <MobileShell>
       <BackLink href={returnPath ?? "/onboarding/mode"} />
-      <section className="onboarding-form">
+      <section className="onboarding-form onboarding-form--join">
         <h1>招待コードを入力しよう</h1>
-        <div className="onboarding-cat-group" aria-hidden="true">
-          <CatDisplay type="black" emotion="neutral" />
-          <CatDisplay type="mike" emotion="neutral" />
-          <CatDisplay type="white" emotion="neutral" />
+        <div className="onboarding-join__cats" aria-hidden="true">
+          <CatDisplay
+            type="black"
+            emotion="negative"
+            priority
+            className="onboarding-join__cat onboarding-join__cat--black"
+          />
+          <CatDisplay
+            type="mike"
+            emotion="negative"
+            className="onboarding-join__cat onboarding-join__cat--mike"
+          />
+          <CatDisplay
+            type="white"
+            emotion="negative"
+            className="onboarding-join__cat onboarding-join__cat--white"
+          />
         </div>
         <form onSubmit={submit}>
           <TextField
             id="invite-code"
             label="招待コード"
+            labelClassName="field-label onboarding-join__label"
             value={code}
             onChange={(value) => setCode(value.toUpperCase())}
             maxLength={6}
             placeholder="招待コードを入力してください"
           />
           {(validationError || error) && <ErrorState message={validationError ?? error ?? ""} />}
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading} className="onboarding-join__button">
             {loading ? "参加中" : "参加する"}
           </Button>
         </form>

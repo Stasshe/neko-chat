@@ -5,14 +5,12 @@ import Link from "next/link";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { ButtonSpinner } from "@/components/button-spinner";
-import { ArrowLeftIcon, SendIcon, SettingsIcon } from "@/components/icons";
+import { ArrowLeftIcon, SendIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { formatPostBody } from "@/lib/post-body";
 import { useApp } from "@/state/app-provider";
 
 import styles from "./page.module.css";
-
-const memberSlots = [0, 1, 2, 3, 4];
 
 function renderSendButtonIcon(submitting: boolean) {
   if (submitting) {
@@ -31,7 +29,6 @@ function getMessageClassName(pending: boolean | undefined, ownMessage: boolean) 
   }
   return classNames.join(" ");
 }
-
 export default function ChatPage() {
   const { profile, currentGroup, posts, loading, error, publishPost } = useApp();
   const [message, setMessage] = useState("");
@@ -77,20 +74,22 @@ export default function ChatPage() {
           </Link>
           <div className={styles.title}>
             <div className={styles.members} role="img" aria-label={`${memberCount}人のメンバー`}>
-              {memberSlots.slice(0, memberCount).map((slot) => (
-                <Image
-                  key={slot}
-                  src="/images/ui/icons/cat-outline.png"
-                  alt=""
-                  width={22}
-                  height={22}
-                />
-              ))}
+              {Array.from({ length: memberCount }, (_, index) => `member-slot-${index + 1}`).map(
+                (memberSlot) => (
+                  <Image
+                    key={memberSlot}
+                    src="/images/ui/icons/cat-outline.png"
+                    alt=""
+                    width={45}
+                    height={45}
+                  />
+                ),
+              )}
             </div>
             <h1>{currentGroup?.name ?? "グループ"}</h1>
           </div>
           <Link className={styles.headerAction} href="/settings" aria-label="設定">
-            <SettingsIcon />
+            <Image src="/images/ui/icons/setting.png" alt="" width={30} height={30} />
             <span>設定</span>
           </Link>
         </header>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
 import { ButtonSpinner } from "@/components/button-spinner";
-import { ArrowLeftIcon } from "@/components/icons";
+import { LongArrowLeftIcon, LogoutIcon } from "@/components/icons";
 import { MobileShell } from "@/components/mobile-shell";
 import { ErrorState, LoadingState } from "@/components/status";
 import { TextField } from "@/components/text-field";
@@ -66,7 +66,7 @@ export default function SettingsPage() {
     <MobileShell>
       <header className="settings-header">
         <Link href="/home" aria-label="ホームへ戻る" className="settings-back">
-          <ArrowLeftIcon />
+          <LongArrowLeftIcon />
           <span>戻る</span>
         </Link>
         <h1>設定</h1>
@@ -87,7 +87,10 @@ export default function SettingsPage() {
                 onClick={startEditingUsername}
                 disabled={!profile}
               >
-                <span>ユーザー名</span>
+                <span className="settings-row__label">
+                  <Image src="/images/ui/icons/image 28.png" alt="" width={38} height={28} />
+                  <span>ユーザー名</span>
+                </span>
                 <strong>{profile?.username ?? ""}</strong>
                 <span aria-hidden="true">›</span>
               </button>
@@ -113,7 +116,16 @@ export default function SettingsPage() {
               </form>
             )}
             <Link className="settings-row" href="/onboarding/cat?returnTo=settings">
-              <span>猫の種類</span>
+              <span className="settings-row__label">
+                <Image
+                  src="/images/cats/white/negative.png"
+                  alt=""
+                  width={44}
+                  height={38}
+                  className="settings-row__cat-icon"
+                />
+                <span>猫の種類</span>
+              </span>
               <strong>{catLabels[profile?.catType ?? "white"]}</strong>
               <span aria-hidden="true">›</span>
             </Link>
@@ -130,7 +142,10 @@ export default function SettingsPage() {
               type="button"
               onClick={() => void signOut()}
             >
-              <span>ログアウト</span>
+              <span className="settings-row__label">
+                <LogoutIcon />
+                <span>ログアウト</span>
+              </span>
               <span aria-hidden="true">›</span>
             </button>
           </div>

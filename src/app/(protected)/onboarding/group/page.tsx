@@ -42,12 +42,12 @@ function GroupContent() {
   return (
     <MobileShell>
       {returnPath && <BackLink href={returnPath} label="グループ一覧へ戻る" />}
-      <section className="onboarding-form">
+      <section className="onboarding-form onboarding-form--group">
         <h1>グループを作成しよう</h1>
         <div className="onboarding-cat-group" aria-hidden="true">
-          <CatDisplay type="black" emotion="neutral" />
-          <CatDisplay type="mike" emotion="neutral" />
-          <CatDisplay type="white" emotion="neutral" />
+          <CatDisplay type="black" emotion="negative" priority />
+          <CatDisplay type="mike" emotion="negative" />
+          <CatDisplay type="white" emotion="negative" />
         </div>
         <form onSubmit={submit}>
           <TextField
