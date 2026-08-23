@@ -118,7 +118,7 @@ export default function SettingsPage() {
             <Link className="settings-row" href="/onboarding/cat?returnTo=settings">
               <span className="settings-row__label">
                 <Image
-                  src="/images/cats/white/negative.png"
+                  src="/images/cats/white/white_shit_posi.png"
                   alt=""
                   width={44}
                   height={38}
