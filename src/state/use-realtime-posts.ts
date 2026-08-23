@@ -33,7 +33,9 @@ export function useRealtimePosts(
           void loadPostsEvent(currentGroup);
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        console.log("[realtime] posts channel status:", status, err);
+      });
 
     return () => {
       void client.removeChannel(channel);
