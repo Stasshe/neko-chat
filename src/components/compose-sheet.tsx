@@ -188,6 +188,7 @@ function ComposeDialog({
               onChange={(event) => onBodyChange(event.target.value)}
               placeholder="いまなにしてる？"
               autoComplete="off"
+              maxLength={30}
             />
             <button
               className="send-button"
